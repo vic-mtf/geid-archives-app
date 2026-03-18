@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@emotion/react": "^11.10.5",
@@ -20,14 +21,12 @@
     "@mui/x-data-grid-pro": "^7.23.6",
     "@mui/x-tree-view": "^6.17.0",
     "@reduxjs/toolkit": "^1.9.1",
-    "RichTreeView": "link:@mui/x-tree-view/RichTreeView",
     "axios": "^1.2.2",
     "axios-hooks": "^4.0.0",
     "crypto-js": "^4.1.1",
     "framer-motion": "^11.0.3",
     "lodash": "^4.17.21",
     "notistack": "^3.0.1",
-    "prop-types": "^15.8.1",
     "query-string": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -41,13 +40,19 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
+    "@types/crypto-js": "^4.1.1",
+    "@types/lodash": "^4.14.202",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
+    "typescript": "^5.3.3",
     "vite": "^5.2.0"
   }
 }
