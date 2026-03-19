@@ -12,7 +12,7 @@
  *   />
  */
 
-import { useMemo } from "react";
+
 import {
   Button,
   Dialog,
@@ -22,7 +22,10 @@ import {
   Stack,
   TextField,
   Typography,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -69,9 +72,24 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     title: "Nouveau conteneur",
     url: "/api/stuff/archives/physical/containers",
     fields: [
-      { name: "name", label: "Nom *", required: true },
-      { name: "location", label: "Localisation" },
-      { name: "description", label: "Description", multiline: true, rows: 3 },
+      {
+        name: "name",
+        label: "Nom *",
+        required: true,
+        helperText: "Identifiant lisible du conteneur pour le localiser physiquement (ex : Armoire A — Bâtiment Principal)",
+      },
+      {
+        name: "location",
+        label: "Localisation",
+        helperText: "Adresse précise dans les locaux (ex : Salle archives, Niveau 0, Couloir B)",
+      },
+      {
+        name: "description",
+        label: "Description",
+        multiline: true,
+        rows: 3,
+        helperText: "Contenu prévu, restrictions d'accès ou conditions de conservation",
+      },
     ],
     schema: yup.object({
       name: yup.string().trim().required("Le nom est requis"),
@@ -85,8 +103,19 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     title: "Nouvelle étagère",
     url: "/api/stuff/archives/physical/shelves",
     fields: [
-      { name: "name", label: "Nom *", required: true },
-      { name: "description", label: "Description", multiline: true, rows: 2 },
+      {
+        name: "name",
+        label: "Nom *",
+        required: true,
+        helperText: "Désignation de la rangée avec sa position (ex : Étagère 1 — Haut)",
+      },
+      {
+        name: "description",
+        label: "Description",
+        multiline: true,
+        rows: 2,
+        helperText: "Description optionnelle du contenu prévu de cette rangée",
+      },
     ],
     schema: yup.object({
       name: yup.string().trim().required("Le nom est requis"),
@@ -99,13 +128,23 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     title: "Nouvel étage",
     url: "/api/stuff/archives/physical/floors",
     fields: [
-      { name: "number", label: "Numéro *", required: true, type: "number" },
-      { name: "label", label: "Libellé" },
+      {
+        name: "number",
+        label: "Numéro *",
+        required: true,
+        type: "number",
+        helperText: "Position sur l'étagère, commence à 1",
+      },
+      {
+        name: "label",
+        label: "Libellé",
+        helperText: "Description libre de ce compartiment (ex : Dossiers actifs 2023-2024)",
+      },
       {
         name: "administrativeUnit",
         label: "Unité administrative (ID) *",
         required: true,
-        helperText: "Identifiant (_id) du rôle / unité administrative responsable",
+        helperText: "Identifiant (_id) du service ou rôle responsable des documents stockés ici",
       },
     ],
     schema: yup.object({
@@ -120,9 +159,25 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     title: "Nouveau classeur",
     url: "/api/stuff/archives/physical/binders",
     fields: [
-      { name: "name", label: "Nom *", required: true },
-      { name: "nature", label: "Nature *", required: true, helperText: "Ex : RH, FINANCE, JURIDIQUE (en majuscules)" },
-      { name: "maxCapacity", label: "Capacité maximale *", required: true, type: "number", helperText: "Nombre max de dossiers autorisés" },
+      {
+        name: "name",
+        label: "Nom *",
+        required: true,
+        helperText: "Titre du classeur permettant d'identifier rapidement son contenu",
+      },
+      {
+        name: "nature",
+        label: "Nature *",
+        required: true,
+        helperText: "Catégorie thématique en MAJUSCULES — détermine les dossiers autorisés (ex : RH, FINANCE, JURIDIQUE)",
+      },
+      {
+        name: "maxCapacity",
+        label: "Capacité maximale *",
+        required: true,
+        type: "number",
+        helperText: "Nombre maximum de dossiers pouvant être rangés dans ce classeur",
+      },
     ],
     schema: yup.object({
       name: yup.string().trim().required("Le nom est requis"),
@@ -136,13 +191,38 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     title: "Nouveau dossier physique",
     url: "/api/stuff/archives/physical/records",
     fields: [
-      { name: "internalNumber", label: "N° interne *", required: true, helperText: "Ex : DOS-2024-0042" },
-      { name: "refNumber", label: "N° référence *", required: true },
-      { name: "subject", label: "Objet *", required: true },
-      { name: "category", label: "Catégorie *", required: true, helperText: "Ex : Contrats, Marchés, Correspondances" },
-      { name: "nature", label: "Nature *", required: true, helperText: "Doit correspondre à la nature du classeur parent" },
-      { name: "editionDate", label: "Date d'édition *", required: true, type: "date" },
-      { name: "archivingDate", label: "Date d'archivage *", required: true, type: "date" },
+      {
+        name: "internalNumber",
+        label: "N° interne *",
+        required: true,
+        helperText: "Code unique attribué par le service d'archives (ex : DOS-2024-0042)",
+      },
+      {
+        name: "refNumber",
+        label: "N° référence *",
+        required: true,
+        helperText: "Référence croisée avec votre GED ou ERP (ex : REF-DRH-042)",
+      },
+      {
+        name: "subject",
+        label: "Objet *",
+        required: true,
+        helperText: "Intitulé précis décrivant le contenu principal du dossier",
+      },
+      {
+        name: "category",
+        label: "Catégorie *",
+        required: true,
+        helperText: "Famille documentaire pour le filtrage et les statistiques (ex : Contrats, Marchés)",
+      },
+      {
+        name: "nature",
+        label: "Nature *",
+        required: true,
+        helperText: "Doit correspondre exactement à la nature du classeur parent (en MAJUSCULES)",
+      },
+      { name: "editionDate", label: "Date d'édition *", required: true, type: "date", helperText: "Date à laquelle le document original a été produit ou signé" },
+      { name: "archivingDate", label: "Date d'archivage *", required: true, type: "date", helperText: "Date d'intégration physique aux archives (généralement aujourd'hui)" },
     ],
     schema: yup.object({
       internalNumber: yup.string().trim().required("Le N° interne est requis"),
@@ -207,38 +287,68 @@ export default function PhysicalEntityForm({
 
   const onSubmit = async (data: FieldValues) => {
     const body = config.buildBody(data, parentId);
-    const snackKey = enqueueSnackbar(
-      <Typography>Enregistrement en cours...</Typography>,
-      { autoHideDuration: null }
-    );
+    const snackKey = enqueueSnackbar("Création en cours, veuillez patienter…", {
+      autoHideDuration: null,
+    });
     try {
       await execute({ data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar(<Typography>Enregistré avec succès</Typography>, { variant: "success" });
+      enqueueSnackbar("L'élément a été créé et enregistré avec succès.", {
+        variant: "success",
+        title: "Créé !",
+      });
       reset();
       onSuccess();
     } catch (err: unknown) {
       closeSnackbar(snackKey);
-      const msg = ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ?? "Une erreur est survenue";
-      enqueueSnackbar(<Typography>{msg}</Typography>, { variant: "error" });
+      const msg =
+        ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
+        "La création a échoué. Vérifiez les informations saisies et réessayez.";
+      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
     }
   };
 
-  const labelCols = useMemo<Record<string, string>>(() => ({
-    container: "le conteneur",
-    shelf: "l'étagère",
-    floor: "l'étage",
-    binder: "le classeur",
-    record: "le dossier",
-  }), []);
+  // Label du niveau PARENT (pas du niveau courant)
+  const parentLevelLabel: Partial<Record<PhysicalLevel, string>> = {
+    shelf:  "le conteneur",
+    floor:  "l'étagère",
+    binder: "l'étage",
+    record: "le classeur",
+  };
+
+  // Sections du guide par niveau
+  const guideSection: Partial<Record<PhysicalLevel, string>> = {
+    container: "conteneur",
+    shelf: "etagere",
+    floor: "etage",
+    binder: "classeur",
+    record: "dossier-physique",
+  };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
-        {config.title}
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <span>{config.title}</span>
+          <Tooltip title="Voir le guide utilisateur pour ce type d'élément" placement="top">
+            <IconButton
+              size="small"
+              tabIndex={-1}
+              sx={{ color: "text.disabled", "&:hover": { color: "primary.main" } }}
+              onClick={() => {
+                // Naviguer vers l'onglet aide avec la section correspondante
+                const event = new CustomEvent("__navigate_help", {
+                  detail: { section: guideSection[level] },
+                });
+                document.getElementById("root")?.dispatchEvent(event);
+              }}>
+              <HelpOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché à {labelCols[level]} : <strong>{parentName}</strong>
+            Rattaché à {parentLevelLabel[level] ?? "l'élément parent"} : <strong>{parentName}</strong>
           </Typography>
         )}
       </DialogTitle>

@@ -6,6 +6,10 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   Grid,
   IconButton,
@@ -23,6 +27,7 @@ import {
 } from "@mui/material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
@@ -37,6 +42,7 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 
 import useAxios from "../../../hooks/useAxios";
 import useToken from "../../../hooks/useToken";
+import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
 import { incrementVersion } from "../../../redux/data";
@@ -65,9 +71,56 @@ export default function PhysicalArchiveContent() {
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { enqueueSnackbar } = useSnackbar();
 
   // Formulaire de création
   const [formOpen, setFormOpen] = useState(false);
+
+  // Dialogue de suppression
+  const [deleteTarget, setDeleteTarget] = useState<{
+    level: Level;
+    id: string;
+    label: string;
+  } | null>(null);
+
+  const deleteEndpoints: Record<Level, string> = {
+    container: "/api/stuff/archives/physical/containers",
+    shelf:     "/api/stuff/archives/physical/shelves",
+    floor:     "/api/stuff/archives/physical/floors",
+    binder:    "/api/stuff/archives/physical/binders",
+    record:    "/api/stuff/archives/physical/records",
+  };
+
+  const [, executeDelete] = useAxios(
+    { method: "DELETE", headers },
+    { manual: true }
+  );
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const key = enqueueSnackbar("Suppression en cours…", { autoHideDuration: null });
+    try {
+      await executeDelete({ url: `${deleteEndpoints[deleteTarget.level]}/${deleteTarget.id}` });
+      enqueueSnackbar(`"${deleteTarget.label}" a été supprimé.`, {
+        variant: "success",
+        title: "Supprimé !",
+      });
+      setDeleteTarget(null);
+      setSelected(null);
+      // Si on est dans un sous-niveau, revenir au niveau parent
+      if (breadcrumb.length > 0 && breadcrumb[breadcrumb.length - 1].id === deleteTarget.id) {
+        setBreadcrumb((prev) => prev.slice(0, -1));
+      }
+      dispatch(incrementVersion());
+    } catch (err: unknown) {
+      const msg =
+        ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
+        "La suppression a échoué.";
+      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
+    } finally {
+      enqueueSnackbar("", { key, persist: false });
+    }
+  };
 
   // Fil d'Ariane / navigation
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([]);
@@ -348,7 +401,11 @@ export default function PhysicalArchiveContent() {
             />
           </Box>
         ) : (
-          <DetailPanel level={selected.level} item={selected.item} />
+          <DetailPanel
+            level={selected.level}
+            item={selected.item}
+            onDelete={(id, label) => setDeleteTarget({ level: selected.level, id, label })}
+          />
         )}
       </Box>
 
@@ -363,6 +420,27 @@ export default function PhysicalArchiveContent() {
           dispatch(incrementVersion());
         }}
       />
+
+      {/* Dialogue de confirmation de suppression */}
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+        <DialogTitle component="div" fontWeight="bold">
+          Confirmer la suppression
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Supprimer <strong>"{deleteTarget?.label}"</strong> ? Cette action est irréversible.
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+            La suppression sera refusée si cet élément contient encore des enfants.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">Annuler</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
@@ -372,9 +450,10 @@ export default function PhysicalArchiveContent() {
 interface DetailPanelProps {
   level: Level;
   item: Container | Shelf | Floor | Binder | PhysicalRecord;
+  onDelete: (id: string, label: string) => void;
 }
 
-function DetailPanel({ level, item }: DetailPanelProps) {
+function DetailPanel({ level, item, onDelete }: DetailPanelProps) {
   const levelLabels: Record<Level, string> = {
     container: "Conteneur",
     shelf: "Étagère",
@@ -383,14 +462,28 @@ function DetailPanel({ level, item }: DetailPanelProps) {
     record: "Dossier physique",
   };
 
+  // Nom lisible de l'élément pour le dialogue de confirmation
+  const itemLabel = useMemo(() => {
+    const it = item as unknown as Record<string, unknown>;
+    return (it.name ?? it.internalNumber ?? it.subject ?? (it.number !== undefined ? `Étage ${it.number}` : null) ?? it._id) as string;
+  }, [item]);
+
   return (
     <Card variant="outlined">
       <CardContent>
         <Stack direction="row" alignItems="center" gap={1} mb={2}>
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
             {levelLabels[level]}
           </Typography>
           <Chip label={level} size="small" variant="outlined" />
+          <Tooltip title="Supprimer cet élément" placement="top">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => onDelete(item._id, itemLabel)}>
+              <DeleteOutlineRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Stack>
         <Divider sx={{ mb: 2 }} />
 
