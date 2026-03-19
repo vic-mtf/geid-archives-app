@@ -36,6 +36,14 @@ import type { FieldValues } from "react-hook-form";
 
 export type PhysicalLevel = "container" | "shelf" | "floor" | "binder" | "record";
 
+// URL de l'entité parente par niveau (pour afficher son nom lisible)
+const parentEndpoint: Partial<Record<PhysicalLevel, string>> = {
+  shelf:  "/api/stuff/archives/physical/containers",
+  floor:  "/api/stuff/archives/physical/shelves",
+  binder: "/api/stuff/archives/physical/floors",
+  record: "/api/stuff/archives/physical/binders",
+};
+
 interface FieldDef {
   name: string;
   label: string;
@@ -180,6 +188,18 @@ export default function PhysicalEntityForm({
     { manual: true }
   );
 
+  // Résolution du nom lisible du parent
+  const parentUrl = parentId && parentEndpoint[level]
+    ? `${parentEndpoint[level]}/${parentId}`
+    : null;
+  const [{ data: parentData }] = useAxios<Record<string, unknown>>(
+    { url: parentUrl!, headers: { Authorization: `Bearer ${token}` } },
+    { manual: !parentUrl }
+  );
+  const parentName = parentData?.name as string | undefined
+    ?? (parentData?.number !== undefined ? `Étage ${parentData.number}` : undefined)
+    ?? parentId;
+
   const handleClose = () => {
     reset();
     onClose();
@@ -218,7 +238,7 @@ export default function PhysicalEntityForm({
         {config.title}
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché à {labelCols[level]} parent (ID : {parentId})
+            Rattaché à {labelCols[level]} : <strong>{parentName}</strong>
           </Typography>
         )}
       </DialogTitle>

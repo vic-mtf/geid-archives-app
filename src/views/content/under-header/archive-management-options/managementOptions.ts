@@ -42,23 +42,31 @@ const managementOptions: ManagementOption[] = [
     type: "button",
     icon: EditNoteOutlinedIcon,
     activeKeys: ["isOnly"],
-    action() {},
+    action() {
+      const state = store.getState();
+      const [id] = state.data.navigation.archiveManagement.selectedElements;
+      const doc = state.data.docs.find((d) => d._id === id || d.id === id);
+      if (doc) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__edit_archive_doc", { detail: { doc } })
+        );
+      }
+    },
   },
-  // {
-  //   label: "Télécharger",
-  //   id: "download",
-  //   type: "button",
-  //   icon: CloudUploadOutlinedIcon,
-  //   activeKeys: ["isOnly"],
-  //   action() {},
-  // },
   {
     label: "Supprimer",
     id: "remove",
     type: "button",
     icon: DeleteOutlineOutlinedIcon,
     activeKeys: ["isOnly", "isMultiple"],
-    action() {},
+    action() {
+      const ids = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (ids.length > 0) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__delete_archive_docs", { detail: { ids } })
+        );
+      }
+    },
   },
 ];
 
