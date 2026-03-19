@@ -19,8 +19,8 @@ import { useLocation } from "react-router-dom";
 import CustomDrawer from "./CustomDrawer";
 import { updateData } from "../../redux/data";
 
-// Tabs qui affichent l'arbre de fichiers dans le panneau gauche
-const TREE_TABS = new Set(["archiveManager"]);
+// Aucun onglet n'utilise plus l'arbre — archiveManager utilise désormais le DataGrid inline
+const TREE_TABS = new Set<string>();
 
 export default function LeftNavigation() {
   const open = useSelector((store: RootState) => store.data.navigation.openLeft);
