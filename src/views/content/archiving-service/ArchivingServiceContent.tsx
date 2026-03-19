@@ -1,20 +1,28 @@
 import useAxios from "../../../hooks/useAxios";
-//import useData from "../../../hooks/useData";
 import useToken from "../../../hooks/useToken";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import columns from "./columns";
 import ArchivingServiceHeader from "./archiving-service-header/ArchivingServiceHeader";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import scrollBarSx from "../../../utils/scrollBarSx";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../redux/store";
 
 export default function ArchivingServiceContent() {
   const Authorization = useToken();
-  const [{ data, loading }] = useAxios({
-    url: "api/stuff/archives/archived/",
+  const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
+  const [{ data, loading }, refetch] = useAxios({
+    url: "/api/stuff/validate",
     headers: { Authorization },
   });
+
+  // Refetch dès qu'une mutation a eu lieu (incrementVersion)
+  useEffect(() => {
+    if (dataVersion > 0) refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataVersion]);
 
   const rows = useMemo(
     () =>
@@ -42,7 +50,8 @@ export default function ArchivingServiceContent() {
           columns={columns}
           showCellVerticalBorder={false}
           showColumnVerticalBorder={false}
-          hideFooter
+          pageSizeOptions={[25, 50, 100]}
+          initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
           sx={{
             border: "none",
             "& .MuiDataGrid-cell": {
@@ -56,9 +65,11 @@ export default function ArchivingServiceContent() {
             "& *": scrollBarSx as Record<string, unknown>,
           }}
           onRowClick={(e) => {
-            window.open(
-              new URL(e.row.fileUrl, import.meta.env.VITE_SERVER_BASE_URL)
-            );
+            if (e.row.fileUrl) {
+              window.open(
+                new URL(e.row.fileUrl, import.meta.env.VITE_SERVER_BASE_URL)
+              );
+            }
           }}
           disableRowSelectionOnClick
           disableDensitySelector

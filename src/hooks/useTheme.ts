@@ -1,4 +1,4 @@
-import { createTheme, Theme } from "@mui/material";
+import { alpha, createTheme, Theme } from "@mui/material";
 import appConfig from "../configs/app-config.json";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -52,6 +52,11 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
     [mode]
   );
 
+  const opacityHex = useMemo(
+    () => Math.round(255 * opacity).toString(16).padStart(2, "0"),
+    [opacity]
+  );
+
   const theme = useMemo(
     () =>
       createTheme({
@@ -65,6 +70,9 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
         },
         components: {
           MuiButton: {
+            defaultProps: {
+              disableElevation: true,
+            },
             styleOverrides: {
               root: { textTransform: "none" },
             },
@@ -94,11 +102,25 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
               },
             },
           },
+          MuiToggleButton: {
+            styleOverrides: {
+              root: {
+                border: "none",
+                "&.Mui-disabled": { border: "none" },
+                textTransform: "none",
+              },
+            },
+          },
           MuiMenu: {
             defaultProps: {
               transformOrigin: { horizontal: "left", vertical: "top" },
               anchorOrigin: { horizontal: "right", vertical: "bottom" },
               onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
+            },
+            styleOverrides: {
+              root: {
+                "& .MuiBackdrop-root": { backdropFilter: "none" },
+              },
             },
           },
           MuiBadge: {
@@ -121,9 +143,20 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
               },
             },
             styleOverrides: {
+              root: ({ theme: t }) => ({
+                "& .MuiBackdrop-root": {
+                  backgroundColor: t.palette.background.paper + opacityHex,
+                  backdropFilter: `blur(${blur}px)`,
+                },
+              }),
+            },
+          },
+          MuiModal: {
+            styleOverrides: {
               root: {
                 "& .MuiBackdrop-root": {
-                  backdropFilter: "blur(10px)",
+                  backdropFilter: `blur(${blur}px)`,
+                  backgroundColor: alpha(paper, 0.2),
                 },
               },
             },
@@ -149,15 +182,48 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
             },
           },
           MuiTextField: {
-            defaultProps: { variant: "outlined" },
+            defaultProps: {
+              variant: "outlined",
+              size: "small",
+            },
+          },
+          MuiSwitch: {
+            defaultProps: { size: "small" },
+          },
+          MuiSelect: {
+            defaultProps: { size: "small" },
+          },
+          MuiFormControl: {
+            defaultProps: { size: "small" },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                backgroundImage: "none",
+              },
+            },
+          },
+          MuiListItemButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: MuiBase.shape.borderRadius,
+              },
+            },
+          },
+          MuiTableCell: {
+            styleOverrides: {
+              root: {
+                borderColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+              },
+            },
           },
         },
         customOptions: {
-          opacity: Math.round(255 * opacity).toString(16),
+          opacity: opacityHex,
           blur: `${blur}px`,
         },
       }),
-    [mode, main, paper, opacity, blur, otherKey]
+    [mode, main, paper, opacity, blur, otherKey, opacityHex]
   );
 
   return theme;

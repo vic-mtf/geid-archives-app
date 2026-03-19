@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button, DialogTitle, Dialog } from "@mui/material";
 import { useSnackbar } from "notistack";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "../../../redux/store";
+import { incrementVersion } from "../../../redux/data";
 import useAxios from "../../../hooks/useAxios";
 import FormContent from "./FormContent";
 import { FieldValues } from "react-hook-form";
@@ -11,9 +12,10 @@ export default function ValidateForm() {
   const [doc, setDoc] = useState<string | null>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
+  const dispatch = useDispatch<AppDispatch>();
   const [, refresh, cancel] = useAxios(
     {
-      url: "api/stuff/validate",
+      url: "/api/stuff/validate",
       method: "post",
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -31,22 +33,28 @@ export default function ValidateForm() {
         refresh({ data })
           .then(() => {
             closeSnackbar();
-            enqueueSnackbar({
+            dispatch(incrementVersion());
+            enqueueSnackbar("Le document a été validé avec succès.", {
               variant: "success",
-            } as unknown as Parameters<typeof enqueueSnackbar>[0]);
+              title: "Validation réussie !",
+            });
+            setDoc(null);
           })
-          .catch(() => {
+          .catch((err) => {
             closeSnackbar();
-            enqueueSnackbar({
-              variant: "error",
-            } as unknown as Parameters<typeof enqueueSnackbar>[0]);
+            const msg =
+              (err?.response?.data?.error as string) ??
+              "Une erreur est survenue. Impossible de valider ce document.";
+            enqueueSnackbar(msg, { variant: "error", title: "Validation impossible" });
           });
-      }, 3000);
-      enqueueSnackbar({
-        message: "Validation du document en cours...",
-        action: ({ id }: { id: string | number }) => (
+      }, 1500);
+
+      enqueueSnackbar("Le document est en cours de validation… vous pouvez annuler.", {
+        title: "Validation en cours",
+        action: (id) => (
           <Button
-            color='inherit'
+            color="inherit"
+            size="small"
             onClick={() => {
               cancel();
               window.clearTimeout(timer);
@@ -56,10 +64,10 @@ export default function ValidateForm() {
           </Button>
         ),
         autoHideDuration: null,
-      } as unknown as Parameters<typeof enqueueSnackbar>[0]);
+      });
       setDoc(null);
     },
-    [cancel, closeSnackbar, enqueueSnackbar, refresh, doc]
+    [cancel, closeSnackbar, enqueueSnackbar, refresh, doc, dispatch]
   );
 
   useEffect(() => {

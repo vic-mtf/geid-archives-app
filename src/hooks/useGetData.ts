@@ -23,7 +23,7 @@ export const useGetUrlData = () => {
   const token = useSelector((store: RootState) => (store.user as { token?: string }).token);
   const getUrlData = useCallback(
     ({ token: tk }: { token?: string }) => ({
-      url: `/api/stuff/validate`,
+      url: `/api/stuff/archives`,
       headers: {
         Authorization: `Bearer ${token || tk}`,
       },

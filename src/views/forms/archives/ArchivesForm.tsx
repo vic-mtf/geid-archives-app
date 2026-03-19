@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Button, Typography } from "@mui/material";
+import { Button } from "@mui/material";
 import useAxios from "../../../hooks/useAxios";
 import { useSnackbar } from "notistack";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
-import textStyle from "../../../styles/text.module.css";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "../../../redux/store";
+import { incrementVersion } from "../../../redux/data";
 import FormContent from "./FormContent";
 import React from "react";
 
@@ -17,9 +17,10 @@ interface FileItem {
 export default function ArchivesFrom() {
   const [file, setFile] = useState<FileItem | null>(null);
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
+  const dispatch = useDispatch<AppDispatch>();
   const [, refresh, cancel] = useAxios(
     {
-      url: "api/stuff/archives/",
+      url: "/api/stuff/archives",
       method: "post",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -71,69 +72,36 @@ export default function ArchivesFrom() {
         refresh({ data })
           .then(() => {
             closeSnackbar();
-            enqueueSnackbar(
-              <Typography>
-                <Typography
-                  title={name}
-                  maxWidth={300}
-                  fontSize={15}
-                  fontWeight='bold'
-                  className={textStyle.monoCrop}
-                  sx={{ p: 0.5 }}>
-                  {name}
-                </Typography>
-                Le fichier a été envoyé au service d'archivage
-              </Typography>,
-              { variant: "success" }
-            );
+            dispatch(incrementVersion());
+            enqueueSnackbar(`"${name}" a bien été transmis au service d'archivage.`, {
+              variant: "success",
+              title: "Fichier envoyé !",
+            });
           })
           .catch(() => {
             closeSnackbar();
             enqueueSnackbar(
-              <Typography>
-                <Typography
-                  title={name}
-                  maxWidth={300}
-                  fontSize={15}
-                  fontWeight='bold'
-                  className={textStyle.monoCrop}
-                  sx={{ p: 0.5 }}>
-                  {name}
-                </Typography>
-                Impossible de soumettre ce fichier !
-              </Typography>,
-              { variant: "error" }
+              `Le transfert de "${name}" a échoué. Vérifiez votre connexion et réessayez.`,
+              { variant: "error", title: "Erreur de transfert" }
             );
           });
       }, 3000);
-      enqueueSnackbar(
-        <Typography>
-          <Typography
-            title={name}
-            maxWidth={300}
-            fontSize={15}
-            fontWeight='bold'
-            className={textStyle.monoCrop}
-            sx={{ p: 0.5 }}>
-            {name}
-          </Typography>
-          Transfert du fichier au service d'archivage en cours...
-        </Typography>,
-        {
-          action: (id) => (
-            <Button
-              children='Annuler'
-              color='inherit'
-              onClick={() => {
-                cancel();
-                window.clearTimeout(timer);
-                closeSnackbar(id);
-              }}
-            />
-          ),
-          autoHideDuration: null,
-        }
-      );
+      enqueueSnackbar("Préparation et envoi en cours… vous pouvez annuler.", {
+        title: `Envoi de "${name}"`,
+        action: (id) => (
+          <Button
+            children="Annuler"
+            color="inherit"
+            size="small"
+            onClick={() => {
+              cancel();
+              window.clearTimeout(timer);
+              closeSnackbar(id);
+            }}
+          />
+        ),
+        autoHideDuration: null,
+      });
       setFile(null);
     }
   };

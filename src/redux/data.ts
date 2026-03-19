@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import deepMerge from "../utils/deepMerge";
-import type { DataSliceState } from "../types";
+import type { DataSliceState, NavigationState } from "../types";
+
+// Deep partial: each nested object can also be partially provided (deepMerge handles the merge at runtime)
+type DataSliceUpdate = Partial<Omit<DataSliceState, "navigation">> & {
+  navigation?: Partial<NavigationState>;
+};
 
 const initialState: DataSliceState = {
   loaded: false,
@@ -15,13 +20,14 @@ const initialState: DataSliceState = {
       selectedElements: [],
     },
   },
+  dataVersion: 0,
 };
 
 const data = createSlice({
   name: "data",
   initialState,
   reducers: {
-    updateData(state, actions: PayloadAction<{ data: Partial<DataSliceState> }>) {
+    updateData(state, actions: PayloadAction<{ data: DataSliceUpdate }>) {
       const { data } = actions.payload;
       const states = deepMerge(state as unknown as Record<string, unknown>, data as unknown as Record<string, unknown>) as unknown as DataSliceState;
       (Object.keys(states) as (keyof DataSliceState)[]).forEach((key) => {
@@ -34,8 +40,12 @@ const data = createSlice({
         delete state[key];
       });
     },
+    // Incrémente le compteur pour signaler aux composants de refetch leurs données
+    incrementVersion(state) {
+      state.dataVersion = (state.dataVersion ?? 0) + 1;
+    },
   },
 });
 
-export const { updateData, removeData } = data.actions;
+export const { updateData, removeData, incrementVersion } = data.actions;
 export default data.reducer;
