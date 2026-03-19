@@ -1,9 +1,6 @@
 import React, { useMemo } from "react";
 import { SnackbarContent, SnackbarProvider, SnackbarProviderProps } from "notistack";
 import {
-  Alert,
-  AlertTitle,
-  SnackbarContent as MuiSnackbarContent,
   Box,
   SxProps,
   Theme,
@@ -53,6 +50,7 @@ const variantBorderColor: Record<SnackbarVariant, string> = {
 
 const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((props, ref) => {
   const {
+    id,
     icon,
     title,
     action,
@@ -68,21 +66,14 @@ const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((pr
 
   const resolvedMessage = typeof message === "function" ? message(props) : message;
 
-  const children = useMemo(
-    () => (
-      <>
-        {title && <AlertTitle sx={{ fontWeight: 700, mb: 0.25, fontSize: "0.85rem" }}>{title}</AlertTitle>}
-        <span style={{ fontSize: "0.82rem", lineHeight: 1.5 }}>{resolvedMessage}</span>
-      </>
-    ),
+  // L'action reçoit le snackbar key (id) — compatibilité avec notistack
+  const resolvedAction = useMemo(
+    () => (typeof action === "function" ? action(id as unknown as ReportCompleteProps) : action),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [title, resolvedMessage]
+    [action, id]
   );
 
-  const snackbarProps = useMemo(
-    () => (variant === "default" ? { message: children } : { children }),
-    [children, variant]
-  );
+  const borderColor = variantBorderColor[variant];
 
   return (
     <Box
@@ -90,57 +81,67 @@ const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((pr
       component={SnackbarContent}
       ref={ref}
       sx={{
-        // Pas de shadow sur le wrapper notistack (coupée par son container overflow:hidden)
-        // La shadow est portée par l'inner Box
         boxShadow: "none",
         borderRadius: 0,
-        p: "3px",                          // marge interne pour que la shadow ne soit pas coupée
+        p: "3px",
         bgcolor: "transparent",
-        minWidth: { xs: "calc(100vw - 32px)", sm: 320 },
-        maxWidth: { xs: "calc(100vw - 32px)", sm: 420 },
-        "& .MuiSnackbarContent-root": {
-          boxShadow: "none",
-          borderRadius: 0,
-          bgcolor: "transparent",
-          p: 0,
-        },
-        "& .MuiSnackbarContent-message": {
-          p: 0,
-          width: "100%",
-        },
+        minWidth: { xs: "calc(100vw - 32px)", sm: 300 },
+        maxWidth: { xs: "calc(100vw - 32px)", sm: 400 },
+        "& .MuiSnackbarContent-root": { boxShadow: "none", borderRadius: 0, bgcolor: "transparent", p: 0 },
+        "& .MuiSnackbarContent-message": { p: 0, width: "100%" },
       }}
       {...otherProps}>
 
-      {/* Inner card avec shadow contenue */}
+      {/* Inner card */}
       <Box
         sx={{
           boxShadow: "0 2px 10px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
           borderRadius: 1.5,
           overflow: "hidden",
-          borderLeft: variant !== "default" ? `3px solid ${variantBorderColor[variant]}` : "none",
+          borderLeft: variant !== "default" ? `3px solid ${borderColor}` : "none",
           bgcolor: "background.paper",
         }}>
-        <Box
-          component={variant === "default" ? MuiSnackbarContent : Alert}
-          {...snackbarProps}
-          severity={variant === "default" ? undefined : variant}
-          action={
-            typeof action === "function"
-              ? action({ ...props, persist, anchorOrigin, autoHideDuration, iconVariant })
-              : action
-          }
-          icon={hideIconVariant === true ? false : icon}
-          sx={{
-            borderRadius: 0,
-            alignItems: "flex-start",
-            bgcolor: "background.paper",
-            color: "text.primary",
-            fontSize: "0.82rem",
-            "& .MuiAlert-action": { pt: 0.5 },
-            "& .MuiSnackbarContent-root": { bgcolor: "background.paper", p: "10px 16px" },
-            "& .MuiSnackbarContent-message": { p: 0 },
-          }}
-        />
+
+        {/* Zone texte */}
+        <Box sx={{ px: 2, pt: 1.5, pb: resolvedAction ? 0.75 : 1.5 }}>
+          {/* Icône + titre */}
+          {variant !== "default" && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: title ? 0.4 : 0 }}>
+              {hideIconVariant !== true && icon && (
+                <Box sx={{ color: borderColor, display: "flex", flexShrink: 0, fontSize: "1.1rem" }}>
+                  {icon}
+                </Box>
+              )}
+              {title && (
+                <Box sx={{ fontWeight: 700, fontSize: "0.84rem", color: "text.primary", lineHeight: 1.3 }}>
+                  {title}
+                </Box>
+              )}
+            </Box>
+          )}
+          {/* Message */}
+          {resolvedMessage && (
+            <Box sx={{ fontSize: "0.82rem", color: "text.secondary", lineHeight: 1.55, mt: variant !== "default" && title ? 0.2 : 0 }}>
+              {resolvedMessage}
+            </Box>
+          )}
+        </Box>
+
+        {/* Zone action : bouton pleine largeur sous le texte */}
+        {resolvedAction && (
+          <Box
+            sx={{
+              px: 1.5,
+              pb: 1.25,
+              pt: 0.25,
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 1,
+              "& .MuiButton-root": { fontSize: "0.78rem" },
+            }}>
+            {resolvedAction}
+          </Box>
+        )}
       </Box>
     </Box>
   );
