@@ -12,9 +12,8 @@ export default function Content() {
       <Toolbar variant='dense' />
       <UnderHeader />
       <MuiBox
-        overflow='hidden'
+        overflow='auto'
         display='flex'
-        flexShrink={0}
         flex={1}
         sx={{ pb: isMobile ? "56px" : 0 }}>
         <DisplayData />
