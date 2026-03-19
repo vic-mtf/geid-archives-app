@@ -19,6 +19,10 @@ interface DocType {
   subtypes?: Array<{ name: string }>;
 }
 
+// L'API peut renvoyer soit string[], soit DocType[]
+type DocTypeEntry = string | DocType;
+const toName = (d: DocTypeEntry): string => (typeof d === "string" ? d : d.name);
+
 interface TypologyValues {
   type: string | null;
   subType: string | null;
@@ -40,14 +44,14 @@ export default function Typology({
   externalSubTypeError,
 }: TypologyProps) {
   const docTypes = useSelector(
-    (store: RootState) => (store.user as Record<string, unknown>).docTypes as DocType[] | undefined
+    (store: RootState) => (store.user as Record<string, unknown>).docTypes as DocTypeEntry[] | undefined
   ) ?? [];
 
   const [values, setValues] = useState<TypologyValues>({
     type: null,
     subType: null,
-    types: docTypes?.map(({ name }) => name) ?? [],
-    subTypes: docTypes[0]?.subtypes?.map(({ name }) => name) ?? [],
+    types: docTypes.map(toName).filter(Boolean),
+    subTypes: typeof docTypes[0] !== "string" ? (docTypes[0] as DocType)?.subtypes?.map(({ name }) => name) ?? [] : [],
   });
 
   const typeEmptyError = useMemo(
@@ -62,8 +66,8 @@ export default function Typology({
   );
 
   const handleType = (_event: React.SyntheticEvent, selectedType: string | null) => {
-    const subTypes =
-      docTypes?.find(({ name }) => name === selectedType)?.subtypes?.map(({ name }) => name) ?? [];
+    const found = docTypes.find((d) => toName(d) === selectedType);
+    const subTypes = typeof found !== "string" ? (found as DocType)?.subtypes?.map(({ name }) => name) ?? [] : [];
     setValues({ ...values, type: selectedType, subType: null, subTypes });
   };
 
