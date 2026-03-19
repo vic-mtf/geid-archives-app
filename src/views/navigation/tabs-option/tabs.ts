@@ -18,17 +18,17 @@ const tabs: Tab[] = [
     id: "dashboard",
   },
   {
-    label: "Archivage",
+    label: "Archivage physique",
     icon: AccountBalanceOutlinedIcon,
     id: "physicalArchive",
   },
   {
-    label: "Gestion",
+    label: "Archives validées",
     icon: ManageHistoryIcon,
     id: "archiveManager",
   },
   {
-    label: "Archives",
+    label: "À valider",
     icon: Inventory2OutlinedIcon,
     id: "archiveService",
   },
