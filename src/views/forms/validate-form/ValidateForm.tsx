@@ -29,43 +29,45 @@ export default function ValidateForm() {
         id: doc,
       };
 
+      const pendingKey = enqueueSnackbar(
+        "Le document est en cours de validation… vous pouvez annuler.",
+        {
+          title: "Validation en cours",
+          action: (id) => (
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => {
+                cancel();
+                window.clearTimeout(timer);
+                closeSnackbar(id);
+              }}>
+              Annuler
+            </Button>
+          ),
+          autoHideDuration: null,
+        }
+      );
+      setDoc(null);
+
       const timer = window.setTimeout(() => {
         refresh({ data })
           .then(() => {
-            closeSnackbar();
+            closeSnackbar(pendingKey);
             dispatch(incrementVersion());
             enqueueSnackbar("Le document a été validé avec succès.", {
               variant: "success",
               title: "Validation réussie !",
             });
-            setDoc(null);
           })
           .catch((err) => {
-            closeSnackbar();
+            closeSnackbar(pendingKey);
             const msg =
               (err?.response?.data?.error as string) ??
               "Une erreur est survenue. Impossible de valider ce document.";
             enqueueSnackbar(msg, { variant: "error", title: "Validation impossible" });
           });
       }, 1500);
-
-      enqueueSnackbar("Le document est en cours de validation… vous pouvez annuler.", {
-        title: "Validation en cours",
-        action: (id) => (
-          <Button
-            color="inherit"
-            size="small"
-            onClick={() => {
-              cancel();
-              window.clearTimeout(timer);
-              closeSnackbar(id);
-            }}>
-            Annuler
-          </Button>
-        ),
-        autoHideDuration: null,
-      });
-      setDoc(null);
     },
     [cancel, closeSnackbar, enqueueSnackbar, refresh, doc, dispatch]
   );
