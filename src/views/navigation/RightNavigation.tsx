@@ -1,17 +1,23 @@
 import { Toolbar, Box as MuiBox, Divider, Typography } from "@mui/material";
 import TreeArchiveManagementView from "./tree-data-view/TreeArchiveManagementView";
 import SearchInput from "../../components/SearchInput";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../redux/store";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "../../redux/store";
 import TabsOption from "./tabs-option/TabsOption";
 import NavigationMenuButton from "./NavigationMenuButton";
 import CustomDrawer from "./CustomDrawer";
+import { useCallback } from "react";
+import { updateData } from "../../redux/data";
 
 export default function RightNavigation() {
   const open = useSelector((store: RootState) => store.data.navigation.openRight);
+  const dispatch = useDispatch<AppDispatch>();
+  const handleClose = useCallback(() => {
+    dispatch(updateData({ data: { navigation: { openRight: false } } }));
+  }, [dispatch]);
 
   return (
-    <CustomDrawer open={open} direction='right'>
+    <CustomDrawer open={open} direction='right' onClose={handleClose}>
       <Toolbar variant='dense' />
       <Toolbar variant='dense'>
         <NavigationMenuButton direction='right' />

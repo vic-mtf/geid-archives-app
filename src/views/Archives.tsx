@@ -3,6 +3,7 @@ import Header from "./header/Header";
 import Content from "./content/Content";
 import Navigation from "./navigation/Navigation";
 import Forms from "./forms/Forms";
+import MobileBottomNav from "./navigation/MobileBottomNav";
 
 export default function Archives() {
   return (
@@ -13,6 +14,7 @@ export default function Archives() {
         <Navigation />
         <Content />
       </MuiBox>
+      <MobileBottomNav />
       <Forms />
     </>
   );

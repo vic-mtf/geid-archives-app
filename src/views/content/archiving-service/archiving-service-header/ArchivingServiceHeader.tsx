@@ -1,18 +1,20 @@
 import React from "react";
-import { Toolbar } from "@mui/material";
-// import {
-//   GridToolbarColumnsButton,
-//   GridToolbarFilterButton,
-// } from "@mui/x-data-grid-pro";
+import { Button, Toolbar } from "@mui/material";
 import {
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
 import NavigationMenuButton from "../../../navigation/NavigationMenuButton";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const ArchivingServiceHeader = React.memo(() => {
+  const handleAdd = () => {
+    const event = new CustomEvent("_open_archives_form", { detail: { file: { name: "Nouvelle archive" } } });
+    document.getElementById("root")?.dispatchEvent(event);
+  };
+
   return (
-    <Toolbar sx={{ gap: 2 }}>
+    <Toolbar sx={{ gap: 1, flexWrap: "wrap", py: 1 }}>
       <NavigationMenuButton
         hide
         IconProps={{ sx: { transform: "rotate(-180deg)" } }}
@@ -28,6 +30,15 @@ const ArchivingServiceHeader = React.memo(() => {
           button: { variant: "outlined", color: "inherit", size: "medium" },
         }}
       />
+
+      <Button
+        variant="contained"
+        size="small"
+        startIcon={<AddRoundedIcon />}
+        onClick={handleAdd}
+        sx={{ ml: "auto" }}>
+        Ajouter
+      </Button>
     </Toolbar>
   );
 });

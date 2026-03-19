@@ -127,6 +127,7 @@ export interface DataSliceState {
   docs: ArchiveDocument[];
   dialog: DialogState;
   navigation: NavigationState;
+  dataVersion: number;
 }
 
 export interface RootState {
@@ -180,3 +181,29 @@ export interface ArchiveFormValues {
 // ============================================================
 export type ThemeMode = "light" | "dark" | "auto";
 export type DisplayMode = "grid" | "list" | "table";
+
+// ── Re-export API types ─────────────────────────────────────
+export type {
+  ApiError,
+  ApiUser,
+  Privilege,
+  LoginBody,
+  SignupBody,
+  LoginResponse,
+  Role,
+  Container,
+  ContainerBody,
+  Shelf,
+  ShelfBody,
+  Floor,
+  FloorBody,
+  Binder,
+  BinderBody,
+  PhysicalRecord,
+  RecordBody,
+  Archive,
+  Workspace,
+  Book,
+  Film,
+  Image as ApiImage,
+} from "./api";

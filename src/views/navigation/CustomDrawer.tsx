@@ -1,32 +1,46 @@
-import { Drawer } from "@mui/material";
+import { Drawer, useMediaQuery, useTheme } from "@mui/material";
 import { ReactNode } from "react";
 
-export const drawerWidth = 350;
+export const drawerWidth = 280;
 
 interface CustomDrawerProps {
   direction?: "left" | "right";
   open?: boolean;
   children?: ReactNode;
+  onClose?: () => void;
+  /** Sur desktop, force l'ouverture permanente (sidebar principale uniquement) */
+  alwaysOpenOnDesktop?: boolean;
 }
 
 export default function CustomDrawer({
   direction = "left",
   open = false,
   children = null,
+  onClose,
+  alwaysOpenOnDesktop = false,
 }: CustomDrawerProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const actualOpen = !isMobile && alwaysOpenOnDesktop ? true : open;
+
   return (
     <Drawer
-      variant='persistent'
-      open={open}
+      variant={isMobile ? "temporary" : "persistent"}
+      open={actualOpen}
       anchor={direction}
+      onClose={onClose}
+      ModalProps={{ keepMounted: true }}
       sx={{
-        width: drawerWidth,
+        width: !isMobile && alwaysOpenOnDesktop ? drawerWidth : 0,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: drawerWidth,
+          width: isMobile ? "100vw" : drawerWidth,
           boxSizing: "border-box",
-          background: "none",
+          bgcolor: "background.paper",
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         },
       }}>
       {children}

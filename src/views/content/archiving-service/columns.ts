@@ -1,88 +1,79 @@
 import { GridColDef } from "@mui/x-data-grid";
+import { createElement } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
+import Chip from "@mui/material/Chip";
+import Button from "@mui/material/Button";
+
+const openValidateForm = (id: string) => {
+  const event = new CustomEvent("__validate_archive_doc", {
+    detail: { doc: id, name: "__validate_archive_doc" },
+  });
+  document.getElementById("root")?.dispatchEvent(event);
+};
 
 const columns: GridColDef[] = [
   {
-    field: "administrativeUnit",
-    headerName: "Local",
-    // description: "This column has a value getter and is not sortable.",
-    width: 220,
-    sortable: false,
-    type: "string",
-  },
-  {
-    field: "tags",
-    headerName: "Étagère/Rayon",
-    type: "string",
-    width: 200,
-    editable: false,
-    valueFormatter: (params: unknown) => (params as string[]).join(", "),
-  },
-  {
-    field: "refNumber",
-    headerName: "Étage/Palier",
-    // description: "This column has a value getter and is not sortable.",
-    width: 220,
-    sortable: false,
-    type: "string",
-  },
-  {
-    field: "classNumber",
-    headerName: "Classeur",
-
-    width: 200,
-    sortable: false,
-    type: "string",
-  },
-  {
-    field: "folder",
-    headerName: "Dossier",
-    type: "string",
-    width: 200,
-    editable: false,
-    valueFormatter: (obj: unknown) => (obj as { name?: string })?.name,
-  },
-  {
     field: "designation",
     headerName: "Désignation",
-    width: 300,
-    editable: false,
-    type: "string",
+    flex: 1,
+    minWidth: 220,
   },
-
   {
     field: "type",
     headerName: "Type de document",
-    type: "string",
+    width: 180,
+  },
+  {
+    field: "classNumber",
+    headerName: "N° classement",
+    width: 150,
+  },
+  {
+    field: "refNumber",
+    headerName: "N° référence",
+    width: 150,
+  },
+  {
+    field: "description",
+    headerName: "Description",
+    width: 280,
+  },
+  {
+    field: "validated",
+    headerName: "Statut",
+    width: 130,
+    renderCell: (params) =>
+      createElement(Chip, {
+        label: params.value ? "Validé" : "En attente",
+        color: (params.value ? "success" : "warning") as "success" | "warning",
+        size: "small",
+        variant: "outlined",
+      }),
   },
   {
     field: "createdAt",
     headerName: "Date",
     type: "dateTime",
-  },
-
-  {
-    field: "_id",
-    headerName: "Codification",
-    // description: "This column has a value getter and is not sortable.",
-    width: 220,
-    sortable: false,
-    type: "string",
+    width: 160,
   },
   {
-    field: "description",
-    headerName: "Déscription",
-    width: 350,
+    field: "__validate__",
+    headerName: "",
+    width: 100,
     sortable: false,
-    type: "string",
+    filterable: false,
+    renderCell: (params) =>
+      createElement(Button, {
+        size: "small",
+        variant: "outlined",
+        color: "primary",
+        onClick: (e: ReactMouseEvent<HTMLButtonElement>) => {
+          e.stopPropagation();
+          openValidateForm(params.row._id as string);
+        },
+        children: "Valider",
+      }),
   },
-  // {
-  //   field: "tags",
-  //   headerName: "Mot clé",
-  //   type: "array",
-  //   width: 200,
-  //   editable: false,
-  //   valueFormatter: (params) => params.join(", "),
-  // },
 ];
 
 export default columns;

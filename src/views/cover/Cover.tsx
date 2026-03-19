@@ -5,7 +5,6 @@ import {
   CardMedia,
   Stack,
   Box as MuiBox,
-  CircularProgress,
   Divider,
   Typography,
 } from "@mui/material";
@@ -15,10 +14,8 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "../../redux/store";
 import openSignIn from "./openSignIn";
 import channels from "../../utils/channels";
-import useGetData from "../../hooks/useGetData";
 import { decrypt } from "../../utils/crypt";
 import { updateUser } from "../../redux/user";
-import { updateData } from "../../redux/data";
 
 interface CoverProps {
   setOpened: (opened: boolean) => void;
@@ -26,19 +23,12 @@ interface CoverProps {
 
 export default function Cover({ setOpened }: CoverProps) {
   const connected = useSelector((store: RootState) => store.user.connected);
-
   const dispatch = useDispatch<AppDispatch>();
-  const [loading, getData] = useGetData({
-    onBeforeUpdate(docs: unknown) {
-      setOpened(true);
-      dispatch(updateData({ data: { docs: docs as import("../../types").ArchiveDocument[] } }));
-    },
-  });
 
   const handleFinish = useCallback(() => {
-    if (connected) getData();
+    if (connected) setOpened(true);
     else openSignIn();
-  }, [connected, getData]);
+  }, [connected, setOpened]);
 
   useEffect(() => {
     const handleLogin = (event: MessageEvent) => {
@@ -49,14 +39,14 @@ export default function Cover({ setOpened }: CoverProps) {
           ...decrypted,
         };
         dispatch(updateUser({ data: data as unknown as import("../../types").UserSliceState }));
-        getData({ urlProps: { token: data?.token as string | undefined } });
+        setOpened(true);
       }
     };
     SIGN_IN_CHANNEL.addEventListener("message", handleLogin);
     return () => {
       SIGN_IN_CHANNEL.removeEventListener("message", handleLogin);
     };
-  }, [dispatch, setOpened, getData]);
+  }, [dispatch, setOpened]);
 
   return (
     <Box
@@ -92,8 +82,9 @@ export default function Cover({ setOpened }: CoverProps) {
           position='relative'>
           <Stack
             spacing={1}
-            direction='row'
-            width={500}
+            direction={{ xs: "column", sm: "row" }}
+            maxWidth={500}
+            width='100%'
             my={1}
             divider={
               <Divider
@@ -102,26 +93,18 @@ export default function Cover({ setOpened }: CoverProps) {
                 sx={{
                   bgcolor: "text.primary",
                   borderWidth: 1,
+                  display: { xs: "none", sm: "block" },
                 }}
               />
             }
             display='flex'
-            justifyContent='center'>
-            <CardMedia component='img' src={_logo_geid} sx={{ width: 120 }} />
+            justifyContent='center'
+            alignItems='center'>
+            <CardMedia component='img' src={_logo_geid} sx={{ width: { xs: 80, sm: 120 } }} />
             <Typography noWrap variant='h4' color='text.primary'>
               Archives
             </Typography>
           </Stack>
-          {loading && (
-            <CircularProgress
-              size={15}
-              sx={{
-                position: "absolute",
-                top: "150%",
-                color: "text.primary",
-              }}
-            />
-          )}
         </MuiBox>
       </Stack>
       <Typography variant='caption' paragraph color='text.primary'>
