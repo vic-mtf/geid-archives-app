@@ -8,7 +8,11 @@ import {
   Stack,
   TextField,
   Typography,
+  InputAdornment,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -82,22 +86,24 @@ export default function ArchiveEditForm() {
         ? (data.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean)
         : [],
     };
-    const snackKey = enqueueSnackbar(
-      <Typography>Modification en cours…</Typography>,
-      { autoHideDuration: null }
-    );
+    const snackKey = enqueueSnackbar("Enregistrement des modifications en cours…", {
+      autoHideDuration: null,
+    });
     try {
       await execute({ url: `/api/stuff/archives/${doc._id ?? doc.id}`, data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar(<Typography>Archive modifiée avec succès</Typography>, { variant: "success" });
+      enqueueSnackbar("Les informations ont été mises à jour avec succès.", {
+        variant: "success",
+        title: "Modifié !",
+      });
       dispatch(incrementVersion());
       handleClose();
     } catch (err: unknown) {
       closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        "Une erreur est survenue";
-      enqueueSnackbar(<Typography>{msg}</Typography>, { variant: "error" });
+        "Impossible d'enregistrer les modifications. Vérifiez votre connexion et réessayez.";
+      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
     }
   };
 
@@ -119,8 +125,23 @@ export default function ArchiveEditForm() {
               {...register("designation")}
               label="Désignation *"
               fullWidth
+              placeholder="Ex : Rapport annuel RH 2024"
               error={!!errors.designation}
-              helperText={errors.designation?.message as string}
+              helperText={
+                (errors.designation?.message as string) ||
+                "Titre principal du document, tel qu'il apparaîtra dans la liste des archives"
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Tooltip title="Voir le guide : Modifier une archive" placement="top">
+                      <IconButton size="small" tabIndex={-1} sx={{ color: "text.disabled" }}>
+                        <HelpOutlineIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </InputAdornment>
+                ),
+              }}
             />
             <TextField
               {...register("description")}
@@ -128,14 +149,19 @@ export default function ArchiveEditForm() {
               fullWidth
               multiline
               rows={3}
+              placeholder="Décrivez le contenu et l'objet du document…"
               error={!!errors.description}
-              helperText={errors.description?.message as string}
+              helperText={
+                (errors.description?.message as string) ||
+                "Résumé du contenu — utilisé pour la recherche et l'identification du document"
+              }
             />
             <TextField
               {...register("tags")}
-              label="Mots-clés (séparés par des virgules)"
+              label="Mots-clés"
               fullWidth
-              helperText="Ex : rapport, finance, 2024"
+              placeholder="rapport, finance, 2024, contrat"
+              helperText="Termes séparés par des virgules facilitant la recherche (ex : rapport, RH, 2024)"
             />
           </Stack>
         </DialogContent>

@@ -5,10 +5,8 @@ import {
   AlertTitle,
   SnackbarContent as MuiSnackbarContent,
   Box,
-  alpha,
   SxProps,
   Theme,
-  Typography,
 } from "@mui/material";
 
 // Permet de passer `title` dans les options de enqueueSnackbar
@@ -44,6 +42,15 @@ interface ReportCompleteProps {
   autoHideDuration?: number;
 }
 
+// Couleurs de bordure gauche par variante
+const variantBorderColor: Record<SnackbarVariant, string> = {
+  success: "#4caf50",
+  error:   "#f44336",
+  warning: "#ff9800",
+  info:    "#2196f3",
+  default: "transparent",
+};
+
 const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((props, ref) => {
   const {
     icon,
@@ -59,17 +66,17 @@ const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((pr
     ...otherProps
   } = props;
 
+  const resolvedMessage = typeof message === "function" ? message(props) : message;
+
   const children = useMemo(
     () => (
       <>
-        {title && <AlertTitle sx={{ fontWeight: 700, mb: 0.25 }}>{title}</AlertTitle>}
-        <Typography variant="body2" component="span" sx={{ lineHeight: 1.5 }}>
-          {typeof message === "function" ? message(props) : message}
-        </Typography>
+        {title && <AlertTitle sx={{ fontWeight: 700, mb: 0.25, fontSize: "0.85rem" }}>{title}</AlertTitle>}
+        <span style={{ fontSize: "0.82rem", lineHeight: 1.5 }}>{resolvedMessage}</span>
       </>
     ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [title, message]
+    [title, resolvedMessage]
   );
 
   const snackbarProps = useMemo(
@@ -83,46 +90,58 @@ const ReportComplete = React.forwardRef<HTMLDivElement, ReportCompleteProps>((pr
       component={SnackbarContent}
       ref={ref}
       sx={{
-        boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
-        borderRadius: 2,
-        overflow: "hidden",
+        // Pas de shadow sur le wrapper notistack (coupée par son container overflow:hidden)
+        // La shadow est portée par l'inner Box
+        boxShadow: "none",
+        borderRadius: 0,
+        p: "3px",                          // marge interne pour que la shadow ne soit pas coupée
+        bgcolor: "transparent",
         minWidth: { xs: "calc(100vw - 32px)", sm: 320 },
-        maxWidth: { xs: "calc(100vw - 32px)", sm: 400 },
+        maxWidth: { xs: "calc(100vw - 32px)", sm: 420 },
         "& .MuiSnackbarContent-root": {
-          bgcolor: "background.paper",
-          backgroundImage: (theme: Theme) => {
-            const color = alpha(theme.palette.common.white, theme.palette.action.activatedOpacity);
-            return `linear-gradient(${color}, ${color})`;
-          },
-          color: "text.primary",
-          borderRadius: 2,
+          boxShadow: "none",
+          borderRadius: 0,
+          bgcolor: "transparent",
           p: 0,
         },
         "& .MuiSnackbarContent-message": {
-          color: "text.secondary",
-          width: "100%",
           p: 0,
-        },
-        "& .MuiAlert-root": {
-          borderRadius: 2,
-          alignItems: "flex-start",
-        },
-        "& .MuiAlert-action": {
-          pt: 0.5,
+          width: "100%",
         },
       }}
       {...otherProps}>
+
+      {/* Inner card avec shadow contenue */}
       <Box
-        component={variant === "default" ? MuiSnackbarContent : Alert}
-        {...snackbarProps}
-        severity={variant === "default" ? undefined : variant}
-        action={
-          typeof action === "function"
-            ? action({ ...props, persist, anchorOrigin, autoHideDuration, iconVariant })
-            : action
-        }
-        icon={hideIconVariant === true ? false : icon}
-      />
+        sx={{
+          boxShadow: "0 2px 10px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+          borderRadius: 1.5,
+          overflow: "hidden",
+          borderLeft: variant !== "default" ? `3px solid ${variantBorderColor[variant]}` : "none",
+          bgcolor: "background.paper",
+        }}>
+        <Box
+          component={variant === "default" ? MuiSnackbarContent : Alert}
+          {...snackbarProps}
+          severity={variant === "default" ? undefined : variant}
+          action={
+            typeof action === "function"
+              ? action({ ...props, persist, anchorOrigin, autoHideDuration, iconVariant })
+              : action
+          }
+          icon={hideIconVariant === true ? false : icon}
+          sx={{
+            borderRadius: 0,
+            alignItems: "flex-start",
+            bgcolor: "background.paper",
+            color: "text.primary",
+            fontSize: "0.82rem",
+            "& .MuiAlert-action": { pt: 0.5 },
+            "& .MuiSnackbarContent-root": { bgcolor: "background.paper", p: "10px 16px" },
+            "& .MuiSnackbarContent-message": { p: 0 },
+          }}
+        />
+      </Box>
     </Box>
   );
 });
@@ -146,7 +165,7 @@ export default function NoticeStackProvider({ children, ...otherProps }: NoticeS
     <SnackbarProvider
       maxSnack={5}
       autoHideDuration={5000}
-      anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       Components={Components as SnackbarProviderProps["Components"]}
       {...otherProps}>
       {children}

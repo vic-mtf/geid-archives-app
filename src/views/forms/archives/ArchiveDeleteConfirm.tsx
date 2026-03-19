@@ -7,6 +7,7 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
+// Typography est utilisé dans le corps du Dialog
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
@@ -39,25 +40,27 @@ export default function ArchiveDeleteConfirm() {
   const handleClose = () => setIds([]);
 
   const handleConfirm = async () => {
-    const key = enqueueSnackbar(
-      <Typography>Suppression en cours…</Typography>,
-      { autoHideDuration: null }
-    );
+    const count = ids.length;
+    const key = enqueueSnackbar("Suppression en cours, veuillez patienter…", {
+      autoHideDuration: null,
+    });
     try {
-      // Supprime chaque archive en séquence
       await Promise.all(
         ids.map((id) => execute({ url: `/api/stuff/archives/${id}` }))
       );
       enqueueSnackbar(
-        <Typography>
-          {ids.length > 1 ? `${ids.length} archives supprimées` : "Archive supprimée"}
-        </Typography>,
-        { variant: "success" }
+        count > 1
+          ? `Les ${count} archives sélectionnées ont été supprimées.`
+          : "L'archive a été supprimée définitivement.",
+        { variant: "success", title: count > 1 ? "Suppression réussie" : "Supprimé" }
       );
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar(<Typography>Erreur lors de la suppression</Typography>, { variant: "error" });
+      enqueueSnackbar(
+        "La suppression a échoué. Vérifiez votre connexion et réessayez.",
+        { variant: "error", title: "Erreur" }
+      );
     } finally {
       enqueueSnackbar("", { key, persist: false });
     }
