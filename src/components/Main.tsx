@@ -6,13 +6,14 @@ import { styled } from "@mui/material";
  * Main prend le reste via flex:1. Pas de margin manuelle nécessaire.
  */
 const Main = styled("main")({
-  overflow: "hidden",
   flexGrow: 1,
   flexShrink: 1,
   flex: 1,
   minWidth: 0,
+  minHeight: 0,
   display: "flex",
   flexDirection: "column",
+  overflow: "hidden",
 });
 
 export default Main;
