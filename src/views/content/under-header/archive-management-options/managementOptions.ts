@@ -3,6 +3,7 @@ import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import store from "../../../../redux/store";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
@@ -84,6 +85,24 @@ const managementOptions: ManagementOption[] = [
       if (id) {
         document.getElementById("root")?.dispatchEvent(
           new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "pending" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Dossier physique",
+    id: "link-physical",
+    type: "button",
+    icon: FolderOpenOutlinedIcon,
+    activeKeys: ["isOnly"],
+    requiresWrite: true,
+    action() {
+      const state = store.getState();
+      const [id] = state.data.navigation.archiveManagement.selectedElements;
+      const doc = state.data.docs.find((d) => d._id === id || d.id === id);
+      if (doc) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__link_physical_record", { detail: { doc } })
         );
       }
     },
