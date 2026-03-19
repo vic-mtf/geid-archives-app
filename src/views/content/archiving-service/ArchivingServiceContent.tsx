@@ -3,7 +3,9 @@ import useToken from "../../../hooks/useToken";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
-import columns from "./columns";
+import { columnsWithValidate } from "./columns";
+import baseColumns from "./columns";
+import useArchivePermissions from "../../../hooks/useArchivePermissions";
 import ArchivingServiceHeader from "./archiving-service-header/ArchivingServiceHeader";
 import { useEffect, useMemo } from "react";
 import scrollBarSx from "../../../utils/scrollBarSx";
@@ -12,6 +14,8 @@ import type { RootState } from "../../../redux/store";
 
 export default function ArchivingServiceContent() {
   const Authorization = useToken();
+  const { canWrite } = useArchivePermissions();
+  const columns = canWrite ? columnsWithValidate : baseColumns;
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const [{ data, loading }, refetch] = useAxios({
     url: "/api/stuff/validate",

@@ -33,6 +33,8 @@ import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import { useLocation } from "react-router-dom";
 
 // ── Composants internes ──────────────────────────────────────
@@ -180,9 +182,10 @@ export default function HelpContent() {
           { id: "tableau-de-bord", label: "3. Tableau de bord" },
           { id: "a-valider", label: "4. À valider — soumettre et valider des documents" },
           { id: "archives-validees", label: "5. Archives validées — gérer les archives officielles" },
-          { id: "archivage-physique", label: "6. Archivage physique — gestion des espaces de stockage" },
-          { id: "roles-permissions", label: "7. Rôles et permissions" },
-          { id: "glossaire", label: "8. Glossaire complet" },
+          { id: "cycle-de-vie", label: "6. Cycle de vie des documents — transitions et historique" },
+          { id: "archivage-physique", label: "7. Archivage physique — gestion des espaces de stockage" },
+          { id: "roles-permissions", label: "8. Rôles, permissions et visibilité" },
+          { id: "glossaire", label: "9. Glossaire complet" },
         ].map(({ id, label }) => (
           <ListItem key={id} disableGutters sx={{ py: 0.3 }}>
             <ListItemIcon sx={{ minWidth: 20 }}>
@@ -245,10 +248,11 @@ export default function HelpContent() {
       </Desc>
       <Stack spacing={1} mb={2}>
         {[
-          { step: "Soumission", desc: "Un agent (soumetteur) remplit le formulaire d'envoi et joint le fichier numérique. Le document est enregistré avec le statut « En attente »." },
+          { step: "Soumission (En attente)", desc: "Un agent remplit le formulaire d'envoi et joint le fichier numérique. Le document est enregistré avec le statut « En attente » (puce orange)." },
           { step: "Examen", desc: "L'archiviste consulte la liste « À valider » et examine chaque document en attente. Il vérifie la désignation, le type documentaire, la description et le fichier joint." },
-          { step: "Validation", desc: "L'archiviste attribue un numéro de classification (selon le plan de classement officiel) et un numéro de référence. Le statut passe à « Validé »." },
-          { step: "Gestion", desc: "Le document validé est visible dans « Archives validées ». Il peut être modifié (métadonnées), supprimé si nécessaire, ou réexaminé." },
+          { step: "Validation (Validé)", desc: "L'archiviste attribue un numéro de classification officiel et un numéro de référence. Le statut passe à « Validé » (puce verte). Le document est désormais dans les Archives validées." },
+          { step: "Archivage (Archivé)", desc: "Un archiviste peut clôturer le document en le faisant passer au statut « Archivé » (puce bleue). Il est conservé mais ne peut plus être traité comme un document actif." },
+          { step: "Élimination (Éliminé)", desc: "Réservé aux administrateurs. Marque définitivement un document comme éliminé (puce rouge) à l'issue de sa durée d'utilité administrative." },
           { step: "Archivage physique (optionnel)", desc: "Si le document a une version papier, il peut être rattaché à un dossier physique dans un classeur, lui-même rangé dans un étage, une étagère et un conteneur." },
         ].map(({ step, desc }, i) => (
           <Paper key={i} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
@@ -566,24 +570,40 @@ export default function HelpContent() {
         {[
           {
             action: "Valider",
-            cond: "1 seul document sélectionné",
-            desc: "Ouvre le formulaire de validation permettant d'attribuer ou de modifier les numéros de classification et de référence.",
+            cond: "1 seul document · statut « En attente »",
+            access: "Écriture",
+            desc: "Ouvre le formulaire de validation permettant d'attribuer ou de modifier les numéros de classification et de référence. Le document passe au statut « Validé ».",
           },
           {
             action: "Modifier",
-            cond: "1 seul document sélectionné",
-            desc: "Ouvre le formulaire de modification des métadonnées : désignation, description, mots-clés.",
+            cond: "1 seul document",
+            access: "Écriture",
+            desc: "Ouvre le formulaire de modification des métadonnées : désignation, description, mots-clés. Le fichier joint ne peut pas être remplacé.",
+          },
+          {
+            action: "Archiver",
+            cond: "1 seul document · statut « Validé »",
+            access: "Écriture",
+            desc: "Fait passer le document au statut « Archivé » (puce bleue). Le document est clôturé et ne peut plus être revalidé directement — il faut d'abord le rouvrir.",
+          },
+          {
+            action: "Rouvrir",
+            cond: "1 seul document · statut « Validé » ou « Archivé »",
+            access: "Écriture",
+            desc: "Ramène le document au statut « En attente » pour retraitement. Utile en cas d'erreur ou de modification nécessaire après validation.",
           },
           {
             action: "Supprimer",
-            cond: "1 ou plusieurs documents sélectionnés",
-            desc: "Supprime définitivement les archives sélectionnées après confirmation. Le fichier associé est également supprimé du serveur.",
+            cond: "1 ou plusieurs documents",
+            access: "Écriture",
+            desc: "Supprime définitivement les archives sélectionnées. Le fichier associé sur le serveur est également supprimé. Action irréversible.",
           },
-        ].map(({ action, cond, desc }) => (
+        ].map(({ action, cond, access, desc }) => (
           <Paper key={action} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="flex-start" mb={0.5}>
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5} flexWrap="wrap" gap={0.5}>
               <Typography variant="body2" fontWeight={700}>{action}</Typography>
               <Chip label={cond} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
+              <Chip label={access} size="small" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
             </Stack>
             <Typography variant="body2" color="text.secondary">{desc}</Typography>
           </Paper>
@@ -628,12 +648,116 @@ export default function HelpContent() {
       <Divider sx={{ my: 2 }} />
 
       {/* ══════════════════════════════════════════════════
-          6. ARCHIVAGE PHYSIQUE
+          6. CYCLE DE VIE DES DOCUMENTS
+      ════════════════════════════════════════════════════ */}
+      <SectionTitle id="cycle-de-vie">
+        <Stack direction="row" alignItems="center" spacing={1} component="span">
+          <HistoryOutlinedIcon fontSize="small" />
+          <span>6. Cycle de vie des documents</span>
+        </Stack>
+      </SectionTitle>
+      <Desc>
+        GEID Archives gère le cycle de vie complet de chaque document selon les principes modernes
+        de l'archivistique. Chaque document passe par des <strong>états successifs</strong> qui
+        reflètent son stade de traitement et sa durée d'utilité administrative (DUA). Ces transitions
+        sont tracées dans l'historique du document et sont irréversibles une fois validées (sauf
+        retour en arrière explicite via « Rouvrir »).
+      </Desc>
+
+      <SubTitle>6.1 Les quatre statuts</SubTitle>
+      <Stack spacing={1} mb={2}>
+        {[
+          {
+            status: "En attente",
+            color: "warning" as const,
+            desc: "Statut initial d'un document soumis. L'archiviste n'a pas encore examiné ni validé ce document. Il est visible dans l'onglet « À valider ».",
+            transitions: "→ Validé (après validation par un archiviste)",
+          },
+          {
+            status: "Validé",
+            color: "success" as const,
+            desc: "Le document a été examiné et certifié conforme. Un numéro de classification et un numéro de référence lui ont été attribués. Il est actif et pleinement consultable.",
+            transitions: "→ Archivé (clôture) · → En attente (réouverture en cas d'erreur)",
+          },
+          {
+            status: "Archivé",
+            color: "info" as const,
+            desc: "Le document a atteint la fin de sa durée d'utilité courante. Il est conservé pour des raisons réglementaires ou historiques mais n'est plus un document de travail actif.",
+            transitions: "→ Éliminé (administrateur uniquement)",
+          },
+          {
+            status: "Éliminé",
+            color: "error" as const,
+            desc: "Le document a atteint la fin de sa durée d'utilité administrative. Il est marqué comme éliminé. Cette transition est définitive et réservée aux administrateurs.",
+            transitions: "Aucune transition possible — état terminal",
+          },
+        ].map(({ status, color, desc, transitions }) => (
+          <Paper key={status} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+            <Stack direction="row" spacing={1.5} alignItems="flex-start">
+              <Chip label={status} size="small" color={color} variant="outlined" sx={{ mt: 0.2, flexShrink: 0 }} />
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{desc}</Typography>
+                <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block" }}>
+                  Transitions : <em>{transitions}</em>
+                </Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        ))}
+      </Stack>
+
+      <SubTitle>6.2 Tableau des transitions autorisées</SubTitle>
+      <Table size="small" sx={{ mb: 2 }}>
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 700 }}>Depuis</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Vers</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Qui peut le faire</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {[
+            { from: "En attente", to: "Validé",     action: "Valider",  who: "Archiviste (accès écriture)" },
+            { from: "Validé",     to: "Archivé",    action: "Archiver", who: "Archiviste (accès écriture)" },
+            { from: "Validé",     to: "En attente", action: "Rouvrir",  who: "Archiviste (accès écriture)" },
+            { from: "Archivé",    to: "En attente", action: "Rouvrir",  who: "Archiviste (accès écriture)" },
+            { from: "Archivé",    to: "Éliminé",    action: "Éliminer", who: "Administrateur uniquement" },
+          ].map(({ from, to, action, who }, i) => (
+            <TableRow key={i}>
+              <TableCell><Typography variant="body2">{from}</Typography></TableCell>
+              <TableCell><Typography variant="body2">{to}</Typography></TableCell>
+              <TableCell><Typography variant="body2" fontWeight={600}>{action}</Typography></TableCell>
+              <TableCell><Typography variant="body2" color="text.secondary">{who}</Typography></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <SubTitle>6.3 Historique du cycle de vie</SubTitle>
+      <Desc>
+        Chaque transition est enregistrée automatiquement dans l'historique du document avec :
+        la date et l'heure exactes de la transition, l'utilisateur qui a effectué l'action, le
+        statut de départ et le statut d'arrivée, et une note optionnelle justifiant la décision.
+        Cet historique garantit la traçabilité complète des documents et permet de rendre compte
+        des décisions prises sur chaque archive. Il n'est pas modifiable.
+      </Desc>
+      <InfoBox>
+        La suppression physique d'un document (<strong>Supprimer</strong>) efface définitivement
+        l'enregistrement et le fichier associé. Elle est distincte du statut « Éliminé » qui
+        conserve la trace de l'existence du document à des fins d'audit. Préférez le statut
+        « Éliminé » à la suppression pour les documents ayant une valeur probatoire ou historique.
+      </InfoBox>
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* ══════════════════════════════════════════════════
+          7. ARCHIVAGE PHYSIQUE
       ════════════════════════════════════════════════════ */}
       <SectionTitle id="archivage-physique">
         <Stack direction="row" alignItems="center" spacing={1} component="span">
           <AccountBalanceOutlinedIcon fontSize="small" />
-          <span>6. Archivage physique</span>
+          <span>7. Archivage physique</span>
         </Stack>
       </SectionTitle>
       <Desc>
@@ -824,47 +948,132 @@ export default function HelpContent() {
       <Divider sx={{ my: 2 }} />
 
       {/* ══════════════════════════════════════════════════
-          7. RÔLES ET PERMISSIONS
+          8. RÔLES ET PERMISSIONS
       ════════════════════════════════════════════════════ */}
-      <SectionTitle id="roles-permissions">7. Rôles et permissions</SectionTitle>
+      <SectionTitle id="roles-permissions">
+        <Stack direction="row" alignItems="center" spacing={1} component="span">
+          <SecurityOutlinedIcon fontSize="small" />
+          <span>8. Rôles, permissions et visibilité</span>
+        </Stack>
+      </SectionTitle>
       <Desc>
-        L'accès aux fonctionnalités de GEID Archives dépend du rôle et des permissions attribuées
-        à votre compte par l'administrateur du système. Voici un aperçu des accès typiques selon
-        les profils d'utilisateurs :
+        GEID Archives utilise un système d'autorisations granulaires basé sur les
+        <strong> unités administratives</strong> (services, départements) et les
+        <strong> niveaux d'accès</strong> (lecture seule ou lecture/écriture). Ces permissions
+        sont attribuées par l'administrateur du système pour chaque compte utilisateur. Elles
+        déterminent ce que vous voyez dans l'interface et les actions que vous pouvez effectuer.
       </Desc>
+
+      <SubTitle>8.1 Les deux niveaux d'accès</SubTitle>
+      <Stack spacing={1} mb={2}>
+        {[
+          {
+            level: "Lecture seule",
+            color: "info" as const,
+            desc: "Vous pouvez consulter les archives de votre unité administrative. Vous voyez les tableaux et les documents mais aucun bouton de modification n'est affiché. Le bouton « Valider » dans le tableau « À valider » n'est pas visible.",
+          },
+          {
+            level: "Lecture / Écriture",
+            color: "success" as const,
+            desc: "Vous pouvez soumettre, valider, modifier, archiver et supprimer des documents dans les unités administratives pour lesquelles vous avez cet accès. Les boutons d'action sont visibles et actifs selon le statut du document sélectionné.",
+          },
+        ].map(({ level, color, desc }) => (
+          <Paper key={level} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
+              <Chip label={level} size="small" color={color} variant="outlined" />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{desc}</Typography>
+          </Paper>
+        ))}
+      </Stack>
+
+      <SubTitle>8.2 Visibilité selon les unités administratives</SubTitle>
+      <Desc>
+        Vos permissions sont liées à des <strong>unités administratives spécifiques</strong>.
+        Le système filtre automatiquement l'affichage des archives en fonction de ces unités :
+      </Desc>
+      <List dense>
+        {[
+          "Vous ne voyez que les archives appartenant aux unités pour lesquelles vous avez au moins un accès (lecture ou écriture).",
+          "Un document soumis sans unité administrative explicite peut être visible selon la configuration du système.",
+          "Si vous avez des accès sur plusieurs unités, vous voyez les archives de toutes ces unités dans un seul tableau.",
+          "Les actions disponibles (Valider, Modifier, Archiver, etc.) ne s'affichent que si vous avez un accès en écriture sur l'unité du document sélectionné.",
+        ].map((text, i) => (
+          <ListItem key={i} disableGutters>
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <CheckCircleOutlineIcon fontSize="small" color="primary" />
+            </ListItemIcon>
+            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
+          </ListItem>
+        ))}
+      </List>
+
+      <SubTitle>8.3 Profil Administrateur</SubTitle>
+      <Desc>
+        Le profil Administrateur est un niveau d'accès spécial qui dépasse les restrictions
+        par unité administrative. Un administrateur possède les caractéristiques suivantes :
+      </Desc>
+      <List dense>
+        {[
+          "Voit toutes les archives du système, quelle que soit leur unité administrative, sans exception.",
+          "Peut effectuer toutes les opérations (soumettre, valider, modifier, archiver, supprimer) sur n'importe quel document.",
+          "Est le seul à pouvoir effectuer la transition vers le statut « Éliminé » — transition réservée aux administrateurs pour des raisons de conformité réglementaire.",
+          "Voit les boutons d'action pour tous les documents, y compris ceux d'autres services.",
+        ].map((text, i) => (
+          <ListItem key={i} disableGutters>
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <CheckCircleOutlineIcon fontSize="small" color="warning" />
+            </ListItemIcon>
+            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
+          </ListItem>
+        ))}
+      </List>
+
+      <SubTitle>8.4 Tableau récapitulatif des permissions</SubTitle>
       <Table size="small" sx={{ mb: 2 }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Profil</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Ce qu'il peut faire</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Lecture</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Écriture</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Admin</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {[
-            {
-              role: "Agent soumetteur (accès lecture/écriture sur son unité)",
-              actions: "Soumettre des documents, consulter les archives de son unité administrative.",
-            },
-            {
-              role: "Archiviste (accès écriture sur une ou plusieurs unités)",
-              actions: "Soumettre, valider, modifier et supprimer des archives. Gérer l'archivage physique.",
-            },
-            {
-              role: "Administrateur (accès « all »)",
-              actions: "Accès complet à toutes les unités administratives. Toutes les opérations disponibles sur l'ensemble des archives.",
-            },
-          ].map(({ role, actions }) => (
-            <TableRow key={role}>
-              <TableCell><Typography variant="body2" fontWeight={600}>{role}</Typography></TableCell>
-              <TableCell><Typography variant="body2" color="text.secondary">{actions}</Typography></TableCell>
+            { action: "Consulter les archives de son unité",   read: "✓", write: "✓", admin: "✓" },
+            { action: "Consulter toutes les archives",          read: "–", write: "–", admin: "✓" },
+            { action: "Soumettre un document",                  read: "–", write: "✓", admin: "✓" },
+            { action: "Valider un document (En attente → Validé)", read: "–", write: "✓", admin: "✓" },
+            { action: "Modifier les métadonnées",               read: "–", write: "✓", admin: "✓" },
+            { action: "Archiver (Validé → Archivé)",            read: "–", write: "✓", admin: "✓" },
+            { action: "Rouvrir (Validé/Archivé → En attente)", read: "–", write: "✓", admin: "✓" },
+            { action: "Éliminer (Archivé → Éliminé)",           read: "–", write: "–", admin: "✓" },
+            { action: "Supprimer définitivement",               read: "–", write: "✓", admin: "✓" },
+            { action: "Gérer l'archivage physique",             read: "–", write: "✓", admin: "✓" },
+          ].map(({ action, read, write, admin }) => (
+            <TableRow key={action}>
+              <TableCell><Typography variant="body2">{action}</Typography></TableCell>
+              <TableCell sx={{ textAlign: "center" }}>
+                <Typography variant="body2" color={read === "✓" ? "success.main" : "text.disabled"}>{read}</Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: "center" }}>
+                <Typography variant="body2" color={write === "✓" ? "success.main" : "text.disabled"}>{write}</Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: "center" }}>
+                <Typography variant="body2" color={admin === "✓" ? "success.main" : "text.disabled"}>{admin}</Typography>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
       <InfoBox>
         Si vous ne voyez pas certaines archives ou fonctionnalités, contactez votre administrateur
         GEID pour vérifier les permissions associées à votre compte. L'accès aux archives est
-        filtré selon les unités administratives auxquelles vous êtes rattaché.
+        filtré selon les unités administratives auxquelles vous êtes rattaché. Les boutons d'action
+        n'apparaissent dans l'interface que si vous avez les droits nécessaires — si un bouton est
+        absent, c'est intentionnel et lié à vos permissions.
       </InfoBox>
 
       <Divider sx={{ my: 2 }} />
@@ -872,7 +1081,7 @@ export default function HelpContent() {
       {/* ══════════════════════════════════════════════════
           8. GLOSSAIRE
       ════════════════════════════════════════════════════ */}
-      <SectionTitle id="glossaire">8. Glossaire complet</SectionTitle>
+      <SectionTitle id="glossaire">9. Glossaire complet</SectionTitle>
       <Desc>
         Définitions des termes techniques et métier utilisés dans GEID Archives :
       </Desc>
@@ -880,7 +1089,23 @@ export default function HelpContent() {
         {[
           {
             term: "Archive",
-            def: "Document numérique soumis au service d'archivage. Une archive peut être en attente de validation (statut « En attente ») ou officiellement validée (statut « Validé »).",
+            def: "Document numérique soumis au service d'archivage. Une archive passe par plusieurs statuts au cours de son cycle de vie : En attente, Validé, Archivé, ou Éliminé.",
+          },
+          {
+            term: "Cycle de vie",
+            def: "Ensemble des étapes successives qu'un document traverse dans le système : soumission (En attente) → validation (Validé) → clôture (Archivé) → élimination réglementaire (Éliminé). Chaque transition est tracée dans l'historique.",
+          },
+          {
+            term: "DUA (Durée d'Utilité Administrative)",
+            def: "Durée pendant laquelle un document doit être conservé à des fins administratives, légales ou réglementaires. À l'expiration de la DUA, le document peut être éliminé ou versé aux archives définitives.",
+          },
+          {
+            term: "Transition de statut",
+            def: "Changement d'un document d'un statut à un autre dans le cycle de vie. Chaque transition est validée selon des règles strictes et enregistrée dans l'historique avec la date, l'utilisateur et une note optionnelle.",
+          },
+          {
+            term: "Historique du cycle de vie",
+            def: "Journal horodaté de toutes les transitions de statut d'un document. Garantit la traçabilité complète : qui a fait quoi, quand, et pourquoi. Non modifiable.",
           },
           {
             term: "Validation",

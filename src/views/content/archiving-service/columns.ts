@@ -11,7 +11,8 @@ const openValidateForm = (id: string) => {
   document.getElementById("root")?.dispatchEvent(event);
 };
 
-const columns: GridColDef[] = [
+// Colonnes de base (sans le bouton Valider)
+const baseColumns: GridColDef[] = [
   {
     field: "designation",
     headerName: "Désignation",
@@ -76,4 +77,28 @@ const columns: GridColDef[] = [
   },
 ];
 
-export default columns;
+// Colonne Valider (ajoutée uniquement si l'utilisateur a accès en écriture)
+const validateColumn: GridColDef = {
+  field: "__validate__",
+  headerName: "",
+  width: 100,
+  sortable: false,
+  filterable: false,
+  renderCell: (params) =>
+    createElement(Button, {
+      size: "small",
+      variant: "outlined",
+      color: "primary",
+      onClick: (e: ReactMouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        openValidateForm(params.row._id as string);
+      },
+      children: "Valider",
+    }),
+};
+
+/** Colonnes avec bouton Valider (utilisateurs avec accès écriture) */
+export const columnsWithValidate: GridColDef[] = [...baseColumns, validateColumn];
+
+/** Colonnes sans bouton Valider (lecture seule) */
+export default baseColumns;

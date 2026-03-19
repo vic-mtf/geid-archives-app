@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
-import { updateData } from "../../../redux/data";
-import { Box as MuiBox } from "@mui/material";
+import { updateData, incrementVersion } from "../../../redux/data";
+import { Box as MuiBox, Chip } from "@mui/material";
 import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarFilterButton, GridRowSelectionModel } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios from "../../../hooks/useAxios";
@@ -11,43 +11,57 @@ import type { Archive, ArchiveDocument, NavigationState } from "../../../types";
 import scrollBarSx from "../../../utils/scrollBarSx";
 import { Toolbar } from "@mui/material";
 import NavigationMenuButton from "../../navigation/NavigationMenuButton";
+import { useSnackbar } from "notistack";
+
+// ── Chip statut du cycle de vie ──────────────────────────────
+
+type ArchiveStatus = "pending" | "validated" | "archived" | "disposed";
+
+const STATUS_LABEL: Record<ArchiveStatus, string> = {
+  pending:   "En attente",
+  validated: "Validé",
+  archived:  "Archivé",
+  disposed:  "Éliminé",
+};
+const STATUS_COLOR: Record<ArchiveStatus, "warning" | "success" | "info" | "error"> = {
+  pending:   "warning",
+  validated: "success",
+  archived:  "info",
+  disposed:  "error",
+};
+
+function StatusChip({ status, validated }: { status?: string; validated?: boolean }) {
+  const resolved = (status as ArchiveStatus) ?? (validated ? "validated" : "pending");
+  return (
+    <Chip
+      label={STATUS_LABEL[resolved] ?? resolved}
+      color={STATUS_COLOR[resolved] ?? "default"}
+      size="small"
+      variant="outlined"
+    />
+  );
+}
 
 // ── Colonnes du tableau ──────────────────────────────────────
 
 const columns: GridColDef[] = [
+  { field: "designation",  headerName: "Désignation",      flex: 2, minWidth: 200 },
+  { field: "type",         headerName: "Type de document", width: 180 },
+  { field: "classNumber",  headerName: "N° classement",    width: 140 },
+  { field: "refNumber",    headerName: "N° référence",     width: 140 },
+  { field: "description",  headerName: "Description",      flex: 1, minWidth: 130 },
   {
-    field: "designation",
-    headerName: "Désignation",
-    flex: 2,
-    minWidth: 200,
+    field: "status",
+    headerName: "Statut",
+    width: 130,
+    renderCell: (params) => (
+      <StatusChip
+        status={params.row.status as string}
+        validated={params.row.validated as boolean}
+      />
+    ),
   },
-  {
-    field: "type",
-    headerName: "Type de document",
-    width: 180,
-  },
-  {
-    field: "classNumber",
-    headerName: "N° classement",
-    width: 155,
-  },
-  {
-    field: "refNumber",
-    headerName: "N° référence",
-    width: 155,
-  },
-  {
-    field: "description",
-    headerName: "Description",
-    flex: 1,
-    minWidth: 150,
-  },
-  {
-    field: "createdAt",
-    headerName: "Date",
-    type: "dateTime",
-    width: 160,
-  },
+  { field: "createdAt", headerName: "Date", type: "dateTime", width: 155 },
 ];
 
 // ── Toolbar du DataGrid ──────────────────────────────────────
@@ -77,6 +91,7 @@ ArchiveManagementHeader.displayName = "ArchiveManagementHeader";
 export default function ArchiveManagementContent() {
   const Authorization = useToken();
   const dispatch = useDispatch<AppDispatch>();
+  const { enqueueSnackbar } = useSnackbar();
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const selectedElements = useSelector(
     (store: RootState) => store.data.navigation.archiveManagement.selectedElements
@@ -86,6 +101,37 @@ export default function ArchiveManagementContent() {
     url: "/api/stuff/archives/archived",
     headers: { Authorization },
   });
+
+  const [, execLifecycle] = useAxios(
+    { method: "PATCH", headers: { Authorization } },
+    { manual: true }
+  );
+
+  // Écoute l'événement de transition lifecycle déclenché par managementOptions
+  useEffect(() => {
+    const root = document.getElementById("root");
+    const handler = async (e: Event) => {
+      const { id, targetStatus } = (e as CustomEvent).detail as { id: string; targetStatus: string };
+      try {
+        await execLifecycle({
+          url: `/api/stuff/archives/${id}/lifecycle`,
+          data: { targetStatus }
+        });
+        dispatch(incrementVersion());
+        enqueueSnackbar(`Statut mis à jour : ${STATUS_LABEL[targetStatus as ArchiveStatus] ?? targetStatus}.`, {
+          variant: "success",
+          title: "Cycle de vie"
+        });
+      } catch {
+        enqueueSnackbar("Impossible de changer le statut de ce document.", {
+          variant: "error",
+          title: "Erreur"
+        });
+      }
+    };
+    root?.addEventListener("__lifecycle_archive", handler);
+    return () => root?.removeEventListener("__lifecycle_archive", handler);
+  }, [execLifecycle, dispatch, enqueueSnackbar]);
 
   // Alimenter docs dans Redux pour que les actions (modifier, supprimer, valider) fonctionnent
   useEffect(() => {

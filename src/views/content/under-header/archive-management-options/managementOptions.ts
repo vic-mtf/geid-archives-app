@@ -1,16 +1,22 @@
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
-//import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
+import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
+import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
 import store from "../../../../redux/store";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
 
-interface ManagementOption {
+export interface ManagementOption {
   label: string;
   id: string;
   type: "button" | string;
+  /** Clés de activeState qui doivent être vraies pour activer le bouton */
   activeKeys: string[];
+  /** Si true, visible uniquement pour un utilisateur avec accès écriture */
+  requiresWrite?: boolean;
+  /** Si true, visible uniquement pour un administrateur (struct=all) */
+  requiresAdmin?: boolean;
   icon: ComponentType<SvgIconProps>;
   action: () => void;
 }
@@ -20,19 +26,15 @@ const managementOptions: ManagementOption[] = [
     label: "Valider",
     id: "verify",
     type: "button",
-    activeKeys: ["isOnly"],
+    activeKeys: ["isOnly", "isPending"],
+    requiresWrite: true,
     icon: VerifiedOutlinedIcon,
     action() {
-      const [doc] =
-        store.getState().data.navigation.archiveManagement.selectedElements;
-
+      const [doc] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (doc) {
-        const event = "__validate_archive_doc";
-        const root = document.getElementById("root");
-        const customEvent = new CustomEvent(event, {
-          detail: { doc, name: event },
-        });
-        root?.dispatchEvent(customEvent);
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__validate_archive_doc", { detail: { doc, name: "__validate_archive_doc" } })
+        );
       }
     },
   },
@@ -42,6 +44,7 @@ const managementOptions: ManagementOption[] = [
     type: "button",
     icon: EditNoteOutlinedIcon,
     activeKeys: ["isOnly"],
+    requiresWrite: true,
     action() {
       const state = store.getState();
       const [id] = state.data.navigation.archiveManagement.selectedElements;
@@ -54,11 +57,44 @@ const managementOptions: ManagementOption[] = [
     },
   },
   {
+    label: "Archiver",
+    id: "archive",
+    type: "button",
+    icon: ArchiveOutlinedIcon,
+    activeKeys: ["isOnly", "isValidated"],
+    requiresWrite: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "archived" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Rouvrir",
+    id: "reopen",
+    type: "button",
+    icon: UnarchiveOutlinedIcon,
+    activeKeys: ["isOnly", "isValidated"],
+    requiresWrite: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "pending" } })
+        );
+      }
+    },
+  },
+  {
     label: "Supprimer",
     id: "remove",
     type: "button",
     icon: DeleteOutlineOutlinedIcon,
     activeKeys: ["isOnly", "isMultiple"],
+    requiresWrite: true,
     action() {
       const ids = store.getState().data.navigation.archiveManagement.selectedElements;
       if (ids.length > 0) {
