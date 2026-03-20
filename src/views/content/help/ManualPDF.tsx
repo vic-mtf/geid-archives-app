@@ -15,7 +15,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
-import logoWhite from "../../../assets/geid_logo_white_transparent.png";
+import logoWhite from "../../../assets/geid_logo_white.png";
 
 // ── Palette ─────────────────────────────────────────────────
 
@@ -225,7 +225,7 @@ function CoverPage() {
       <View style={s.coverWrap}>
         {/* Haut — titre */}
         <View style={s.coverTop}>
-          <Image src={logoWhite} style={{ width: 190, marginBottom: 24 }} />
+          <Image src={logoWhite} style={{ width: 160, marginBottom: 24 }} />
           <Text style={s.coverBadge}>SYSTÈME DE GESTION DOCUMENTAIRE</Text>
           <Text style={s.coverTitle}>Manuel{"\n"}Utilisateur</Text>
           <Text style={s.coverSubtitle}>GEID | Archives</Text>
