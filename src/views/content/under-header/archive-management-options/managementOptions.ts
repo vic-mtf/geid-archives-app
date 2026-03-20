@@ -15,11 +15,9 @@ export interface ManagementOption {
   label: string;
   id: string;
   type: "button" | string;
-  /** Clés de activeState qui doivent être vraies pour activer le bouton */
+  /** activeState keys that must be true to enable this button */
   activeKeys: string[];
-  /** Si true, visible uniquement pour un utilisateur avec accès écriture */
   requiresWrite?: boolean;
-  /** Si true, visible uniquement pour un administrateur (struct=all) */
   requiresAdmin?: boolean;
   icon: ComponentType<SvgIconProps>;
   action: () => void;
@@ -44,7 +42,7 @@ const managementOptions: ManagementOption[] = [
     },
   },
 
-  // ── Modification ─────────────────────────────────────────────
+  // ── Edit ─────────────────────────────────────────────────────
   {
     label: "Modifier",
     id: "edit",
@@ -64,7 +62,7 @@ const managementOptions: ManagementOption[] = [
     },
   },
 
-  // ── Dossier physique ─────────────────────────────────────────
+  // ── Physical record ──────────────────────────────────────────
   {
     label: "Dossier physique",
     id: "link-physical",
@@ -84,20 +82,20 @@ const managementOptions: ManagementOption[] = [
     },
   },
 
-  // ── Transitions de cycle de vie ──────────────────────────────
+  // ── Lifecycle transitions ────────────────────────────────────
 
   {
     label: "Intermédiaire",
-    id: "to-intermediaire",
+    id: "to-semi-active",
     type: "button",
     icon: ArchiveOutlinedIcon,
-    activeKeys: ["isOnly", "isActif"],
+    activeKeys: ["isOnly", "isActive"],
     requiresWrite: true,
     action() {
       const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (id) {
         document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "intermédiaire" } })
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "SEMI_ACTIVE" } })
         );
       }
     },
@@ -107,36 +105,36 @@ const managementOptions: ManagementOption[] = [
     id: "reactivate",
     type: "button",
     icon: UnarchiveOutlinedIcon,
-    activeKeys: ["isOnly", "isIntermédiaire"],
+    activeKeys: ["isOnly", "isSemiActive"],
     requiresWrite: true,
     action() {
       const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (id) {
         document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "actif" } })
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "ACTIVE" } })
         );
       }
     },
   },
   {
     label: "Historique",
-    id: "to-historique",
+    id: "to-permanent",
     type: "button",
     icon: HistoryEduOutlinedIcon,
-    activeKeys: ["isOnly", "isIntermédiaire"],
+    activeKeys: ["isOnly", "isSemiActive"],
     requiresWrite: true,
     action() {
       const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (id) {
         document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "historique" } })
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PERMANENT" } })
         );
       }
     },
   },
   {
     label: "Éliminer",
-    id: "to-detruit",
+    id: "to-destroyed",
     type: "button",
     icon: DeleteForeverOutlinedIcon,
     activeKeys: ["isOnly", "isEliminable"],
@@ -146,7 +144,7 @@ const managementOptions: ManagementOption[] = [
       const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (id) {
         document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "détruit" } })
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "DESTROYED" } })
         );
       }
     },
@@ -156,20 +154,20 @@ const managementOptions: ManagementOption[] = [
     id: "restore",
     type: "button",
     icon: RestoreOutlinedIcon,
-    activeKeys: ["isOnly", "isDétruit"],
+    activeKeys: ["isOnly", "isDestroyed"],
     requiresWrite: true,
     requiresAdmin: true,
     action() {
       const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
       if (id) {
         document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "historique" } })
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PERMANENT" } })
         );
       }
     },
   },
 
-  // ── Suppression physique ─────────────────────────────────────
+  // ── Physical delete ──────────────────────────────────────────
   {
     label: "Supprimer",
     id: "remove",
