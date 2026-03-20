@@ -14,6 +14,7 @@ import {
   View,
   StyleSheet,
   Image,
+  Link,
 } from "@react-pdf/renderer";
 import logoWhite from "../../../assets/geid_logo_white.png";
 
@@ -226,7 +227,7 @@ function CoverPage() {
         {/* Haut — titre */}
         <View style={s.coverTop}>
           <Image src={logoWhite} style={{ width: 160, marginBottom: 24 }} />
-          <Text style={s.coverBadge}>SYSTÈME DE GESTION DOCUMENTAIRE</Text>
+          <Text style={s.coverBadge}>GESTION ELECTRONIQUE DE L'INFORMATION ET DES DOCUMENTS</Text>
           <Text style={s.coverTitle}>Manuel{"\n"}Utilisateur</Text>
           <Text style={s.coverSubtitle}>GEID | Archives</Text>
           <Text style={s.coverDesc}>
@@ -254,17 +255,24 @@ function CoverPage() {
           </Text>
         </View>
 
-        {/* Bas — version / date */}
+        {/* Bas — version / date / liens */}
         <View style={s.coverBot}>
           <View>
             <Text style={s.coverMeta}>Date de révision</Text>
             <Text style={[s.coverMeta, { color: "#E3F2FD", fontSize: 12, fontFamily: "Helvetica-Bold" }]}>
               {new Date().toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}
             </Text>
+            <Text style={[s.coverMeta, { marginTop: 10 }]}>Application</Text>
+            <Link src="https://geidbudget.com/apps/archives" style={{ fontSize: 10, color: "#64B5F6", textDecoration: "underline" }}>
+              geidbudget.com/apps/archives
+            </Link>
+            <Link src="https://geidbudget.com" style={{ fontSize: 9, color: "#90CAF9", marginTop: 3 }}>
+              geidbudget.com
+            </Link>
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={s.coverMeta}>Version</Text>
-            <Text style={s.coverVersion}>v2.0</Text>
+            <Text style={s.coverVersion}>v1.0.0</Text>
           </View>
         </View>
       </View>
@@ -1611,7 +1619,7 @@ function AnnexeC() {
 export default function ManualDocument() {
   return (
     <Document
-      title="GEID Archives — Manuel Utilisateur v2.0"
+      title="GEID Archives — Manuel Utilisateur v1.0.0"
       author="GEID Archives"
       subject="Guide complet de gestion des archives numériques et physiques"
       creator="GEID Archives App"
