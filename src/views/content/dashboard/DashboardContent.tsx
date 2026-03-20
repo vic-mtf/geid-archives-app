@@ -18,10 +18,8 @@ import {
 } from "@mui/material";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import StorageRoundedIcon from "@mui/icons-material/StorageRounded";
-import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
-import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
-import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
+import ManageHistoryRoundedIcon from "@mui/icons-material/ManageHistoryRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import useAxios from "../../../hooks/useAxios";
 import useToken from "../../../hooks/useToken";
@@ -30,6 +28,30 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import formatDate from "../../../utils/formatTime";
 import type { Archive, PhysicalRecord, Container, Binder } from "../../../types";
+import { STATUS_LABEL } from "../archive-management-content/ArchiveManagementContent";
+
+// Map normalized status to MUI chip color
+const STATUS_COLOR_MAP: Record<string, "default" | "warning" | "success" | "info" | "secondary" | "error"> = {
+  PENDING:    "warning",
+  ACTIVE:     "success",
+  SEMI_ACTIVE:"info",
+  PERMANENT:  "secondary",
+  DESTROYED:  "error",
+};
+
+function resolveStatus(doc: Archive): string {
+  if (doc.status) return doc.status as string;
+  return (doc as unknown as Record<string, unknown>).validated ? "ACTIVE" : "PENDING";
+}
+
+function normalizeKey(status: string): string {
+  const map: Record<string, string> = {
+    pending: "PENDING", validated: "ACTIVE", archived: "SEMI_ACTIVE",
+    disposed: "DESTROYED", actif: "ACTIVE", "intermédiaire": "SEMI_ACTIVE",
+    historique: "PERMANENT", détruit: "DESTROYED",
+  };
+  return map[status] ?? status;
+}
 
 export default function DashboardContent() {
   const Authorization = useToken();
@@ -37,7 +59,7 @@ export default function DashboardContent() {
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
 
   const [{ data: archives, loading: archivesLoading }, refetchArchives] = useAxios<Archive[]>({
-    url: "/api/stuff/validate",
+    url: "/api/stuff/archives/archived",
     headers,
   });
 
@@ -56,7 +78,6 @@ export default function DashboardContent() {
     headers,
   });
 
-  // Refetch toutes les stats après une mutation
   useEffect(() => {
     if (dataVersion > 0) {
       refetchArchives();
@@ -72,6 +93,18 @@ export default function DashboardContent() {
   const binderList = useMemo(() => (binders as Binder[]) ?? [], [binders]);
   const recordList = useMemo(() => (records as PhysicalRecord[]) ?? [], [records]);
 
+  // Per-status counts
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      PENDING: 0, ACTIVE: 0, SEMI_ACTIVE: 0, PERMANENT: 0, DESTROYED: 0,
+    };
+    archiveList.forEach((doc) => {
+      const key = normalizeKey(resolveStatus(doc));
+      if (key in counts) counts[key]++;
+    });
+    return counts;
+  }, [archiveList]);
+
   const recentArchives = useMemo(
     () =>
       [...archiveList]
@@ -82,15 +115,24 @@ export default function DashboardContent() {
 
   return (
     <Box sx={{ p: 2, overflowY: "auto", height: "100%" }}>
-      {/* Statistiques */}
+      {/* Statistiques lifecycle */}
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            label="En attente de validation"
+            label="Total archives"
             value={archiveList.length}
             loading={archivesLoading}
-            icon={<InventoryRoundedIcon />}
+            icon={<ManageHistoryRoundedIcon />}
             color="primary.main"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            label="En attente"
+            value={statusCounts.PENDING}
+            loading={archivesLoading}
+            icon={<InventoryRoundedIcon />}
+            color="warning.main"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -100,15 +142,6 @@ export default function DashboardContent() {
             loading={containersLoading}
             icon={<StorageRoundedIcon />}
             color="success.main"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            label="Classeurs"
-            value={binderList.length}
-            loading={bindersLoading}
-            icon={<FolderOpenRoundedIcon />}
-            color="warning.main"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -139,85 +172,122 @@ export default function DashboardContent() {
                 <EmptyPlaceholder label="Aucune archive trouvée" />
               ) : (
                 <List disablePadding dense>
-                  {recentArchives.map((doc) => (
-                    <ListItem
-                      key={doc._id}
-                      disablePadding
-                      sx={{ py: 0.5 }}
-                      secondaryAction={
-                        <Chip
-                          size="small"
-                          icon={
-                            doc.validated ? (
-                              <CheckCircleOutlineRoundedIcon />
-                            ) : (
-                              <PendingActionsRoundedIcon />
-                            )
-                          }
-                          label={doc.validated ? "Validé" : "En attente"}
-                          color={doc.validated ? "success" : "warning"}
-                          variant="outlined"
+                  {recentArchives.map((doc) => {
+                    const rawStatus = resolveStatus(doc);
+                    const normKey = normalizeKey(rawStatus);
+                    return (
+                      <ListItem
+                        key={doc._id}
+                        disablePadding
+                        sx={{ py: 0.5 }}
+                        secondaryAction={
+                          <Chip
+                            size="small"
+                            label={STATUS_LABEL[rawStatus] ?? STATUS_LABEL[normKey] ?? rawStatus}
+                            color={STATUS_COLOR_MAP[normKey] ?? "default"}
+                            variant="outlined"
+                          />
+                        }>
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                          <InsertDriveFileOutlinedIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={doc.designation ?? doc.title ?? "—"}
+                          secondary={formatDate(doc.createdAt as string)}
+                          primaryTypographyProps={{ noWrap: true, maxWidth: 280 }}
+                          secondaryTypographyProps={{ variant: "caption" }}
                         />
-                      }>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <InsertDriveFileOutlinedIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={doc.designation ?? doc.title ?? "—"}
-                        secondary={formatDate(doc.createdAt as string)}
-                        primaryTypographyProps={{ noWrap: true, maxWidth: 280 }}
-                        secondaryTypographyProps={{ variant: "caption" }}
-                      />
-                    </ListItem>
-                  ))}
+                      </ListItem>
+                    );
+                  })}
                 </List>
               )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Capacité des classeurs */}
+        {/* Répartition par statut */}
         <Grid item xs={12} md={5}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent>
               <Typography variant="body1" fontWeight="bold" mb={1}>
-                Capacité des classeurs
+                Répartition par statut
               </Typography>
               <Divider sx={{ mb: 1 }} />
-              {bindersLoading ? (
+              {archivesLoading ? (
                 <Box display="flex" justifyContent="center" p={3}>
                   <CircularProgress size={24} />
                 </Box>
-              ) : binderList.length === 0 ? (
-                <EmptyPlaceholder label="Aucun classeur trouvé" />
+              ) : archiveList.length === 0 ? (
+                <EmptyPlaceholder label="Aucune archive trouvée" />
               ) : (
                 <Stack spacing={1.5}>
-                  {binderList.slice(0, 8).map((binder) => {
-                    const pct = binder.maxCapacity
-                      ? Math.min(100, Math.round(((binder.currentCount ?? 0) / binder.maxCapacity) * 100))
+                  {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"] as const).map((key) => {
+                    const count = statusCounts[key] ?? 0;
+                    const pct = archiveList.length > 0
+                      ? Math.round((count / archiveList.length) * 100)
                       : 0;
+                    const colorMap: Record<string, "warning" | "success" | "info" | "secondary" | "error"> = {
+                      PENDING: "warning", ACTIVE: "success", SEMI_ACTIVE: "info",
+                      PERMANENT: "secondary", DESTROYED: "error",
+                    };
                     return (
-                      <Box key={binder._id}>
+                      <Box key={key}>
                         <Box display="flex" justifyContent="space-between" mb={0.3}>
-                          <Tooltip title={binder.name} placement="top">
-                            <Typography noWrap sx={{ maxWidth: 160 }}>
-                              {binder.name}
-                            </Typography>
-                          </Tooltip>
-                          <Typography color="text.secondary">
-                            {binder.currentCount ?? 0} / {binder.maxCapacity}
+                          <Typography variant="body2">
+                            {STATUS_LABEL[key]}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {count} ({pct}%)
                           </Typography>
                         </Box>
                         <LinearProgress
                           variant="determinate"
                           value={pct}
-                          color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "success"}
+                          color={colorMap[key]}
                           sx={{ borderRadius: 1, height: 6 }}
                         />
                       </Box>
                     );
                   })}
                 </Stack>
+              )}
+
+              {/* Classeurs */}
+              {!bindersLoading && binderList.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant="body2" fontWeight="bold" mb={1}>
+                    Capacité des classeurs
+                  </Typography>
+                  <Stack spacing={1}>
+                    {binderList.slice(0, 5).map((binder) => {
+                      const pct = binder.maxCapacity
+                        ? Math.min(100, Math.round(((binder.currentCount ?? 0) / binder.maxCapacity) * 100))
+                        : 0;
+                      return (
+                        <Box key={binder._id}>
+                          <Box display="flex" justifyContent="space-between" mb={0.3}>
+                            <Tooltip title={binder.name} placement="top">
+                              <Typography noWrap sx={{ maxWidth: 140 }} variant="body2">
+                                {binder.name}
+                              </Typography>
+                            </Tooltip>
+                            <Typography color="text.secondary" variant="body2">
+                              {binder.currentCount ?? 0} / {binder.maxCapacity}
+                            </Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={pct}
+                            color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "success"}
+                            sx={{ borderRadius: 1, height: 5 }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </>
               )}
             </CardContent>
           </Card>

@@ -1,7 +1,7 @@
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
 
@@ -23,9 +23,9 @@ const tabs: Tab[] = [
     id: "archiveManager",
   },
   {
-    label: "À valider",
-    icon: Inventory2OutlinedIcon,
-    id: "archiveService",
+    label: "Archivage physique",
+    icon: InventoryRoundedIcon,
+    id: "physicalArchive",
   },
   {
     label: "Aide",
