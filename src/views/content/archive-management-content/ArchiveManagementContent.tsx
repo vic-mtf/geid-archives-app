@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
 import { updateData, incrementVersion } from "../../../redux/data";
-import { Box as MuiBox, Chip } from "@mui/material";
+import { Box as MuiBox, Chip, Tooltip, LinearProgress, Typography } from "@mui/material";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import { DataGrid, GridColDef, GridToolbarColumnsButton, GridToolbarFilterButton, GridRowSelectionModel } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios from "../../../hooks/useAxios";
@@ -77,6 +78,80 @@ function StatusChip({ status, validated }: { status?: string; validated?: boolea
   );
 }
 
+// ── DUA status cell ──────────────────────────────────────────
+
+function computeExpiresAt(startDate: Date, value: number, unit: string): Date {
+  const d = new Date(startDate);
+  if (unit === "years")  d.setFullYear(d.getFullYear() + value);
+  if (unit === "months") d.setMonth(d.getMonth() + value);
+  return d;
+}
+
+function DuaCell({ row }: { row: Record<string, unknown> }) {
+  const status  = row.status as string | undefined;
+  const dua     = row.dua as { value?: number; unit?: string; sortFinal?: string; startDate?: string } | undefined;
+
+  const isSemiActive = status === "SEMI_ACTIVE" || status === "intermédiaire" || status === "archived";
+  if (!isSemiActive) return null;
+
+  if (!dua?.value || !dua?.unit || !dua?.startDate) {
+    return (
+      <Tooltip title="DUA non configurée — cliquez sur Configurer DUA">
+        <Chip
+          icon={<AccessTimeOutlinedIcon />}
+          label="DUA non config."
+          size="small"
+          color="warning"
+          variant="outlined"
+          sx={{ fontSize: 11 }}
+        />
+      </Tooltip>
+    );
+  }
+
+  const startDate = new Date(dua.startDate);
+  const expiresAt = computeExpiresAt(startDate, dua.value, dua.unit);
+  const now       = new Date();
+  const totalMs   = expiresAt.getTime() - startDate.getTime();
+  const elapsedMs = now.getTime() - startDate.getTime();
+  const pct       = Math.min(100, Math.max(0, (elapsedMs / totalMs) * 100));
+  const expired   = now >= expiresAt;
+
+  const diffMs    = expiresAt.getTime() - now.getTime();
+  const daysLeft  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const label     = expired
+    ? "Expirée"
+    : daysLeft < 30
+    ? `${daysLeft}j`
+    : daysLeft < 365
+    ? `${Math.floor(daysLeft / 30)}m`
+    : `${Math.floor(daysLeft / 365)}a`;
+
+  const sortLabel = dua.sortFinal === "conservation" ? "→ Historique" : "→ Détruire";
+  const tooltipText = `DUA : ${dua.value} ${dua.unit === "years" ? "an(s)" : "mois"} ${sortLabel}\nExpire le : ${expiresAt.toLocaleDateString("fr-FR")}`;
+
+  return (
+    <Tooltip title={<span style={{ whiteSpace: "pre-line" }}>{tooltipText}</span>}>
+      <MuiBox width={90}>
+        <MuiBox display="flex" justifyContent="space-between">
+          <Typography variant="caption" color={expired ? "error" : "text.secondary"} sx={{ fontSize: 10 }}>
+            {expired ? "Expirée" : label}
+          </Typography>
+          <Typography variant="caption" color="text.disabled" sx={{ fontSize: 10 }}>
+            {sortLabel}
+          </Typography>
+        </MuiBox>
+        <LinearProgress
+          variant="determinate"
+          value={pct}
+          color={pct > 90 || expired ? "error" : pct > 70 ? "warning" : "info"}
+          sx={{ height: 4, borderRadius: 2 }}
+        />
+      </MuiBox>
+    </Tooltip>
+  );
+}
+
 // ── Colonnes du tableau ──────────────────────────────────────
 
 const columns: GridColDef[] = [
@@ -95,6 +170,13 @@ const columns: GridColDef[] = [
         validated={params.row.validated as boolean}
       />
     ),
+  },
+  {
+    field: "dua",
+    headerName: "DUA",
+    width: 110,
+    sortable: false,
+    renderCell: (params) => <DuaCell row={params.row} />,
   },
   { field: "createdAt", headerName: "Date", type: "dateTime", width: 155 },
 ];
