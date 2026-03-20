@@ -7,6 +7,7 @@ import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import store from "../../../../redux/store";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
@@ -77,6 +78,26 @@ const managementOptions: ManagementOption[] = [
       if (doc) {
         document.getElementById("root")?.dispatchEvent(
           new CustomEvent("__link_physical_record", { detail: { doc } })
+        );
+      }
+    },
+  },
+
+  // ── DUA configuration ────────────────────────────────────────
+  {
+    label: "Configurer DUA",
+    id: "configure-dua",
+    type: "button",
+    icon: AccessTimeOutlinedIcon,
+    activeKeys: ["isOnly", "isSemiActive"],
+    requiresWrite: true,
+    action() {
+      const state = store.getState();
+      const [id] = state.data.navigation.archiveManagement.selectedElements;
+      const doc = state.data.docs.find((d) => d._id === id || d.id === id);
+      if (doc) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__configure_dua", { detail: { doc } })
         );
       }
     },
