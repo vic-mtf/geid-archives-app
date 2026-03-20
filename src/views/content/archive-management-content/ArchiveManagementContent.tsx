@@ -13,44 +13,60 @@ import { Toolbar } from "@mui/material";
 import NavigationMenuButton from "../../navigation/NavigationMenuButton";
 import { useSnackbar } from "notistack";
 
-// ── Chip statut du cycle de vie ──────────────────────────────
+// ── Lifecycle status ──────────────────────────────────────────
 
-type ArchiveStatus =
+export type ArchiveStatus =
+  | "PENDING"
+  | "ACTIVE"
+  | "SEMI_ACTIVE"
+  | "PERMANENT"
+  | "DESTROYED"
+  // Legacy values — backward compat
   | "pending"
+  | "validated"
+  | "archived"
+  | "disposed"
   | "actif"
   | "intermédiaire"
   | "historique"
-  | "détruit"
-  | "validated"
-  | "archived"
-  | "disposed";
+  | "détruit";
 
-export const STATUS_LABEL: Record<ArchiveStatus, string> = {
+export const STATUS_LABEL: Record<string, string> = {
+  PENDING:     "En attente",
+  ACTIVE:      "Actif",
+  SEMI_ACTIVE: "Intermédiaire",
+  PERMANENT:   "Historique",
+  DESTROYED:   "Détruit",
+  // Legacy
   pending:        "En attente",
+  validated:      "Actif",
+  archived:       "Intermédiaire",
+  disposed:       "Détruit",
   actif:          "Actif",
   "intermédiaire": "Intermédiaire",
   historique:     "Historique",
   détruit:        "Détruit",
-  // anciens statuts — compatibilité
-  validated: "Actif",
-  archived:  "Intermédiaire",
-  disposed:  "Détruit",
 };
 
-const STATUS_COLOR: Record<ArchiveStatus, "default" | "warning" | "success" | "info" | "error" | "secondary"> = {
+const STATUS_COLOR: Record<string, "default" | "warning" | "success" | "info" | "error" | "secondary"> = {
+  PENDING:     "warning",
+  ACTIVE:      "success",
+  SEMI_ACTIVE: "info",
+  PERMANENT:   "secondary",
+  DESTROYED:   "error",
+  // Legacy
   pending:        "warning",
+  validated:      "success",
+  archived:       "info",
+  disposed:       "error",
   actif:          "success",
   "intermédiaire": "info",
   historique:     "secondary",
   détruit:        "error",
-  // anciens statuts
-  validated: "success",
-  archived:  "info",
-  disposed:  "error",
 };
 
 function StatusChip({ status, validated }: { status?: string; validated?: boolean }) {
-  const resolved = (status as ArchiveStatus) ?? (validated ? "actif" : "pending");
+  const resolved = status ?? (validated ? "ACTIVE" : "PENDING");
   return (
     <Chip
       label={STATUS_LABEL[resolved] ?? resolved}
@@ -83,7 +99,7 @@ const columns: GridColDef[] = [
   { field: "createdAt", headerName: "Date", type: "dateTime", width: 155 },
 ];
 
-// ── Toolbar du DataGrid ──────────────────────────────────────
+// ── Toolbar ──────────────────────────────────────────────────
 
 const ArchiveManagementHeader = React.memo(() => (
   <Toolbar sx={{ gap: 1, flexWrap: "wrap", py: 1 }}>
@@ -92,20 +108,16 @@ const ArchiveManagementHeader = React.memo(() => (
       IconProps={{ sx: { transform: "rotate(-180deg)" } }}
     />
     <GridToolbarColumnsButton
-      slotProps={{
-        button: { variant: "outlined", color: "inherit", size: "medium" },
-      }}
+      slotProps={{ button: { variant: "outlined", color: "inherit", size: "medium" } }}
     />
     <GridToolbarFilterButton
-      slotProps={{
-        button: { variant: "outlined", color: "inherit", size: "medium" },
-      }}
+      slotProps={{ button: { variant: "outlined", color: "inherit", size: "medium" } }}
     />
   </Toolbar>
 ));
 ArchiveManagementHeader.displayName = "ArchiveManagementHeader";
 
-// ── Composant principal ──────────────────────────────────────
+// ── Main component ───────────────────────────────────────────
 
 export default function ArchiveManagementContent() {
   const Authorization = useToken();
@@ -126,7 +138,6 @@ export default function ArchiveManagementContent() {
     { manual: true }
   );
 
-  // Écoute l'événement de transition lifecycle déclenché par managementOptions
   useEffect(() => {
     const root = document.getElementById("root");
     const handler = async (e: Event) => {
@@ -138,13 +149,12 @@ export default function ArchiveManagementContent() {
         });
         dispatch(incrementVersion());
         enqueueSnackbar(
-          `Statut mis à jour : ${STATUS_LABEL[targetStatus as ArchiveStatus] ?? targetStatus}.`,
+          `Statut mis à jour : ${STATUS_LABEL[targetStatus] ?? targetStatus}.`,
           { variant: "success", title: "Cycle de vie" }
         );
       } catch {
         enqueueSnackbar("Impossible de changer le statut de ce document.", {
-          variant: "error",
-          title: "Erreur"
+          variant: "error", title: "Erreur"
         });
       }
     };
@@ -152,7 +162,6 @@ export default function ArchiveManagementContent() {
     return () => root?.removeEventListener("__lifecycle_archive", handler);
   }, [execLifecycle, dispatch, enqueueSnackbar]);
 
-  // Alimenter docs dans Redux pour que les actions (modifier, supprimer, valider) fonctionnent
   useEffect(() => {
     if (data) {
       dispatch(
@@ -168,7 +177,6 @@ export default function ArchiveManagementContent() {
     }
   }, [data, dispatch]);
 
-  // Refetch après toute mutation
   useEffect(() => {
     if (dataVersion > 0) refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -211,13 +219,7 @@ export default function ArchiveManagementContent() {
 
   return (
     <MuiBox display="flex" flex={1} position="relative">
-      <MuiBox
-        position="absolute"
-        display="flex"
-        flex={1}
-        width="100%"
-        height="100%"
-        top={0}>
+      <MuiBox position="absolute" display="flex" flex={1} width="100%" height="100%" top={0}>
         <DataGrid
           rows={rows}
           loading={loading}

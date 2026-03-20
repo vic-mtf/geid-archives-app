@@ -17,30 +17,37 @@ export default function ArchiveManagementOptions() {
     return id ? store.data.docs.find((d) => d._id === id || d.id === id) : undefined;
   });
 
-  const selectedStatus = (selectedDoc as Record<string, unknown> | undefined)?.status as string | undefined;
+  const s = (selectedDoc as Record<string, unknown> | undefined)?.status as string | undefined;
 
   const activeState = useMemo(
     () => ({
-      isOnly:          selectedElements?.length === 1,
-      isMultiple:      selectedElements?.length > 1,
-      // Statuts courants (nouveau cycle de vie)
-      isPending:       selectedStatus === "pending" || (!selectedStatus && selectedDoc && !(selectedDoc as Record<string, unknown>).validated),
-      isActif:         selectedStatus === "actif"         || selectedStatus === "validated",
-      isIntermédiaire: selectedStatus === "intermédiaire" || selectedStatus === "archived",
-      isHistorique:    selectedStatus === "historique",
-      isDétruit:       selectedStatus === "détruit"       || selectedStatus === "disposed",
-      // isEliminable : peut être éliminé (intermédiaire ou historique)
+      isOnly:     selectedElements?.length === 1,
+      isMultiple: selectedElements?.length > 1,
+
+      isPending:   s === "PENDING"   || s === "pending",
+      isActive:    s === "ACTIVE"    || s === "validated" || s === "actif",
+      isSemiActive:s === "SEMI_ACTIVE"|| s === "archived" || s === "intermédiaire",
+      isPermanent: s === "PERMANENT" || s === "historique",
+      isDestroyed: s === "DESTROYED" || s === "disposed"  || s === "détruit",
+
+      // Can be eliminated: SEMI_ACTIVE or PERMANENT
       isEliminable:
-        selectedStatus === "intermédiaire" ||
-        selectedStatus === "historique"    ||
-        selectedStatus === "archived",
+        s === "SEMI_ACTIVE" || s === "PERMANENT" ||
+        s === "archived"    || s === "historique" || s === "intermédiaire",
+
+      // No status yet (legacy doc without status field)
+      ...(s === undefined && selectedDoc
+        ? {
+            isPending: !(selectedDoc as Record<string, unknown>).validated,
+            isActive:   !!(selectedDoc as Record<string, unknown>).validated,
+          }
+        : {}),
     }),
-    [selectedElements, selectedStatus, selectedDoc]
+    [selectedElements, s, selectedDoc]
   );
 
-  const isDisabled = (option: typeof managementOptions[0]) => {
-    return !option.activeKeys.some((key) => activeState[key as keyof typeof activeState]);
-  };
+  const isDisabled = (option: typeof managementOptions[0]) =>
+    !option.activeKeys.some((key) => activeState[key as keyof typeof activeState]);
 
   const isVisible = (option: typeof managementOptions[0]) => {
     if (option.requiresAdmin && !isAdmin) return false;
@@ -48,21 +55,20 @@ export default function ArchiveManagementOptions() {
     return true;
   };
 
-  const visibleOptions = managementOptions.filter(isVisible);
-
   return (
     <>
-      {visibleOptions.map((option) => (
+      {managementOptions.filter(isVisible).map((option) => (
         <React.Fragment key={option.id}>
           {option.type === "button" && (
             <Button
               startIcon={React.createElement(option.icon)}
               onClick={option.action}
-              color={option.id === "to-detruit" ? "error" : "inherit"}
+              color={option.id === "to-destroyed" ? "error" : "inherit"}
               sx={{ mr: 1 }}
               variant="outlined"
               size="small"
-              disabled={isDisabled(option)}>
+              disabled={isDisabled(option)}
+            >
               {option.label}
             </Button>
           )}
