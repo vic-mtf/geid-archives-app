@@ -15,23 +15,42 @@ import { useSnackbar } from "notistack";
 
 // ── Chip statut du cycle de vie ──────────────────────────────
 
-type ArchiveStatus = "pending" | "validated" | "archived" | "disposed";
+type ArchiveStatus =
+  | "pending"
+  | "actif"
+  | "intermédiaire"
+  | "historique"
+  | "détruit"
+  | "validated"
+  | "archived"
+  | "disposed";
 
-const STATUS_LABEL: Record<ArchiveStatus, string> = {
-  pending:   "En attente",
-  validated: "Validé",
-  archived:  "Archivé",
-  disposed:  "Éliminé",
+export const STATUS_LABEL: Record<ArchiveStatus, string> = {
+  pending:        "En attente",
+  actif:          "Actif",
+  "intermédiaire": "Intermédiaire",
+  historique:     "Historique",
+  détruit:        "Détruit",
+  // anciens statuts — compatibilité
+  validated: "Actif",
+  archived:  "Intermédiaire",
+  disposed:  "Détruit",
 };
-const STATUS_COLOR: Record<ArchiveStatus, "warning" | "success" | "info" | "error"> = {
-  pending:   "warning",
+
+const STATUS_COLOR: Record<ArchiveStatus, "default" | "warning" | "success" | "info" | "error" | "secondary"> = {
+  pending:        "warning",
+  actif:          "success",
+  "intermédiaire": "info",
+  historique:     "secondary",
+  détruit:        "error",
+  // anciens statuts
   validated: "success",
   archived:  "info",
   disposed:  "error",
 };
 
 function StatusChip({ status, validated }: { status?: string; validated?: boolean }) {
-  const resolved = (status as ArchiveStatus) ?? (validated ? "validated" : "pending");
+  const resolved = (status as ArchiveStatus) ?? (validated ? "actif" : "pending");
   return (
     <Chip
       label={STATUS_LABEL[resolved] ?? resolved}
@@ -53,7 +72,7 @@ const columns: GridColDef[] = [
   {
     field: "status",
     headerName: "Statut",
-    width: 130,
+    width: 145,
     renderCell: (params) => (
       <StatusChip
         status={params.row.status as string}
@@ -118,10 +137,10 @@ export default function ArchiveManagementContent() {
           data: { targetStatus }
         });
         dispatch(incrementVersion());
-        enqueueSnackbar(`Statut mis à jour : ${STATUS_LABEL[targetStatus as ArchiveStatus] ?? targetStatus}.`, {
-          variant: "success",
-          title: "Cycle de vie"
-        });
+        enqueueSnackbar(
+          `Statut mis à jour : ${STATUS_LABEL[targetStatus as ArchiveStatus] ?? targetStatus}.`,
+          { variant: "success", title: "Cycle de vie" }
+        );
       } catch {
         enqueueSnackbar("Impossible de changer le statut de ce document.", {
           variant: "error",

@@ -3,6 +3,9 @@ import EditNoteOutlinedIcon from "@mui/icons-material/EditNoteOutlined";
 import VerifiedOutlinedIcon from "@mui/icons-material/VerifiedOutlined";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import UnarchiveOutlinedIcon from "@mui/icons-material/UnarchiveOutlined";
+import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
+import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import store from "../../../../redux/store";
 import { ComponentType } from "react";
@@ -23,6 +26,7 @@ export interface ManagementOption {
 }
 
 const managementOptions: ManagementOption[] = [
+  // ── Validation ──────────────────────────────────────────────
   {
     label: "Valider",
     id: "verify",
@@ -39,6 +43,8 @@ const managementOptions: ManagementOption[] = [
       }
     },
   },
+
+  // ── Modification ─────────────────────────────────────────────
   {
     label: "Modifier",
     id: "edit",
@@ -57,38 +63,8 @@ const managementOptions: ManagementOption[] = [
       }
     },
   },
-  {
-    label: "Archiver",
-    id: "archive",
-    type: "button",
-    icon: ArchiveOutlinedIcon,
-    activeKeys: ["isOnly", "isValidated"],
-    requiresWrite: true,
-    action() {
-      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
-      if (id) {
-        document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "archived" } })
-        );
-      }
-    },
-  },
-  {
-    label: "Rouvrir",
-    id: "reopen",
-    type: "button",
-    icon: UnarchiveOutlinedIcon,
-    activeKeys: ["isOnly", "isValidated"],
-    requiresWrite: true,
-    action() {
-      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
-      if (id) {
-        document.getElementById("root")?.dispatchEvent(
-          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "pending" } })
-        );
-      }
-    },
-  },
+
+  // ── Dossier physique ─────────────────────────────────────────
   {
     label: "Dossier physique",
     id: "link-physical",
@@ -107,6 +83,93 @@ const managementOptions: ManagementOption[] = [
       }
     },
   },
+
+  // ── Transitions de cycle de vie ──────────────────────────────
+
+  {
+    label: "Intermédiaire",
+    id: "to-intermediaire",
+    type: "button",
+    icon: ArchiveOutlinedIcon,
+    activeKeys: ["isOnly", "isActif"],
+    requiresWrite: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "intermédiaire" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Réactiver",
+    id: "reactivate",
+    type: "button",
+    icon: UnarchiveOutlinedIcon,
+    activeKeys: ["isOnly", "isIntermédiaire"],
+    requiresWrite: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "actif" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Historique",
+    id: "to-historique",
+    type: "button",
+    icon: HistoryEduOutlinedIcon,
+    activeKeys: ["isOnly", "isIntermédiaire"],
+    requiresWrite: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "historique" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Éliminer",
+    id: "to-detruit",
+    type: "button",
+    icon: DeleteForeverOutlinedIcon,
+    activeKeys: ["isOnly", "isEliminable"],
+    requiresWrite: true,
+    requiresAdmin: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "détruit" } })
+        );
+      }
+    },
+  },
+  {
+    label: "Restaurer",
+    id: "restore",
+    type: "button",
+    icon: RestoreOutlinedIcon,
+    activeKeys: ["isOnly", "isDétruit"],
+    requiresWrite: true,
+    requiresAdmin: true,
+    action() {
+      const [id] = store.getState().data.navigation.archiveManagement.selectedElements;
+      if (id) {
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "historique" } })
+        );
+      }
+    },
+  },
+
+  // ── Suppression physique ─────────────────────────────────────
   {
     label: "Supprimer",
     id: "remove",

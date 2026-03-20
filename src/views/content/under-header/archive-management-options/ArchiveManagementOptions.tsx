@@ -12,7 +12,6 @@ export default function ArchiveManagementOptions() {
     (store: RootState) => store.data.navigation.archiveManagement.selectedElements
   );
 
-  // Récupère le statut du document sélectionné pour activer/désactiver les boutons lifecycle
   const selectedDoc = useSelector((store: RootState) => {
     const id = store.data.navigation.archiveManagement.selectedElements[0];
     return id ? store.data.docs.find((d) => d._id === id || d.id === id) : undefined;
@@ -22,27 +21,25 @@ export default function ArchiveManagementOptions() {
 
   const activeState = useMemo(
     () => ({
-      isOnly:     selectedElements?.length === 1,
-      isMultiple: selectedElements?.length > 1,
-      // Actif selon le statut du document sélectionné
-      isPending:   selectedStatus === "pending" || (!selectedStatus && selectedDoc && !(selectedDoc as Record<string, unknown>).validated),
-      isValidated: selectedStatus === "validated" || (!selectedStatus && !!(selectedDoc as Record<string, unknown> | undefined)?.validated),
-      isArchived:  selectedStatus === "archived",
+      isOnly:          selectedElements?.length === 1,
+      isMultiple:      selectedElements?.length > 1,
+      // Statuts courants (nouveau cycle de vie)
+      isPending:       selectedStatus === "pending" || (!selectedStatus && selectedDoc && !(selectedDoc as Record<string, unknown>).validated),
+      isActif:         selectedStatus === "actif"         || selectedStatus === "validated",
+      isIntermédiaire: selectedStatus === "intermédiaire" || selectedStatus === "archived",
+      isHistorique:    selectedStatus === "historique",
+      isDétruit:       selectedStatus === "détruit"       || selectedStatus === "disposed",
+      // isEliminable : peut être éliminé (intermédiaire ou historique)
+      isEliminable:
+        selectedStatus === "intermédiaire" ||
+        selectedStatus === "historique"    ||
+        selectedStatus === "archived",
     }),
     [selectedElements, selectedStatus, selectedDoc]
   );
 
   const isDisabled = (option: typeof managementOptions[0]) => {
-    // Bouton désactivé si aucune clé active n'est vraie
-    if (!option.activeKeys.some((key) => activeState[key as keyof typeof activeState])) return true;
-
-    // Désactiver Archiver si le doc est déjà archivé
-    if (option.id === "archive" && activeState.isArchived) return true;
-
-    // Désactiver Rouvrir si le doc est déjà pending
-    if (option.id === "reopen" && activeState.isPending) return true;
-
-    return false;
+    return !option.activeKeys.some((key) => activeState[key as keyof typeof activeState]);
   };
 
   const isVisible = (option: typeof managementOptions[0]) => {
@@ -61,7 +58,7 @@ export default function ArchiveManagementOptions() {
             <Button
               startIcon={React.createElement(option.icon)}
               onClick={option.action}
-              color="inherit"
+              color={option.id === "to-detruit" ? "error" : "inherit"}
               sx={{ mr: 1 }}
               variant="outlined"
               size="small"
