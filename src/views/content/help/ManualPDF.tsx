@@ -15,7 +15,7 @@ import {
   StyleSheet,
   Image,
 } from "@react-pdf/renderer";
-import logoWhite from "../../../assets/geid_logo_white_middle.webp";
+import logoWhite from "../../../assets/geid_logo_white_transparent.png";
 
 // ── Palette ─────────────────────────────────────────────────
 
@@ -225,9 +225,10 @@ function CoverPage() {
       <View style={s.coverWrap}>
         {/* Haut — titre */}
         <View style={s.coverTop}>
-          <Image src={logoWhite} style={{ width: 220, marginBottom: 28 }} />
+          <Image src={logoWhite} style={{ width: 190, marginBottom: 24 }} />
           <Text style={s.coverBadge}>SYSTÈME DE GESTION DOCUMENTAIRE</Text>
           <Text style={s.coverTitle}>Manuel{"\n"}Utilisateur</Text>
+          <Text style={s.coverSubtitle}>GEID | Archives</Text>
           <Text style={s.coverDesc}>
             Guide complet de la gestion des archives numériques et physiques.{"\n"}
             De la soumission d'un document jusqu'à sa conservation définitive ou sa destruction.
