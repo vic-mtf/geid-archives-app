@@ -25,3 +25,6 @@ dist-ssr
 
 # Fichiers locaux (ne pas versionner)
 *.local.md
+
+# PDF générés
+src/assets/*.pdf
