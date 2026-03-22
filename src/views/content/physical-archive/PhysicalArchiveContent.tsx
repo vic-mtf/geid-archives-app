@@ -16,7 +16,6 @@ import {
   LinearProgress,
   List,
   ListItem,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   Stack,
@@ -28,17 +27,20 @@ import {
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import ViewAgendaOutlinedIcon from "@mui/icons-material/ViewAgendaOutlined";
+import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
+import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
+import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
+import StyleOutlinedIcon from "@mui/icons-material/StyleOutlined";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 
 import useAxios from "../../../hooks/useAxios";
 import useToken from "../../../hooks/useToken";
@@ -290,152 +292,218 @@ export default function PhysicalArchiveContent() {
   };
 
   const levelConfig: Record<Level, { icon: React.ReactNode; label: string; color: string }> = {
-    container: { icon: <MeetingRoomOutlinedIcon />,  label: "Conteneur", color: "primary.main" },
-    shelf:     { icon: <LayersOutlinedIcon />,      label: "Étagère",   color: "success.main" },
-    floor:     { icon: <ViewAgendaOutlinedIcon />,  label: "Étage",     color: "info.main" },
-    binder:    { icon: <FolderOpenOutlinedIcon />,  label: "Classeur",  color: "warning.main" },
-    record:    { icon: <ArticleOutlinedIcon />,     label: "Dossier",   color: "secondary.main" },
-    document:  { icon: <DescriptionOutlinedIcon />, label: "Document",  color: "error.main" },
+    container: { icon: <WarehouseOutlinedIcon />,          label: "Conteneur", color: "#5C6BC0" },
+    shelf:     { icon: <DnsOutlinedIcon />,                label: "Étagère",   color: "#26A69A" },
+    floor:     { icon: <ViewStreamOutlinedIcon />,         label: "Niveau",    color: "#42A5F5" },
+    binder:    { icon: <StyleOutlinedIcon />,              label: "Classeur",  color: "#FFA726" },
+    record:    { icon: <FolderOutlinedIcon />,             label: "Dossier",   color: "#AB47BC" },
+    document:  { icon: <InsertDriveFileOutlinedIcon />,    label: "Document",  color: "#78909C" },
   };
 
   const showDetail = selected !== null;
 
+  // Déterminer si le niveau courant est le dernier (pas de navigation enfant)
+  const isLeafLevel = currentLevel === "document";
+
   return (
-    <Box display="flex" flex={1} overflow="hidden" height="100%">
-      {/* Panneau gauche : navigation hiérarchique */}
+    <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
+      {/* ── Barre de navigation (fil d'Ariane) ────────────────── */}
       <Box
-        sx={{
-          width: { xs: "100%", md: 320 },
-          flexShrink: 0,
-          display: isMobile && showDetail ? "none" : "flex",
-          flexDirection: "column",
-          borderRight: { xs: "none", md: "1px solid" },
-          borderColor: "divider",
-          overflow: "hidden",
-        }}>
-        {/* Fil d'Ariane */}
-        <Box px={1} py={0.5} display="flex" alignItems="center" gap={0.5} flexWrap="wrap" borderBottom={1} borderColor="divider" minHeight={40}>
-          <Chip
-            label="Racine"
-            size="small"
-            clickable
-            variant={breadcrumb.length === 0 ? "filled" : "outlined"}
-            onClick={() => handleBreadcrumb(0)}
-          />
-          {breadcrumb.map((b, i) => (
-            <Box key={b.id} display="flex" alignItems="center" gap={0.5}>
-              <ChevronRightRoundedIcon fontSize="small" sx={{ color: "text.disabled" }} />
-              <Chip
-                label={b.label}
-                size="small"
-                clickable
-                variant={i === breadcrumb.length - 1 ? "filled" : "outlined"}
-                onClick={() => handleBreadcrumb(i + 1)}
-              />
-            </Box>
-          ))}
-        </Box>
-
-        {/* Niveau courant */}
-        <Box px={1.5} py={1} display="flex" alignItems="center" gap={1}>
-          <Box sx={{ color: levelConfig[currentLevel].color }}>
-            {levelConfig[currentLevel].icon}
-          </Box>
-          <Typography fontWeight="bold" color={levelConfig[currentLevel].color}>
-            {levelConfig[currentLevel].label}s
-          </Typography>
-          {!loading && (
-            <Chip label={items.length} size="small" />
-          )}
-          <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
-            <IconButton size="small" onClick={() => setFormOpen(true)} sx={{ ml: "auto" }}>
-              <AddRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {/* Liste */}
-        <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
-          {loading ? (
-            <Box display="flex" justifyContent="center" p={3}>
-              <CircularProgress size={24} />
-            </Box>
-          ) : items.length === 0 ? (
-            <Box display="flex" justifyContent="center" p={3}>
-              <Typography color="text.secondary" variant="body2">Aucun élément</Typography>
-            </Box>
-          ) : (
-            <List disablePadding dense>
-              {items.map((item) => (
-                <ListItemButton
-                  key={item.id}
-                  selected={selected?.item && (selected.item as { _id: string })._id === item.id}
-                  onClick={() => handleSelect(item.id, item.label)}
-                  sx={{ borderRadius: 1, mx: 0.5, my: 0.25 }}>
-                  <ListItemIcon sx={{ minWidth: 32, color: levelConfig[currentLevel].color }}>
-                    {currentLevel === "record" ? (
-                      <QrCode2RoundedIcon fontSize="small" />
-                    ) : (
-                      levelConfig[currentLevel].icon
-                    )}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={item.label}
-                    secondary={item.sub}
-                    primaryTypographyProps={{ noWrap: true }}
-                    secondaryTypographyProps={{ noWrap: true, variant: "caption" }}
-                  />
-                  {item.meta && (
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ ml: 1 }}>
-                      {item.meta}
-                    </Typography>
-                  )}
-                  {currentLevel !== "record" && (
-                    <ChevronRightRoundedIcon fontSize="small" sx={{ color: "text.disabled", ml: 0.5 }} />
-                  )}
-                </ListItemButton>
-              ))}
-            </List>
-          )}
-        </Box>
+        px={2}
+        py={0.75}
+        display="flex"
+        alignItems="center"
+        gap={0.5}
+        flexWrap="wrap"
+        borderBottom={1}
+        borderColor="divider"
+        bgcolor="background.paper"
+        minHeight={44}>
+        <Typography
+          variant="body2"
+          sx={{ cursor: "pointer", fontWeight: breadcrumb.length === 0 ? "bold" : "normal", "&:hover": { textDecoration: "underline" } }}
+          color={breadcrumb.length === 0 ? "text.primary" : "text.secondary"}
+          onClick={() => handleBreadcrumb(0)}>
+          Archivage physique
+        </Typography>
+        {breadcrumb.map((b, i) => (
+          <React.Fragment key={b.id}>
+            <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+            <Typography
+              variant="body2"
+              sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" } }}
+              color={i === breadcrumb.length - 1 ? "text.primary" : "text.secondary"}
+              onClick={() => handleBreadcrumb(i + 1)}>
+              {b.label}
+            </Typography>
+          </React.Fragment>
+        ))}
+        <Box flex={1} />
+        <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
+          <IconButton size="small" onClick={() => setFormOpen(true)}>
+            <AddRoundedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Box>
 
-      {/* Panneau droit : détail */}
-      <Box
-        flex={1}
-        overflow="auto"
-        p={2}
-        sx={{
-          ...scrollBarSx,
-          display: isMobile && !showDetail ? "none" : "flex",
-          flexDirection: "column",
-        }}>
-        {isMobile && showDetail && (
-          <Button
-            startIcon={<ArrowBackRoundedIcon />}
-            onClick={() => setSelected(null)}
-            sx={{ mb: 1, alignSelf: "flex-start" }}
-            size="small">
-            Retour
-          </Button>
-        )}
-        {!selected ? (
-          <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
-            <Chip
-              variant="outlined"
-              icon={<InfoOutlinedIcon />}
-              label="Sélectionnez un élément pour afficher ses détails"
-              sx={{ borderRadius: 1 }}
-            />
+      {/* ── Contenu principal : explorateur + détail ────────────── */}
+      <Box display="flex" flex={1} overflow="hidden">
+        {/* ── Panneau gauche : explorateur de fichiers ───────── */}
+        <Box
+          sx={{
+            width: { xs: "100%", md: showDetail ? "45%" : "100%" },
+            flexShrink: 0,
+            display: isMobile && showDetail ? "none" : "flex",
+            flexDirection: "column",
+            borderRight: showDetail ? { xs: "none", md: "1px solid" } : "none",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}>
+
+          {/* En-tête de la liste — style explorateur */}
+          <Box
+            px={2}
+            py={0.75}
+            display="flex"
+            alignItems="center"
+            gap={1}
+            borderBottom={1}
+            borderColor="divider"
+            bgcolor="action.hover">
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Nom
+            </Typography>
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: 120, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Type
+            </Typography>
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: 100, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", sm: "block" } }}>
+              Info
+            </Typography>
           </Box>
-        ) : (
-          <DetailPanel
-            level={selected.level}
-            item={selected.item}
-            headers={headers}
-            onDelete={(id, label) => setDeleteTarget({ level: selected.level, id, label })}
-          />
-        )}
+
+          {/* Ligne parent (..) pour remonter */}
+          {breadcrumb.length > 0 && (
+            <Box
+              px={2}
+              py={0.75}
+              display="flex"
+              alignItems="center"
+              gap={1}
+              sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, borderBottom: "1px solid", borderColor: "divider" }}
+              onClick={() => handleBreadcrumb(breadcrumb.length - 1)}>
+              <FolderOpenOutlinedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+              <Typography variant="body2" color="text.secondary">..</Typography>
+            </Box>
+          )}
+
+          {/* Liste des éléments */}
+          <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
+            {loading ? (
+              <Box display="flex" justifyContent="center" p={3}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : items.length === 0 ? (
+              <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={1}>
+                {levelConfig[currentLevel].icon}
+                <Typography color="text.secondary" variant="body2">
+                  Aucun {levelConfig[currentLevel].label.toLowerCase()}
+                </Typography>
+                <Button size="small" startIcon={<AddRoundedIcon />} onClick={() => setFormOpen(true)}>
+                  Créer
+                </Button>
+              </Box>
+            ) : (
+              items.map((item) => {
+                const isSelected = selected?.item && (selected.item as { _id: string })._id === item.id;
+                return (
+                  <Box
+                    key={item.id}
+                    px={2}
+                    py={0.75}
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    sx={{
+                      cursor: "pointer",
+                      bgcolor: isSelected ? "action.selected" : "transparent",
+                      "&:hover": { bgcolor: isSelected ? "action.selected" : "action.hover" },
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
+                    }}
+                    onClick={() => handleSelect(item.id, item.label)}>
+                    {/* Icône */}
+                    <Box sx={{ color: levelConfig[currentLevel].color, display: "flex", flexShrink: 0 }}>
+                      {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
+                    </Box>
+                    {/* Nom + sous-titre */}
+                    <Box flex={1} minWidth={0}>
+                      <Typography variant="body2" noWrap fontWeight={500}>
+                        {item.label}
+                      </Typography>
+                      {item.sub && (
+                        <Typography variant="caption" color="text.secondary" noWrap>
+                          {item.sub}
+                        </Typography>
+                      )}
+                    </Box>
+                    {/* Type */}
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{ width: 120, textAlign: "right", flexShrink: 0 }}>
+                      {levelConfig[currentLevel].label}
+                    </Typography>
+                    {/* Info / méta */}
+                    {item.meta && (
+                      <Typography variant="caption" color="text.secondary" noWrap sx={{ width: 100, textAlign: "right", flexShrink: 0, display: { xs: "none", sm: "block" } }}>
+                        {item.meta}
+                      </Typography>
+                    )}
+                    {/* Flèche navigation */}
+                    {!isLeafLevel && (
+                      <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
+                    )}
+                  </Box>
+                );
+              })
+            )}
+          </Box>
+        </Box>
+
+        {/* ── Panneau droit : détail ─────────────────────────── */}
+        <Box
+          flex={1}
+          overflow="auto"
+          p={2}
+          sx={{
+            ...scrollBarSx,
+            display: isMobile && !showDetail ? "none" : "flex",
+            flexDirection: "column",
+          }}>
+          {isMobile && showDetail && (
+            <Button
+              startIcon={<ArrowBackRoundedIcon />}
+              onClick={() => setSelected(null)}
+              sx={{ mb: 1, alignSelf: "flex-start" }}
+              size="small">
+              Retour
+            </Button>
+          )}
+          {!selected ? (
+            <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
+              <Stack alignItems="center" gap={1}>
+                <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+                <Typography color="text.secondary" variant="body2">
+                  Sélectionnez un élément pour afficher ses détails
+                </Typography>
+              </Stack>
+            </Box>
+          ) : (
+            <DetailPanel
+              level={selected.level}
+              item={selected.item}
+              headers={headers}
+              onDelete={(id, label) => setDeleteTarget({ level: selected.level, id, label })}
+            />
+          )}
+        </Box>
       </Box>
 
       {/* Formulaire de création */}
@@ -542,7 +610,7 @@ function DetailPanel({ level, item, onDelete, headers }: DetailPanelProps) {
 function ContainerDetail({ item }: { item: Container }) {
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<MeetingRoomOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
+      <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
       {item.location && (
         <DetailRow icon={<LocationOnOutlinedIcon fontSize="small" />} label="Localisation" value={item.location} />
       )}
@@ -556,7 +624,7 @@ function ContainerDetail({ item }: { item: Container }) {
 function ShelfDetail({ item }: { item: Shelf }) {
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<LayersOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
+      <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
       {item.description && (
         <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />
       )}
@@ -567,7 +635,7 @@ function ShelfDetail({ item }: { item: Shelf }) {
 function FloorDetail({ item }: { item: Floor }) {
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<ViewAgendaOutlinedIcon fontSize="small" />} label="Numéro" value={`${item.number}`} />
+      <DetailRow icon={<ViewStreamOutlinedIcon fontSize="small" />} label="Numéro" value={`${item.number}`} />
       {item.label && (
         <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Libellé" value={item.label} />
       )}
