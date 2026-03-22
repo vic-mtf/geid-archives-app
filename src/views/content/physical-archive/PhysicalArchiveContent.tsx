@@ -155,6 +155,14 @@ export default function PhysicalArchiveContent() {
     [breadcrumb]
   );
   const parentId = breadcrumb[breadcrumb.length - 1]?.id;
+  const parentLevel = breadcrumb[breadcrumb.length - 1]?.level;
+
+  // URL des documents : dépend si le parent est un record ou un document
+  const documentsUrl = currentLevel === "document" && parentId
+    ? parentLevel === "record"
+      ? `/api/stuff/archives/physical/documents/record/${parentId}`   // premier niveau
+      : `/api/stuff/archives/physical/documents/parent/${parentId}`   // sous-documents
+    : null;
 
   // ── Chargement selon le niveau ──────────────────────────
 
@@ -184,8 +192,8 @@ export default function PhysicalArchiveContent() {
   );
 
   const [{ data: documents, loading: dLoading }, refetchDocuments] = useAxios<PhysicalDocument[]>(
-    { url: `/api/stuff/archives/physical/documents/record/${parentId}`, headers },
-    { manual: currentLevel !== "document" || !parentId }
+    { url: documentsUrl ?? "", headers },
+    { manual: !documentsUrl }
   );
 
   // Refetch la liste courante après une mutation
@@ -197,7 +205,7 @@ export default function PhysicalArchiveContent() {
         floor: refetchFloors,
         binder: refetchBinders,
         record: refetchRecords,
-        document: refetchDocuments,
+        document: () => { refetchDocuments(); if (isInsideDocument) refetchDocArchives(); },
       };
       refetchMap[currentLevel]?.();
     }
@@ -214,7 +222,17 @@ export default function PhysicalArchiveContent() {
 
   // ── Items courants ──────────────────────────────────────
 
-  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string }[]>(() => {
+  // Fetch archives liées au document courant (pour affichage mixte)
+  const isInsideDocument = currentLevel === "document" && parentLevel === "document";
+  const [{ data: docArchivesData }, refetchDocArchives] = useAxios<{
+    document: string; count: number;
+    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; createdAt?: string }>;
+  }>(
+    { url: isInsideDocument ? `/api/stuff/archives/physical/documents/${parentId}/archives` : "", headers },
+    { manual: !isInsideDocument }
+  );
+
+  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string; itemType?: "document" | "archive" }[]>(() => {
     switch (currentLevel) {
       case "container":
         return ((containers as Container[]) ?? []).map((c) => ({
@@ -249,17 +267,31 @@ export default function PhysicalArchiveContent() {
           sub: r.subject,
           meta: r.nature,
         }));
-      case "document":
-        return ((documents as PhysicalDocument[]) ?? []).map((d) => ({
+      case "document": {
+        // Sous-documents
+        const docItems = ((documents as PhysicalDocument[]) ?? []).map((d) => ({
           id: d._id,
           label: d.title,
           sub: d.nature ?? d.description,
           meta: d.documentDate ? new Date(d.documentDate).toLocaleDateString("fr-FR") : undefined,
+          itemType: "document" as const,
         }));
+        // Archives liées (affichées dans la même liste quand on est dans un document)
+        const archiveItems = isInsideDocument
+          ? (docArchivesData?.archives ?? []).map((a) => ({
+              id: a._id,
+              label: a.designation ?? a.folder ?? a._id,
+              sub: a.classNumber ? `N° ${a.classNumber}` : undefined,
+              meta: a.createdAt ? new Date(a.createdAt).toLocaleDateString("fr-FR") : undefined,
+              itemType: "archive" as const,
+            }))
+          : [];
+        return [...docItems, ...archiveItems];
+      }
       default:
         return [];
     }
-  }, [currentLevel, containers, shelves, floors, binders, records, documents]);
+  }, [currentLevel, containers, shelves, floors, binders, records, documents, isInsideDocument, docArchivesData]);
 
   const getItemRaw = useCallback(
     (id: string) => {
@@ -276,14 +308,18 @@ export default function PhysicalArchiveContent() {
     [currentLevel, containers, shelves, floors, binders, records, documents]
   );
 
-  const handleSelect = (id: string, label: string) => {
+  const handleSelect = (id: string, label: string, itemType?: string) => {
+    // Les archives sont des feuilles — pas de navigation, seulement sélection
+    if (itemType === "archive") {
+      // On ne navigue pas dans une archive, on la sélectionne seulement
+      return;
+    }
+
     const raw = getItemRaw(id);
     if (raw) setSelected({ level: currentLevel, item: raw as Container });
 
-    // Naviguer seulement si ce n'est pas le dernier niveau
-    if (currentLevel !== "document") {
-      setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
-    }
+    // Naviguer dans les sous-éléments
+    setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
   };
 
   const handleBreadcrumb = (index: number) => {
@@ -301,9 +337,6 @@ export default function PhysicalArchiveContent() {
   };
 
   const showDetail = selected !== null;
-
-  // Déterminer si le niveau courant est le dernier (pas de navigation enfant)
-  const isLeafLevel = currentLevel === "document";
 
   return (
     <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
@@ -430,10 +463,16 @@ export default function PhysicalArchiveContent() {
                       borderBottom: "1px solid",
                       borderColor: "divider",
                     }}
-                    onClick={() => handleSelect(item.id, item.label)}>
-                    {/* Icône */}
-                    <Box sx={{ color: levelConfig[currentLevel].color, display: "flex", flexShrink: 0 }}>
-                      {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
+                    onClick={() => handleSelect(item.id, item.label, item.itemType)}>
+                    {/* Icône — document vs archive */}
+                    <Box sx={{
+                      color: item.itemType === "archive" ? "#43A047" : levelConfig[currentLevel].color,
+                      display: "flex", flexShrink: 0
+                    }}>
+                      {item.itemType === "archive"
+                        ? <ArticleOutlinedIcon fontSize="small" />
+                        : React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })
+                      }
                     </Box>
                     {/* Nom + sous-titre */}
                     <Box flex={1} minWidth={0}>
@@ -448,7 +487,7 @@ export default function PhysicalArchiveContent() {
                     </Box>
                     {/* Type */}
                     <Typography variant="caption" color="text.secondary" noWrap sx={{ width: 120, textAlign: "right", flexShrink: 0 }}>
-                      {levelConfig[currentLevel].label}
+                      {item.itemType === "archive" ? "Archive" : levelConfig[currentLevel].label}
                     </Typography>
                     {/* Info / méta */}
                     {item.meta && (
@@ -456,8 +495,8 @@ export default function PhysicalArchiveContent() {
                         {item.meta}
                       </Typography>
                     )}
-                    {/* Flèche navigation */}
-                    {!isLeafLevel && (
+                    {/* Flèche navigation (pas pour les archives) */}
+                    {item.itemType !== "archive" && (
                       <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
                     )}
                   </Box>
