@@ -33,7 +33,7 @@ import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon from "@mui/icons-material/StyleOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import TopicOutlinedIcon from "@mui/icons-material/TopicOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
@@ -333,7 +333,7 @@ export default function PhysicalArchiveContent() {
     floor:     { icon: <ViewStreamOutlinedIcon />,         label: "Niveau",    color: "#42A5F5" },
     binder:    { icon: <StyleOutlinedIcon />,              label: "Classeur",  color: "#FFA726" },
     record:    { icon: <FolderOutlinedIcon />,             label: "Dossier",   color: "#AB47BC" },
-    document:  { icon: <InsertDriveFileOutlinedIcon />,    label: "Document",  color: "#78909C" },
+    document:  { icon: <TopicOutlinedIcon />,               label: "Document",  color: "#78909C" },
   };
 
   const showDetail = selected !== null;
@@ -393,19 +393,26 @@ export default function PhysicalArchiveContent() {
             overflow: "hidden",
           }}>
 
-          {/* En-tête de la liste — style explorateur */}
+          {/* Titre contextuel — indique le niveau courant */}
           <Box
             px={2}
-            py={0.75}
+            py={1}
             display="flex"
             alignItems="center"
             gap={1}
             borderBottom={1}
             borderColor="divider"
             bgcolor="action.hover">
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
-              Nom
+            <Box sx={{ color: levelConfig[currentLevel].color, display: "flex" }}>
+              {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
+            </Box>
+            <Typography variant="body2" fontWeight="bold" color={levelConfig[currentLevel].color}>
+              {levelConfig[currentLevel].label}s
             </Typography>
+            {!loading && (
+              <Chip label={items.length} size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
+            )}
+            <Box flex={1} />
             <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: 120, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5 }}>
               Type
             </Typography>
