@@ -343,7 +343,7 @@ export default function PhysicalArchiveContent() {
     <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
       {/* ── Barre de navigation (fil d'Ariane) ────────────────── */}
       <Box
-        px={2}
+        px={{ xs: 1, sm: 2 }}
         py={0.75}
         display="flex"
         alignItems="center"
@@ -352,20 +352,18 @@ export default function PhysicalArchiveContent() {
         borderBottom={1}
         borderColor="divider"
         bgcolor="background.paper"
-        minHeight={44}>
+        minHeight={{ xs: 36, sm: 44 }}>
         <Typography
-          variant="body2"
-          sx={{ cursor: "pointer", fontWeight: breadcrumb.length === 0 ? "bold" : "normal", "&:hover": { textDecoration: "underline" } }}
+          sx={{ cursor: "pointer", fontWeight: breadcrumb.length === 0 ? "bold" : "normal", "&:hover": { textDecoration: "underline" }, fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
           color={breadcrumb.length === 0 ? "text.primary" : "text.secondary"}
           onClick={() => handleBreadcrumb(0)}>
           Archivage physique
         </Typography>
         {breadcrumb.map((b, i) => (
           <React.Fragment key={b.id}>
-            <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+            <NavigateNextRoundedIcon sx={{ fontSize: { xs: 14, sm: 18 }, color: "text.disabled" }} />
             <Typography
-              variant="body2"
-              sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" } }}
+              sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" }, fontSize: { xs: "0.75rem", sm: "0.875rem" }, maxWidth: { xs: 100, sm: 200 }, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               color={i === breadcrumb.length - 1 ? "text.primary" : "text.secondary"}
               onClick={() => handleBreadcrumb(i + 1)}>
               {b.label}
@@ -414,10 +412,10 @@ export default function PhysicalArchiveContent() {
               <Chip label={items.length} size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
             )}
             <Box flex={1} />
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: 120, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5 }}>
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: { xs: 70, sm: 100, md: 120 }, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", sm: "block" } }}>
               Type
             </Typography>
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: 100, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", sm: "block" } }}>
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: { sm: 80, md: 100 }, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", md: "block" } }}>
               Info
             </Typography>
           </Box>
@@ -493,13 +491,13 @@ export default function PhysicalArchiveContent() {
                         </Typography>
                       )}
                     </Box>
-                    {/* Type */}
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ width: 120, textAlign: "right", flexShrink: 0 }}>
+                    {/* Type — masqué sur mobile */}
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{ width: { xs: 70, sm: 100, md: 120 }, textAlign: "right", flexShrink: 0, display: { xs: "none", sm: "block" } }}>
                       {item.itemType === "archive" ? "Archive" : levelConfig[currentLevel].label}
                     </Typography>
-                    {/* Info / méta */}
+                    {/* Info / méta — masqué sur mobile et tablette */}
                     {item.meta && (
-                      <Typography variant="caption" color="text.secondary" noWrap sx={{ width: 100, textAlign: "right", flexShrink: 0, display: { xs: "none", sm: "block" } }}>
+                      <Typography variant="caption" color="text.secondary" noWrap sx={{ width: { sm: 80, md: 100 }, textAlign: "right", flexShrink: 0, display: { xs: "none", md: "block" } }}>
                         {item.meta}
                       </Typography>
                     )}

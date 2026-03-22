@@ -320,7 +320,7 @@ export default function DashboardContent() {
                         <ListItemText
                           primary={doc.designation ?? (doc as Record<string, unknown>).title as string ?? "—"}
                           secondary={formatDate(doc.createdAt as string)}
-                          primaryTypographyProps={{ noWrap: true, maxWidth: 260, variant: "body2" }}
+                          primaryTypographyProps={{ noWrap: true, variant: "body2", sx: { maxWidth: { xs: 120, sm: 200, md: 260 } } }}
                           secondaryTypographyProps={{ variant: "caption" }}
                         />
                         <Chip
@@ -482,7 +482,7 @@ export default function DashboardContent() {
                       <Box key={binder._id}>
                         <Box display="flex" justifyContent="space-between" mb={0.25}>
                           <Tooltip title={binder.name} placement="top">
-                            <Typography noWrap sx={{ maxWidth: 160 }} variant="body2">
+                            <Typography noWrap sx={{ maxWidth: { xs: 100, sm: 130, md: 160 } }} variant="body2">
                               {binder.name}
                             </Typography>
                           </Tooltip>
