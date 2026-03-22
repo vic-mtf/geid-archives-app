@@ -38,13 +38,13 @@ import type { ArchiveDocument } from "../../../types";
 
 // ── Types ────────────────────────────────────────────────────
 
-type Level = "container" | "shelf" | "floor" | "binder" | "record";
+type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
 
 interface Item extends Record<string, unknown> {
   _id: string;
 }
 
-const LEVELS: Level[] = ["container", "shelf", "floor", "binder", "record"];
+const LEVELS: Level[] = ["container", "shelf", "floor", "binder", "record", "document"];
 
 const LEVEL_LABELS: Record<Level, string> = {
   container : "Conteneur",
@@ -52,6 +52,7 @@ const LEVEL_LABELS: Record<Level, string> = {
   floor     : "Étage",
   binder    : "Classeur",
   record    : "Dossier physique",
+  document  : "Document",
 };
 
 const LEVEL_ICONS: Record<Level, React.ReactNode> = {
@@ -60,10 +61,11 @@ const LEVEL_ICONS: Record<Level, React.ReactNode> = {
   floor     : <FolderOpenOutlinedIcon fontSize="small" />,
   binder    : <BookmarkBorderOutlinedIcon fontSize="small" />,
   record    : <ArticleOutlinedIcon fontSize="small" />,
+  document  : <ArticleOutlinedIcon fontSize="small" />,
 };
 
 // URL de l'API pour chaque niveau (parentId = _id du niveau supérieur)
-const levelUrl = (level: Level, parentId?: string) => {
+const levelUrl = (level: Level, parentId?: string, parentLevel?: Level) => {
   const base = "/api/stuff/archives/physical";
   switch (level) {
     case "container": return `${base}/containers`;
@@ -71,6 +73,9 @@ const levelUrl = (level: Level, parentId?: string) => {
     case "floor"    : return `${base}/floors/shelf/${parentId}`;
     case "binder"   : return `${base}/binders/floor/${parentId}`;
     case "record"   : return `${base}/records/binder/${parentId}`;
+    case "document" : return parentLevel === "document"
+      ? `${base}/documents/parent/${parentId}`
+      : `${base}/documents/record/${parentId}`;
   }
 };
 
@@ -191,7 +196,7 @@ function BinderCard({ item, onClick }: { item: Item; onClick: () => void }) {
   );
 }
 
-function RecordCard({ item, selected, onClick }: { item: Item; selected: boolean; onClick: () => void }) {
+function RecordCard({ item, selected, onClick, onDrillDown }: { item: Item; selected: boolean; onClick: () => void; onDrillDown?: () => void }) {
   return (
     <Paper
       variant="outlined"
@@ -209,16 +214,29 @@ function RecordCard({ item, selected, onClick }: { item: Item; selected: boolean
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={1} alignItems="center" mb={0.25}>
-            <Typography variant="body2" fontWeight={700}>{item.internalNumber as string}</Typography>
-            <Chip label={item.category as string} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
+            <Typography variant="body2" fontWeight={700}>{String(item.internalNumber ?? "")}</Typography>
+            {!!item.category && <Chip label={String(item.category)} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />}
           </Stack>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            {item.subject as string}
-          </Typography>
-          <Typography variant="caption" color="text.disabled">
-            Réf. {item.refNumber as string}
-          </Typography>
+          {!!item.subject && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+              {String(item.subject)}
+            </Typography>
+          )}
+          {!!item.refNumber && (
+            <Typography variant="caption" color="text.disabled">
+              Réf. {String(item.refNumber)}
+            </Typography>
+          )}
         </Box>
+        {onDrillDown && (
+          <Tooltip title="Voir le contenu">
+            <Box
+              onClick={(e) => { e.stopPropagation(); onDrillDown(); }}
+              sx={{ cursor: "pointer", color: "text.disabled", flexShrink: 0, "&:hover": { color: "primary.main" } }}>
+              <ChevronRightIcon />
+            </Box>
+          </Tooltip>
+        )}
       </Stack>
     </Paper>
   );
@@ -266,11 +284,11 @@ export default function LinkToPhysicalRecordDialog() {
   }, []);
 
   // Charger les éléments d'un niveau
-  const loadLevel = useCallback(async (lvl: Level, parentId?: string) => {
+  const loadLevel = useCallback(async (lvl: Level, parentId?: string, parentLevel?: Level) => {
     setLoadingItems(true);
     setItems([]);
     try {
-      const result = await fetchItems({ url: levelUrl(lvl, parentId) });
+      const result = await fetchItems({ url: levelUrl(lvl, parentId, parentLevel) });
       setItems((result.data as Item[]) ?? []);
     } catch {
       setItems([]);
@@ -284,38 +302,44 @@ export default function LinkToPhysicalRecordDialog() {
     if (doc) loadLevel("container");
   }, [doc, loadLevel]);
 
-  // Clic sur une carte — descend d'un niveau (sauf record)
+  // Clic sur une carte — descend d'un niveau
   const handleDrillDown = useCallback((item: Item, lvl: Level) => {
     const nextLevel = LEVELS[LEVELS.indexOf(lvl) + 1];
     setSelected(prev => ({ ...prev, [lvl]: item }));
     if (nextLevel) {
+      // Sauvegarder l'état actuel pour le retour
+      const parentLevel = LEVELS[LEVELS.indexOf(lvl) - 1];
+      const parentId = parentLevel ? selected[parentLevel]?._id : undefined;
+      setNavHistory(h => [...h, { level: lvl, parentId, parentLevel }]);
       setLevel(nextLevel);
-      loadLevel(nextLevel, item._id);
+      loadLevel(nextLevel, item._id, lvl);
     }
-  }, [loadLevel]);
+  }, [loadLevel, selected]);
 
-  // Clic sur un dossier physique — sélection (pas de descente)
-  const handleSelectRecord = useCallback((item: Item) => {
+  // Sélection pour rattachement — record OU document (toggle)
+  const handleSelectTarget = useCallback((item: Item, targetLevel: Level) => {
     setSelected(prev => ({
       ...prev,
-      record: prev.record?._id === item._id ? undefined : item, // toggle
+      [targetLevel]: prev[targetLevel]?._id === item._id ? undefined : item,
     }));
   }, []);
 
+  // Historique de navigation pour gérer les documents récursifs
+  const [navHistory, setNavHistory] = useState<{ level: Level; parentId?: string; parentLevel?: Level }[]>([]);
+
   // Retour au niveau précédent via bouton ←
   const handleBack = useCallback(() => {
-    const prevLevel   = LEVELS[LEVELS.indexOf(level) - 1];
-    if (!prevLevel) return;
-    const grandParent = LEVELS[LEVELS.indexOf(prevLevel) - 1];
-    const parentId    = grandParent ? selected[grandParent]?._id : undefined;
-    setSelected(prev => {
-      const next = { ...prev };
+    if (navHistory.length === 0) return;
+    const prev = navHistory[navHistory.length - 1];
+    setNavHistory(h => h.slice(0, -1));
+    setSelected(s => {
+      const next = { ...s };
       delete next[level];
       return next;
     });
-    setLevel(prevLevel);
-    loadLevel(prevLevel, parentId);
-  }, [level, selected, loadLevel]);
+    setLevel(prev.level);
+    loadLevel(prev.level, prev.parentId, prev.parentLevel);
+  }, [level, navHistory, loadLevel]);
 
   // Clic sur un item du breadcrumb — remonte
   const handleBreadcrumbClick = useCallback((lvl: Level) => {
@@ -327,7 +351,8 @@ export default function LinkToPhysicalRecordDialog() {
       return next;
     });
     setLevel(lvl);
-    loadLevel(lvl, parentId);
+    setNavHistory([]);
+    loadLevel(lvl, parentId, parentLevel);
   }, [selected, loadLevel]);
 
   // Fermer le dialog
@@ -337,19 +362,31 @@ export default function LinkToPhysicalRecordDialog() {
     setLevel("container");
     setSelected({});
     setItems([]);
+    setNavHistory([]);
   };
+
+  // Cible sélectionnée : record ou document
+  const linkTarget = selected.document ?? selected.record;
+  const linkTargetType: "record" | "document" | null = selected.document ? "document" : selected.record ? "record" : null;
+  const linkTargetLabel = linkTarget
+    ? (linkTarget.title as string ?? linkTarget.internalNumber as string ?? linkTarget._id)
+    : "";
 
   // Confirmer le rattachement
   const handleLink = async () => {
-    if (!doc || !selected.record) return;
+    if (!doc || !linkTarget || !linkTargetType) return;
     setLinking(true);
     try {
+      const data = linkTargetType === "document"
+        ? { document: linkTarget._id, record: selected.record?._id ?? null }
+        : { record: linkTarget._id, document: null };
       await executePatch({
-        url : `/api/stuff/archives/${doc._id ?? doc.id}`,
-        data: { record: selected.record._id },
+        url: `/api/stuff/archives/${doc._id ?? doc.id}`,
+        data,
       });
+      const typeLabel = linkTargetType === "document" ? "document" : "dossier physique";
       enqueueSnackbar(
-        `L'archive numérique est maintenant rattachée au dossier physique « ${selected.record.internalNumber as string} ». Vous pouvez la retrouver dans la section Archivage physique.`,
+        `L'archive numérique est maintenant rattachée au ${typeLabel} « ${linkTargetLabel} ».`,
         { variant: "success", title: "Rattachement effectué avec succès" }
       );
       dispatch(incrementVersion());
@@ -369,14 +406,14 @@ export default function LinkToPhysicalRecordDialog() {
     setLinking(true);
     try {
       await executePatch({
-        url : `/api/stuff/archives/${doc._id ?? doc.id}`,
-        data: { record: null },
+        url: `/api/stuff/archives/${doc._id ?? doc.id}`,
+        data: { record: null, document: null },
       });
-      enqueueSnackbar("L'archive a été détachée de son dossier physique. Elle n'est plus associée à aucun support physique.", { variant: "success", title: "Détachement effectué" });
+      enqueueSnackbar("L'archive a été détachée. Elle n'est plus associée à aucun support physique.", { variant: "success", title: "Détachement effectué" });
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Le détachement a échoué. L'archive est toujours liée à son dossier physique. Vérifiez vos droits et réessayez.", { variant: "error", title: "Détachement impossible" });
+      enqueueSnackbar("Le détachement a échoué. Vérifiez vos droits et réessayez.", { variant: "error", title: "Détachement impossible" });
     } finally {
       setLinking(false);
     }
@@ -385,8 +422,8 @@ export default function LinkToPhysicalRecordDialog() {
   // Breadcrumbs : tous les niveaux sélectionnés avant le niveau courant
   const breadcrumbs = LEVELS.slice(0, LEVELS.indexOf(level)).filter(l => selected[l]);
 
-  // Le document est-il déjà rattaché à un dossier physique ?
-  const alreadyLinked = Boolean(doc?.record);
+  // Le document est-il déjà rattaché ?
+  const alreadyLinked = Boolean(doc?.record) || Boolean((doc as Record<string, unknown>)?.document);
 
   const itemLabel = (lvl: Level, item: Item): string => {
     if (lvl === "floor") return `Étage ${item.number as number}${item.label ? ` — ${item.label as string}` : ""}`;
@@ -405,7 +442,7 @@ export default function LinkToPhysicalRecordDialog() {
       <DialogTitle component="div" sx={{ pb: 1 }}>
         <Stack direction="row" alignItems="center" spacing={1} mb={0.25}>
           <LinkIcon fontSize="small" color="primary" />
-          <Typography fontWeight={700}>Rattacher à un dossier physique</Typography>
+          <Typography fontWeight={700}>Rattacher à un dossier ou document physique</Typography>
         </Stack>
         {doc?.designation && (
           <Typography variant="caption" color="text.secondary" noWrap display="block" pl={3.5}>
@@ -467,11 +504,11 @@ export default function LinkToPhysicalRecordDialog() {
           <Box sx={{ color: "primary.main" }}>{LEVEL_ICONS[level]}</Box>
           <Box flex={1}>
             <Typography variant="subtitle2" fontWeight={600}>
-              {level === "record" ? "Sélectionnez un dossier physique" : `Choisissez ${level === "floor" ? "un étage" : `un${["étagère"].includes(LEVEL_LABELS[level].toLowerCase()) ? "e" : ""} ${LEVEL_LABELS[level].toLowerCase()}`}`}
+              {(level === "record" || level === "document") ? "Sélectionnez un élément pour le rattachement" : `Choisissez ${level === "floor" ? "un étage" : `un${["étagère"].includes(LEVEL_LABELS[level].toLowerCase()) ? "e" : ""} ${LEVEL_LABELS[level].toLowerCase()}`}`}
             </Typography>
-            {level === "record" && (
+            {(level === "record" || level === "document") && (
               <Typography variant="caption" color="text.secondary">
-                Cliquez sur un dossier pour le sélectionner, puis confirmez avec « Rattacher »
+                Cliquez pour sélectionner, utilisez la flèche pour naviguer dans le contenu
               </Typography>
             )}
           </Box>
@@ -497,12 +534,23 @@ export default function LinkToPhysicalRecordDialog() {
                 if (level === "shelf")     return <ShelfCard     key={item._id} item={item} onClick={() => handleDrillDown(item, "shelf")} />;
                 if (level === "floor")     return <FloorCard     key={item._id} item={item} onClick={() => handleDrillDown(item, "floor")} />;
                 if (level === "binder")    return <BinderCard    key={item._id} item={item} onClick={() => handleDrillDown(item, "binder")} />;
-                return (
+                if (level === "record") return (
                   <RecordCard
                     key={item._id}
                     item={item}
-                    selected={selected.record?._id === item._id}
-                    onClick={() => handleSelectRecord(item)}
+                    selected={selected.record?._id === item._id && !selected.document}
+                    onClick={() => handleSelectTarget(item, "record")}
+                    onDrillDown={() => handleDrillDown(item, "record")}
+                  />
+                );
+                // document level
+                return (
+                  <RecordCard
+                    key={item._id}
+                    item={{ ...item, internalNumber: item.title as string, subject: item.description as string ?? "", refNumber: "", category: item.nature as string ?? "Document" }}
+                    selected={selected.document?._id === item._id}
+                    onClick={() => handleSelectTarget(item, "document")}
+                    onDrillDown={() => handleDrillDown(item, "document")}
                   />
                 );
               })}
@@ -536,11 +584,11 @@ export default function LinkToPhysicalRecordDialog() {
         <Button onClick={handleClose} color="inherit" disabled={linking}>
           Annuler
         </Button>
-        {level === "record" && (
+        {(level === "record" || level === "document") && (
           <Button
             variant="contained"
             onClick={handleLink}
-            disabled={!selected.record || linking}
+            disabled={!linkTarget || linking}
             startIcon={linking ? <CircularProgress size={14} color="inherit" /> : <LinkIcon />}>
             Rattacher
           </Button>
