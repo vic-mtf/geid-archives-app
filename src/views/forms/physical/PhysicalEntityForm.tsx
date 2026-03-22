@@ -420,6 +420,7 @@ export default function PhysicalEntityForm({
                       format="DD/MM/YYYY"
                       slotProps={{
                         textField: {
+                          size: "medium",
                           fullWidth: true,
                           error: !!errors[field.name],
                           helperText: (errors[field.name]?.message as string) ?? field.helperText,
@@ -434,6 +435,7 @@ export default function PhysicalEntityForm({
                   {...register(field.name)}
                   label={field.label}
                   type={field.type ?? "text"}
+                  size="medium"
                   multiline={field.multiline}
                   rows={field.rows}
                   fullWidth
