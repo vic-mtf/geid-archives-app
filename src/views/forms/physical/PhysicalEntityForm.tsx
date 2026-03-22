@@ -37,14 +37,15 @@ import type { FieldValues } from "react-hook-form";
 
 // ── Types ──────────────────────────────────────────────────
 
-export type PhysicalLevel = "container" | "shelf" | "floor" | "binder" | "record";
+export type PhysicalLevel = "container" | "shelf" | "floor" | "binder" | "record" | "document";
 
 // URL de l'entité parente par niveau (pour afficher son nom lisible)
 const parentEndpoint: Partial<Record<PhysicalLevel, string>> = {
-  shelf:  "/api/stuff/archives/physical/containers",
-  floor:  "/api/stuff/archives/physical/shelves",
-  binder: "/api/stuff/archives/physical/floors",
-  record: "/api/stuff/archives/physical/binders",
+  shelf:    "/api/stuff/archives/physical/containers",
+  floor:    "/api/stuff/archives/physical/shelves",
+  binder:   "/api/stuff/archives/physical/floors",
+  record:   "/api/stuff/archives/physical/binders",
+  document: "/api/stuff/archives/physical/records",
 };
 
 interface FieldDef {
@@ -235,6 +236,44 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
     }),
     buildBody: (data, parentId) => ({ ...data, binder: parentId }),
   },
+
+  document: {
+    title: "Nouveau document",
+    url: "/api/stuff/archives/physical/documents",
+    fields: [
+      {
+        name: "title",
+        label: "Titre *",
+        required: true,
+        helperText: "Intitulé du document (ex : Contrat de travail, PV de réunion)",
+      },
+      {
+        name: "description",
+        label: "Description",
+        multiline: true,
+        rows: 2,
+        helperText: "Description du contenu du document",
+      },
+      {
+        name: "nature",
+        label: "Nature",
+        helperText: "Type de document en MAJUSCULES (ex : CONTRAT, PV, FACTURE)",
+      },
+      {
+        name: "documentDate",
+        label: "Date du document",
+        type: "date",
+        helperText: "Date figurant sur le document original",
+      },
+    ],
+    schema: yup.object({
+      title: yup.string().trim().required("Le titre est requis"),
+      description: yup.string(),
+      nature: yup.string(),
+      documentDate: yup.string(),
+    }),
+    buildBody: (data, parentId) => ({ ...data, record: parentId }),
+  },
 };
 
 // ── Composant principal ────────────────────────────────────
@@ -287,15 +326,24 @@ export default function PhysicalEntityForm({
 
   const onSubmit = async (data: FieldValues) => {
     const body = config.buildBody(data, parentId);
-    const snackKey = enqueueSnackbar("Création en cours, veuillez patienter…", {
+    const levelNames: Record<PhysicalLevel, string> = {
+      container: "conteneur",
+      shelf:     "étagère",
+      floor:     "travée",
+      binder:    "dossier physique",
+      record:    "fiche physique",
+      document:  "document",
+    };
+    const levelName = levelNames[level] ?? "élément";
+    const snackKey = enqueueSnackbar(`Création du ${levelName} en cours, veuillez patienter…`, {
       autoHideDuration: null,
     });
     try {
       await execute({ data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar("L'élément a été créé et enregistré avec succès.", {
+      enqueueSnackbar(`Le ${levelName} a été créé et ajouté à l'inventaire physique. Vous pouvez maintenant y rattacher des archives ou y ajouter des sous-éléments.`, {
         variant: "success",
-        title: "Créé !",
+        title: `${levelName.charAt(0).toUpperCase() + levelName.slice(1)} créé avec succès`,
       });
       reset();
       onSuccess();
@@ -303,8 +351,8 @@ export default function PhysicalEntityForm({
       closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        "La création a échoué. Vérifiez les informations saisies et réessayez.";
-      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
+        `La création du ${levelName} a échoué. Vérifiez les informations saisies et réessayez.`;
+      enqueueSnackbar(msg, { variant: "error", title: `Impossible de créer le ${levelName}` });
     }
   };
 

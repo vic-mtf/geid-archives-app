@@ -1,6 +1,6 @@
 // ============================================================
 // GEID API — Types TypeScript (générés depuis swagger.js)
-// Hiérarchie physique : Container → Shelf → Floor → Binder → Record → Archive
+// Hiérarchie physique : Container → Shelf → Floor → Binder → Record → Document → Archive
 // ============================================================
 
 // ── Génériques ─────────────────────────────────────────────
@@ -156,6 +156,31 @@ export interface RecordBody {
   category: string;
   nature: string;
   binder: string;
+  metadata?: Record<string, unknown>;
+}
+
+// ── Documents physiques (subdivision du dossier) ─────────────
+export interface PhysicalDocument {
+  _id: string;
+  title: string;
+  description?: string;
+  record: PhysicalRecord | string;
+  parent?: PhysicalDocument | string | null;
+  nature?: string;
+  documentDate?: string;
+  agent?: { _id: string; firstName: string; lastName: string };
+  metadata?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PhysicalDocumentBody {
+  title: string;
+  description?: string;
+  record: string;
+  parent?: string | null;
+  nature?: string;
+  documentDate?: string;
   metadata?: Record<string, unknown>;
 }
 

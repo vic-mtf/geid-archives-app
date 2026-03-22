@@ -42,11 +42,13 @@ import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 
 import useAxios from "../../../hooks/useAxios";
 import useToken from "../../../hooks/useToken";
+import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "../archive-management-content/ArchiveManagementContent";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "../../../redux/store";
 import { incrementVersion } from "../../../redux/data";
-import type { Container, Shelf, Floor, Binder, PhysicalRecord } from "../../../types";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "../../../types";
 import formatDate from "../../../utils/formatTime";
 import scrollBarSx from "../../../utils/scrollBarSx";
 import PhysicalEntityForm from "../../forms/physical/PhysicalEntityForm";
@@ -54,7 +56,7 @@ import type { PhysicalLevel } from "../../forms/physical/PhysicalEntityForm";
 
 // ── Types locaux ───────────────────────────────────────────
 
-type Level = "container" | "shelf" | "floor" | "binder" | "record";
+type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
 
 interface BreadcrumbItem {
   id: string;
@@ -66,7 +68,7 @@ interface BreadcrumbItem {
 
 export default function PhysicalArchiveContent() {
   const Authorization = useToken();
-  const headers = useMemo(() => ({ Authorization }), [Authorization]);
+  const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const dispatch = useDispatch<AppDispatch>();
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const theme = useTheme();
@@ -89,6 +91,7 @@ export default function PhysicalArchiveContent() {
     floor:     "/api/stuff/archives/physical/floors",
     binder:    "/api/stuff/archives/physical/binders",
     record:    "/api/stuff/archives/physical/records",
+    document:  "/api/stuff/archives/physical/documents",
   };
 
   const [, executeDelete] = useAxios(
@@ -98,13 +101,22 @@ export default function PhysicalArchiveContent() {
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    const key = enqueueSnackbar("Suppression en cours…", { autoHideDuration: null });
+    const levelLabels: Record<string, string> = {
+      container: "conteneur",
+      shelf:     "étagère",
+      floor:     "travée",
+      binder:    "dossier",
+      record:    "fiche physique",
+      document:  "document",
+    };
+    const levelLabel = levelLabels[deleteTarget.level] ?? "élément";
+    const key = enqueueSnackbar(`Suppression du ${levelLabel} en cours, veuillez patienter…`, { autoHideDuration: null });
     try {
       await executeDelete({ url: `${deleteEndpoints[deleteTarget.level]}/${deleteTarget.id}` });
-      enqueueSnackbar(`"${deleteTarget.label}" a été supprimé.`, {
-        variant: "success",
-        title: "Supprimé !",
-      });
+      enqueueSnackbar(
+        `Le ${levelLabel} « ${deleteTarget.label} » a été supprimé de l'inventaire physique. Les archives associées ne sont plus rattachées à ce support.`,
+        { variant: "success", title: `${levelLabel.charAt(0).toUpperCase() + levelLabel.slice(1)} supprimé` }
+      );
       setDeleteTarget(null);
       setSelected(null);
       // Si on est dans un sous-niveau, revenir au niveau parent
@@ -115,8 +127,8 @@ export default function PhysicalArchiveContent() {
     } catch (err: unknown) {
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        "La suppression a échoué.";
-      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
+        `La suppression du ${levelLabel} a échoué. Il n'a pas été modifié. Vérifiez vos droits et réessayez.`;
+      enqueueSnackbar(msg, { variant: "error", title: "Suppression impossible" });
     } finally {
       enqueueSnackbar("", { key, persist: false });
     }
@@ -133,7 +145,8 @@ export default function PhysicalArchiveContent() {
         shelf: "floor",
         floor: "binder",
         binder: "record",
-        record: "record",
+        record: "document",
+        document: "document",
       };
       return next[last.level];
     },
@@ -168,6 +181,11 @@ export default function PhysicalArchiveContent() {
     { manual: currentLevel !== "record" || !parentId }
   );
 
+  const [{ data: documents, loading: dLoading }, refetchDocuments] = useAxios<PhysicalDocument[]>(
+    { url: `/api/stuff/archives/physical/documents/record/${parentId}`, headers },
+    { manual: currentLevel !== "document" || !parentId }
+  );
+
   // Refetch la liste courante après une mutation
   useEffect(() => {
     if (dataVersion > 0) {
@@ -177,6 +195,7 @@ export default function PhysicalArchiveContent() {
         floor: refetchFloors,
         binder: refetchBinders,
         record: refetchRecords,
+        document: refetchDocuments,
       };
       refetchMap[currentLevel]?.();
     }
@@ -186,10 +205,10 @@ export default function PhysicalArchiveContent() {
   // Élément sélectionné pour le panneau de détail
   const [selected, setSelected] = useState<{
     level: Level;
-    item: Container | Shelf | Floor | Binder | PhysicalRecord;
+    item: Container | Shelf | Floor | Binder | PhysicalRecord | PhysicalDocument;
   } | null>(null);
 
-  const loading = cLoading || sLoading || fLoading || bLoading || rLoading;
+  const loading = cLoading || sLoading || fLoading || bLoading || rLoading || dLoading;
 
   // ── Items courants ──────────────────────────────────────
 
@@ -228,10 +247,17 @@ export default function PhysicalArchiveContent() {
           sub: r.subject,
           meta: r.nature,
         }));
+      case "document":
+        return ((documents as PhysicalDocument[]) ?? []).map((d) => ({
+          id: d._id,
+          label: d.title,
+          sub: d.nature ?? d.description,
+          meta: d.documentDate ? new Date(d.documentDate).toLocaleDateString("fr-FR") : undefined,
+        }));
       default:
         return [];
     }
-  }, [currentLevel, containers, shelves, floors, binders, records]);
+  }, [currentLevel, containers, shelves, floors, binders, records, documents]);
 
   const getItemRaw = useCallback(
     (id: string) => {
@@ -241,10 +267,11 @@ export default function PhysicalArchiveContent() {
         floor: (floors as Floor[]) ?? [],
         binder: (binders as Binder[]) ?? [],
         record: (records as PhysicalRecord[]) ?? [],
+        document: (documents as PhysicalDocument[]) ?? [],
       };
       return (lists[currentLevel] as Array<{ _id: string }>).find((i) => i._id === id);
     },
-    [currentLevel, containers, shelves, floors, binders, records]
+    [currentLevel, containers, shelves, floors, binders, records, documents]
   );
 
   const handleSelect = (id: string, label: string) => {
@@ -252,7 +279,7 @@ export default function PhysicalArchiveContent() {
     if (raw) setSelected({ level: currentLevel, item: raw as Container });
 
     // Naviguer seulement si ce n'est pas le dernier niveau
-    if (currentLevel !== "record") {
+    if (currentLevel !== "document") {
       setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
     }
   };
@@ -263,11 +290,12 @@ export default function PhysicalArchiveContent() {
   };
 
   const levelConfig: Record<Level, { icon: React.ReactNode; label: string; color: string }> = {
-    container: { icon: <MeetingRoomOutlinedIcon />, label: "Conteneur", color: "primary.main" },
-    shelf:     { icon: <LayersOutlinedIcon />,     label: "Étagère",   color: "success.main" },
-    floor:     { icon: <ViewAgendaOutlinedIcon />, label: "Étage",     color: "info.main" },
-    binder:    { icon: <FolderOpenOutlinedIcon />, label: "Classeur",  color: "warning.main" },
-    record:    { icon: <ArticleOutlinedIcon />,    label: "Dossier",   color: "secondary.main" },
+    container: { icon: <MeetingRoomOutlinedIcon />,  label: "Conteneur", color: "primary.main" },
+    shelf:     { icon: <LayersOutlinedIcon />,      label: "Étagère",   color: "success.main" },
+    floor:     { icon: <ViewAgendaOutlinedIcon />,  label: "Étage",     color: "info.main" },
+    binder:    { icon: <FolderOpenOutlinedIcon />,  label: "Classeur",  color: "warning.main" },
+    record:    { icon: <ArticleOutlinedIcon />,     label: "Dossier",   color: "secondary.main" },
+    document:  { icon: <DescriptionOutlinedIcon />, label: "Document",  color: "error.main" },
   };
 
   const showDetail = selected !== null;
@@ -404,6 +432,7 @@ export default function PhysicalArchiveContent() {
           <DetailPanel
             level={selected.level}
             item={selected.item}
+            headers={headers}
             onDelete={(id, label) => setDeleteTarget({ level: selected.level, id, label })}
           />
         )}
@@ -449,23 +478,25 @@ export default function PhysicalArchiveContent() {
 
 interface DetailPanelProps {
   level: Level;
-  item: Container | Shelf | Floor | Binder | PhysicalRecord;
+  item: Container | Shelf | Floor | Binder | PhysicalRecord | PhysicalDocument;
   onDelete: (id: string, label: string) => void;
+  headers: Record<string, string>;
 }
 
-function DetailPanel({ level, item, onDelete }: DetailPanelProps) {
+function DetailPanel({ level, item, onDelete, headers }: DetailPanelProps) {
   const levelLabels: Record<Level, string> = {
     container: "Conteneur",
     shelf: "Étagère",
     floor: "Étage",
     binder: "Classeur",
     record: "Dossier physique",
+    document: "Document",
   };
 
   // Nom lisible de l'élément pour le dialogue de confirmation
   const itemLabel = useMemo(() => {
     const it = item as unknown as Record<string, unknown>;
-    return (it.name ?? it.internalNumber ?? it.subject ?? (it.number !== undefined ? `Étage ${it.number}` : null) ?? it._id) as string;
+    return (it.name ?? it.title ?? it.internalNumber ?? it.subject ?? (it.number !== undefined ? `Étage ${it.number}` : null) ?? it._id) as string;
   }, [item]);
 
   return (
@@ -475,7 +506,7 @@ function DetailPanel({ level, item, onDelete }: DetailPanelProps) {
           <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
             {levelLabels[level]}
           </Typography>
-          <Chip label={level} size="small" variant="outlined" />
+          <Chip label={levelLabels[level]} size="small" variant="outlined" />
           <Tooltip title="Supprimer cet élément" placement="top">
             <IconButton
               size="small"
@@ -491,7 +522,8 @@ function DetailPanel({ level, item, onDelete }: DetailPanelProps) {
         {level === "shelf" && <ShelfDetail item={item as Shelf} />}
         {level === "floor" && <FloorDetail item={item as Floor} />}
         {level === "binder" && <BinderDetail item={item as Binder} />}
-        {level === "record" && <RecordDetail item={item as PhysicalRecord} />}
+        {level === "record" && <RecordDetail item={item as PhysicalRecord} headers={headers} />}
+        {level === "document" && <DocumentDetail item={item as PhysicalDocument} headers={headers} />}
 
         <Divider sx={{ mt: 2, mb: 1 }} />
         <Grid container spacing={1}>
@@ -570,7 +602,26 @@ function BinderDetail({ item }: { item: Binder }) {
   );
 }
 
-function RecordDetail({ item }: { item: PhysicalRecord }) {
+function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record<string, string> }) {
+  const [{ data: archivesData, loading: archivesLoading }] = useAxios<{
+    count: number;
+    archives: Array<{
+      _id: string;
+      designation?: string;
+      description?: string;
+      folder?: string;
+      classNumber?: string;
+      status?: string;
+      validated?: boolean;
+      createdAt?: string;
+    }>;
+  }>(
+    { url: `/api/stuff/archives/physical/records/${item._id}/archives`, headers },
+    { manual: false }
+  );
+
+  const linkedArchives = archivesData?.archives ?? [];
+
   return (
     <Stack spacing={1}>
       <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label="N° interne" value={item.internalNumber} />
@@ -617,6 +668,149 @@ function RecordDetail({ item }: { item: PhysicalRecord }) {
             ))}
           </Stack>
         </Box>
+      )}
+
+      {/* ── Archives numériques liées ── */}
+      <Box mt={1}>
+        <Divider sx={{ mb: 1.5 }} />
+        <Stack direction="row" alignItems="center" gap={1} mb={1}>
+          <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+          <Typography variant="subtitle2" fontWeight="bold">
+            Archives numériques liées
+          </Typography>
+          {!archivesLoading && (
+            <Chip label={linkedArchives.length} size="small" color={linkedArchives.length > 0 ? "primary" : "default"} />
+          )}
+        </Stack>
+        {archivesLoading ? (
+          <Box display="flex" justifyContent="center" py={1.5}>
+            <CircularProgress size={20} />
+          </Box>
+        ) : linkedArchives.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
+            Aucune archive numérique n&apos;est rattachée à ce document physique.
+            Pour en ajouter une, ouvrez la fiche de l&apos;archive depuis la gestion des archives
+            et utilisez l&apos;action &laquo;&nbsp;Dossier physique&nbsp;&raquo;.
+          </Typography>
+        ) : (
+          <Stack spacing={0.75}>
+            {linkedArchives.map((arc) => {
+              const norm = normalizeStatus(arc.status, arc.validated);
+              return (
+                <Box
+                  key={arc._id}
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 1,
+                    p: 0.75,
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                  }}>
+                  <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
+                  <Box flex={1} minWidth={0}>
+                    <Typography variant="body2" noWrap fontWeight={500}>
+                      {arc.designation ?? arc.folder ?? arc._id}
+                    </Typography>
+                    {arc.classNumber && (
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        N° {arc.classNumber}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Chip
+                    label={STATUS_LABEL[norm] ?? norm}
+                    color={STATUS_COLOR[norm] ?? "default"}
+                    size="small"
+                    variant="outlined"
+                    sx={{ flexShrink: 0 }}
+                  />
+                </Box>
+              );
+            })}
+          </Stack>
+        )}
+      </Box>
+    </Stack>
+  );
+}
+
+// ── Détail d'un document ────────────────────────────────────
+
+function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Record<string, string> }) {
+  const [{ data: archivesData, loading: archLoading }] = useAxios<{
+    document: string;
+    count: number;
+    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean }>;
+  }>(
+    { url: `/api/stuff/archives/physical/documents/${item._id}/archives`, headers },
+  );
+
+  const linkedArchives = archivesData?.archives ?? [];
+
+  return (
+    <Stack spacing={1}>
+      <DetailRow icon={<DescriptionOutlinedIcon fontSize="small" />} label="Titre" value={item.title} />
+      {item.description && (
+        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />
+      )}
+      {item.nature && (
+        <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
+      )}
+      {item.documentDate && (
+        <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date du document" value={new Date(item.documentDate).toLocaleDateString("fr-FR")} />
+      )}
+
+      <Divider sx={{ my: 1 }} />
+      <Stack direction="row" alignItems="center" gap={1} mb={1}>
+        <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+        <Typography variant="subtitle2" fontWeight="bold">
+          Archives numériques liées
+        </Typography>
+        {archivesData && (
+          <Chip label={archivesData.count} size="small" color="default" />
+        )}
+      </Stack>
+
+      {archLoading ? (
+        <CircularProgress size={20} />
+      ) : linkedArchives.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
+          Aucune archive numérique rattachée à ce document.
+        </Typography>
+      ) : (
+        <Stack spacing={0.5}>
+          {linkedArchives.map((arc) => {
+            const norm = normalizeStatus(arc.status, arc.validated);
+            return (
+              <Box
+                key={arc._id}
+                sx={{
+                  display: "flex", alignItems: "flex-start", gap: 1, p: 0.75,
+                  borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper",
+                }}>
+                <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
+                <Box flex={1} minWidth={0}>
+                  <Typography variant="body2" noWrap fontWeight={500}>
+                    {arc.designation ?? arc.folder ?? arc._id}
+                  </Typography>
+                  {arc.classNumber && (
+                    <Typography variant="caption" color="text.secondary" noWrap>
+                      N° {arc.classNumber}
+                    </Typography>
+                  )}
+                </Box>
+                <Chip
+                  label={STATUS_LABEL[norm] ?? norm}
+                  color={STATUS_COLOR[norm] ?? "default"}
+                  size="small" variant="outlined" sx={{ flexShrink: 0 }}
+                />
+              </Box>
+            );
+          })}
+        </Stack>
       )}
     </Stack>
   );

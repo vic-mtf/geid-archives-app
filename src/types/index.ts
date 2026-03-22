@@ -201,6 +201,8 @@ export type {
   BinderBody,
   PhysicalRecord,
   RecordBody,
+  PhysicalDocument,
+  PhysicalDocumentBody,
   Archive,
   Workspace,
   Book,
