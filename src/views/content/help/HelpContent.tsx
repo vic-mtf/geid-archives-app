@@ -136,23 +136,33 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "archivage-physique", number: "10", title: "L'archivage physique",
-    keywords: ["archivage physique", "inventaire", "local", "étagère", "classeur", "document physique", "hiérarchie"],
-    body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à cinq niveaux correspondant à la réalité d'un centre d'archives physiques.",
+    keywords: ["archivage physique", "inventaire", "conteneur", "étagère", "classeur", "dossier", "document", "hiérarchie", "explorateur"],
+    body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à six niveaux correspondant à la réalité d'un centre d'archives physiques. L'interface adopte une disposition de type explorateur de fichiers avec un fil d'Ariane pour naviguer entre les niveaux, une ligne de retour (..) et un panneau de détail latéral.",
   },
   {
     id: "hierarchie-physique", number: "10.1", title: "La hiérarchie des espaces physiques",
-    keywords: ["local", "étagère", "section", "classeur", "document", "hiérarchie", "niveau", "arborescence"],
-    body: "La hiérarchie physique est organisée de la manière suivante. Le Local ou emplacement représente le bâtiment ou la salle de conservation. L'Étagère est un meuble ou un rayonnage à l'intérieur du local. La Section correspond à un niveau ou compartiment de l'étagère. Le Classeur est une unité de rangement contenant des chemises ou dossiers. Le Document est la fiche physique représentant un dossier réel qui peut contenir une ou plusieurs archives numériques.",
+    keywords: ["conteneur", "étagère", "niveau", "classeur", "dossier", "document", "hiérarchie", "arborescence", "sous-document"],
+    body: "La hiérarchie physique est organisée en six niveaux. Le Conteneur représente l'armoire, la salle ou l'unité de stockage racine. L'Étagère est un rayon ou une travée à l'intérieur du conteneur. Le Niveau correspond à un étage ou compartiment de l'étagère, rattaché à une unité administrative. Le Classeur est une unité de rangement spécialisée par nature de document avec une capacité maximale. Le Dossier est le dossier physique identifié par un code QR unique. Le Document est une subdivision du dossier qui peut contenir des archives numériques et/ou d'autres sous-documents de manière récursive.",
   },
   {
-    id: "rattachement", number: "10.2", title: "Rattacher une archive numérique à un document physique",
-    keywords: ["rattacher", "lier", "associer", "archive numérique", "document physique", "support"],
-    body: "Le rattachement permet d'associer une archive numérique à son document physique correspondant. Cela crée un lien bidirectionnel : depuis l'archive numérique vous pouvez accéder à la fiche physique, et depuis la fiche physique vous pouvez consulter toutes les archives numériques associées. Pour effectuer le rattachement ouvrez le panneau de détail de l'archive et cliquez sur le bouton Dossier physique.",
+    id: "rattachement", number: "10.2", title: "Rattacher une archive à un dossier ou un document",
+    keywords: ["rattacher", "lier", "associer", "archive numérique", "dossier physique", "document", "support"],
+    body: "Le rattachement permet d'associer une archive numérique à un dossier physique ou à un document spécifique à l'intérieur de ce dossier. Depuis le panneau de détail de l'archive, cliquez sur le bouton Dossier physique pour ouvrir la navigation en cascade. Parcourez la hiérarchie jusqu'au dossier ou au document souhaité. Cliquez sur l'élément pour le sélectionner, ou utilisez la flèche pour explorer son contenu. Confirmez avec le bouton Rattacher. Le détachement est aussi possible depuis le même dialogue.",
   },
   {
-    id: "qrcode", number: "10.3", title: "Le code QR d'un document physique",
+    id: "documents-physiques", number: "10.3", title: "Les documents et sous-documents",
+    keywords: ["document", "sous-document", "récursif", "créer document", "contenu", "imbriqué"],
+    body: "Un dossier physique peut contenir un ou plusieurs documents. Chaque document peut lui-même contenir d'autres sous-documents et/ou des archives numériques. Cette structure récursive permet de modéliser des dossiers complexes avec plusieurs niveaux de classement internes. Pour créer un document, naviguez dans un dossier puis cliquez sur le bouton d'ajout. Le formulaire propose un titre, une description, une nature et une date. Les sous-documents se créent de la même manière en naviguant dans un document parent.",
+  },
+  {
+    id: "qrcode", number: "10.4", title: "Le code QR d'un dossier physique",
     keywords: ["QR code", "code QR", "étiquette", "identification", "scan"],
-    body: "Chaque document physique se voit attribuer automatiquement un code QR unique lors de sa création. Ce code peut être imprimé et collé sur la chemise physique pour permettre une identification rapide par scan. Il contient le numéro interne du document et permet de retrouver immédiatement sa fiche dans le système.",
+    body: "Chaque dossier physique se voit attribuer automatiquement un code QR unique (UUID) lors de sa création. Ce code peut être imprimé et collé sur la chemise physique pour permettre une identification rapide par scan. L'endpoint de recherche par QR code retrouve instantanément la fiche numérique complète du dossier avec toute sa localisation hiérarchique.",
+  },
+  {
+    id: "datepicker", number: "10.5", title: "Saisie des dates avec le calendrier",
+    keywords: ["date", "calendrier", "datepicker", "saisie", "format"],
+    body: "Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA (français). Vous pouvez cliquer sur l'icône calendrier pour ouvrir le sélecteur, naviguer entre les mois et les années, ou saisir directement la date au clavier. Les dates sont enregistrées au format international ISO pour garantir la cohérence des données.",
   },
   {
     id: "recherche", number: "11", title: "Rechercher dans le système",

@@ -363,10 +363,12 @@ function TocPage() {
     { num: "7",   title: "Validation et contrôle qualité" },
     { num: "8",   title: "Gestion et opérations sur les archives" },
     { num: "9",   title: "L'archivage physique" },
-    { num: "9.1", title: "La hiérarchie des espaces", sub: true },
-    { num: "9.2", title: "Créer et gérer chaque niveau", sub: true },
-    { num: "9.3", title: "Rattachement numérique / physique", sub: true },
-    { num: "9.4", title: "Le code QR et son utilisation", sub: true },
+    { num: "9.1", title: "La hiérarchie des espaces (6 niveaux)", sub: true },
+    { num: "9.2", title: "Les documents et sous-documents", sub: true },
+    { num: "9.3", title: "Créer et gérer chaque niveau", sub: true },
+    { num: "9.4", title: "Rattachement à un dossier ou un document", sub: true },
+    { num: "9.5", title: "Le code QR et son utilisation", sub: true },
+    { num: "9.6", title: "Saisie des dates avec le calendrier", sub: true },
     { num: "10",  title: "Recherche et indexation" },
     { num: "11",  title: "Rôles, permissions et sécurité" },
     { num: "12",  title: "Administration du système" },
@@ -1217,18 +1219,21 @@ function Chapter9() {
           lien avec les équivalents numériques existants.
         </P2>
 
-        <H2>9.2 — La hiérarchie des espaces physiques</H2>
+        <H2>9.1 — La hiérarchie des espaces physiques (6 niveaux)</H2>
         <P2>
-          L'organisation physique est représentée sous la forme d'une arborescence à cinq niveaux
+          L'organisation physique est représentée sous la forme d'une arborescence à six niveaux
           imbriqués. Chaque niveau représente un type d'espace ou de contenant différent.
+          L'interface adopte une disposition de type explorateur de fichiers avec un fil d'Ariane,
+          un titre contextuel indiquant le niveau courant et une ligne de retour (..) pour remonter.
         </P2>
 
         {[
-          { name: "Local / Emplacement", color: P, desc: "Le niveau racine de la hiérarchie physique. Représente le bâtiment, la salle, le couloir ou tout espace de conservation délimité. Un local peut être une salle forte, une armoire ignifuge, un entrepôt d'archives ou un espace de bureau dédié à la conservation. Chaque local est identifié par un nom unique dans le système." },
-          { name: "Étagère", color: "#0277BD", desc: "Un meuble de rangement ou un rayonnage situé à l'intérieur d'un local. L'étagère peut représenter une armoire à tiroirs, un rayonnage ouvert ou une bibliothèque. Elle constitue la première subdivision géographique à l'intérieur d'un local." },
-          { name: "Section", color: "#0288D1", desc: "Un niveau, un plateau, un tiroir ou un compartiment à l'intérieur d'une étagère. La section permet d'affiner la localisation physique au sein d'un meuble de rangement. Vous pouvez par exemple nommer les sections par numéro (Section 1, Section 2) ou par couleur si vos meubles sont ainsi organisés." },
-          { name: "Classeur", color: "#039BE5", desc: "Une unité de rangement individuelle : boîte d'archives, chemise cartonnée, portefeuille ou classeur à anneaux. Le classeur peut avoir une capacité maximale définie (nombre de documents qu'il peut contenir). Le système surveille le taux de remplissage de chaque classeur et vous alerte quand il approche de sa limite." },
-          { name: "Document physique", color: "#03A9F4", desc: "La fiche représentant un dossier physique réel : une chemise, un dossier suspendu, un registre ou tout autre unité documentaire physique. C'est le niveau le plus fin de la hiérarchie. Chaque document physique reçoit automatiquement un numéro interne unique et un code QR. Il peut être associé à une ou plusieurs archives numériques." },
+          { name: "Conteneur", color: "#5C6BC0", desc: "Le niveau racine de la hiérarchie physique. Représente l'armoire, la salle, le couloir ou tout espace de conservation délimité. Un conteneur peut être une salle forte, une armoire ignifuge, un entrepôt d'archives ou un espace de bureau dédié à la conservation. Chaque conteneur est identifié par un nom unique." },
+          { name: "Étagère", color: "#26A69A", desc: "Un meuble de rangement ou un rayonnage situé à l'intérieur d'un conteneur. L'étagère peut représenter une armoire à tiroirs, un rayonnage ouvert ou une bibliothèque. Elle constitue la première subdivision géographique." },
+          { name: "Niveau", color: "#42A5F5", desc: "Un étage, un plateau, un tiroir ou un compartiment à l'intérieur d'une étagère. Le niveau est rattaché à une unité administrative qui en est responsable." },
+          { name: "Classeur", color: "#FFA726", desc: "Une unité de rangement spécialisée par nature de document. Le classeur a une capacité maximale définie. Le système surveille le taux de remplissage et alerte quand il approche de sa limite. Seuls les dossiers de même nature peuvent y être ajoutés." },
+          { name: "Dossier physique", color: "#AB47BC", desc: "La fiche représentant un dossier réel identifié par un code QR unique. C'est dans le dossier que l'on crée des documents pour organiser le contenu." },
+          { name: "Document", color: "#78909C", desc: "Une subdivision du dossier physique. Un document peut contenir des archives numériques rattachées et/ou d'autres sous-documents de manière récursive, permettant de modéliser des dossiers complexes avec plusieurs niveaux de classement internes." },
         ].map(h => (
           <View key={h.name} style={[s.hierLevel]}>
             <View style={[s.hierBullet, { backgroundColor: h.color }]} />
@@ -1244,11 +1249,20 @@ function Chapter9() {
       <Page size="A4" style={s.page}>
         <Hdr section="Chapitre 9 — L'archivage physique (suite)" />
 
+        <H2>9.2 — Les documents et sous-documents</H2>
+        <P2>
+          Un dossier physique peut contenir un ou plusieurs documents. Chaque document peut lui-même
+          contenir d'autres sous-documents et/ou des archives numériques. Cette structure récursive
+          permet de modéliser des dossiers complexes avec plusieurs niveaux de classement internes.
+          Dans l'explorateur, les documents sont affichés avec les archives liées dans une liste mixte.
+          Les archives apparaissent avec une icône verte sans flèche de navigation (ce sont des feuilles).
+        </P2>
+
         <H2>9.3 — Créer et gérer les éléments physiques</H2>
         <P2>
           La navigation dans l'arborescence physique s'effectue de manière progressive depuis le
-          niveau Local. Cliquez sur un local pour voir ses étagères, cliquez sur une étagère pour
-          voir ses sections, et ainsi de suite jusqu'aux documents physiques. Le fil de navigation
+          niveau Conteneur. Cliquez sur un conteneur pour voir ses étagères, cliquez sur une étagère pour
+          voir ses niveaux, et ainsi de suite jusqu'aux documents. Le fil d'Ariane
           en haut de la section vous indique toujours votre position dans la hiérarchie.
         </P2>
         <H4>Créer un nouvel élément</H4>
@@ -1265,25 +1279,26 @@ function Chapter9() {
           Un classeur à plus de 90 % de capacité génère une alerte dans le tableau de bord principal.
         </P2>
 
-        <H2>9.4 — Le rattachement archive numérique / document physique</H2>
+        <H2>9.4 — Rattacher une archive à un dossier ou un document</H2>
         <P2>
-          Le rattachement est l'opération qui crée le lien entre un document physique et une ou
-          plusieurs archives numériques. Ce lien est bidirectionnel : depuis l'archive numérique,
-          vous pouvez consulter la localisation physique du document, et depuis la fiche physique,
-          vous pouvez lister toutes les archives numériques rattachées.
+          Le rattachement permet d'associer une archive numérique à un dossier physique ou à un
+          document spécifique à l'intérieur de ce dossier. Ce lien est bidirectionnel : depuis
+          l'archive numérique, vous pouvez consulter la localisation physique, et depuis la fiche
+          physique, vous pouvez lister toutes les archives numériques rattachées.
         </P2>
-        <H4>Rattacher une archive numérique à un document physique</H4>
+        <H4>Procédure de rattachement</H4>
         <NumBullet n={1}>Ouvrez le panneau de détail de l'archive numérique à rattacher.</NumBullet>
         <NumBullet n={2}>Cliquez sur le bouton Dossier physique dans la barre d'actions rapides.</NumBullet>
-        <NumBullet n={3}>Une fenêtre s'ouvre avec la liste des documents physiques. Utilisez la barre de recherche pour trouver rapidement le bon document.</NumBullet>
-        <NumBullet n={4}>Sélectionnez le document physique correspondant.</NumBullet>
-        <NumBullet n={5}>Confirmez. Le panneau de détail de l'archive affiche maintenant la localisation physique complète (Local - Étagère - Section - Classeur - Document).</NumBullet>
+        <NumBullet n={3}>Naviguez dans la hiérarchie en cascade : Conteneur - Étagère - Niveau - Classeur - Dossier - Document.</NumBullet>
+        <NumBullet n={4}>Cliquez sur l'élément pour le sélectionner. Utilisez la flèche pour explorer son contenu avant de choisir.</NumBullet>
+        <NumBullet n={5}>Vous pouvez rattacher au niveau dossier OU au niveau document selon la granularité souhaitée.</NumBullet>
+        <NumBullet n={6}>Confirmez avec le bouton Rattacher.</NumBullet>
 
         <H4>Détacher une archive</H4>
         <P2>
           Pour défaire un rattachement, ouvrez le panneau de détail de l'archive, cliquez sur
-          Dossier physique et choisissez Détacher. L'opération est immédiate. Vous pourrez ensuite
-          effectuer un nouveau rattachement si nécessaire.
+          Dossier physique et choisissez Détacher. L'archive est dissociée à la fois du dossier
+          et du document. Vous pourrez effectuer un nouveau rattachement si nécessaire.
         </P2>
 
         <H2>9.5 — Le code QR et son utilisation pratique</H2>
@@ -1300,6 +1315,15 @@ function Chapter9() {
           archives numériques rattachées.
         </P2>
         <Succ>L'utilisation systématique des codes QR réduit considérablement le risque d'erreur lors des opérations de classement et de recherche physique. Elle est particulièrement recommandée dans les dépôts contenant un grand nombre de documents.</Succ>
+
+        <H2>9.6 — Saisie des dates avec le calendrier</H2>
+        <P2>
+          Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur
+          de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA (français).
+          Cliquez sur l'icône calendrier pour ouvrir le sélecteur, naviguez entre les mois et les
+          années, ou saisissez directement la date au clavier. Les dates sont enregistrées au format
+          international ISO pour garantir la cohérence des données dans le système.
+        </P2>
         <Ftr />
       </Page>
     </>
