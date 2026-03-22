@@ -86,15 +86,15 @@ export default function ArchiveEditForm() {
         ? (data.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean)
         : [],
     };
-    const snackKey = enqueueSnackbar("Enregistrement des modifications en cours…", {
+    const snackKey = enqueueSnackbar("Enregistrement des modifications en cours, veuillez patienter…", {
       autoHideDuration: null,
     });
     try {
       await execute({ url: `/api/stuff/archives/${doc._id ?? doc.id}`, data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar("Les informations ont été mises à jour avec succès.", {
+      enqueueSnackbar("Les modifications ont été enregistrées. La fiche de l'archive est maintenant à jour.", {
         variant: "success",
-        title: "Modifié !",
+        title: "Archive mise à jour",
       });
       dispatch(incrementVersion());
       handleClose();
@@ -103,7 +103,7 @@ export default function ArchiveEditForm() {
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
         "Impossible d'enregistrer les modifications. Vérifiez votre connexion et réessayez.";
-      enqueueSnackbar(msg, { variant: "error", title: "Erreur" });
+      enqueueSnackbar(msg, { variant: "error", title: "Impossible d'enregistrer les modifications" });
     }
   };
 

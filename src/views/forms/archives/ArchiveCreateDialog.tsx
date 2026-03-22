@@ -114,10 +114,10 @@ export default function ArchiveCreateDialog() {
         throw new Error((body as { message?: string }).message ?? `Erreur ${res.status}`);
       }
       dispatch(incrementVersion());
-      enqueueSnackbar(`"${designation.current}" a été envoyée au service d'archivage.`, {
-        variant: "success",
-        title: "Archive créée !",
-      });
+      enqueueSnackbar(
+        `"${designation.current}" a bien été transmise au service d'archivage. Elle est maintenant en attente de validation par un archiviste.`,
+        { variant: "success", title: "Archive déposée avec succès" }
+      );
       handleClose();
     } catch (err: unknown) {
       setError((err as Error).message ?? "Une erreur est survenue. Réessayez.");

@@ -1,52 +1,212 @@
 /**
- * HelpContent — Manuel utilisateur complet de l'application GEID Archives.
- * Chaque section porte un id HTML pour être ciblée depuis les bulles d'aide (HelpTip).
+ * HelpContent — Manuel utilisateur complet GEID Archives.
+ *
+ * Fonctionnalités :
+ *  - Recherche plein-texte avec Fuse.js (suggestions, navigation vers la section)
+ *  - Téléchargement PDF avec html2canvas + jsPDF (rendu fidèle à l'écran)
+ *  - Ancrage automatique depuis d'autres pages (location.state.helpAnchor)
+ *  - Sommaire interactif avec navigation par défilement fluide
  */
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
-  Typography,
-  Divider,
+  Button,
   Chip,
-  Paper,
-  Stack,
+  CircularProgress,
+  Collapse,
+  Divider,
+  IconButton,
+  InputAdornment,
   List,
   ListItem,
-  ListItemText,
-  ListItemIcon,
-  Alert,
+  Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
+  TextField,
+  Tooltip,
+  Typography,
 } from "@mui/material";
-import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
-import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
-import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
+import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import CloseRoundedIcon         from "@mui/icons-material/CloseRounded";
+import ExpandMoreRoundedIcon    from "@mui/icons-material/ExpandMoreRounded";
+import CheckCircleOutlineIcon   from "@mui/icons-material/CheckCircleOutline";
+import ArrowRightRoundedIcon    from "@mui/icons-material/ArrowRightRounded";
+import InfoOutlinedIcon         from "@mui/icons-material/InfoOutlined";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
-import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
-import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
-import { useLocation } from "react-router-dom";
+import { useLocation }          from "react-router-dom";
+import Fuse                     from "fuse.js";
 
-// ── Composants internes ──────────────────────────────────────
+// ── Structure des sections du manuel ─────────────────────────
 
-function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
+interface ManualSection {
+  id:       string;
+  number:   string;
+  title:    string;
+  keywords: string[];
+  body:     string; // texte brut pour l'indexation Fuse
+}
+
+const SECTIONS: ManualSection[] = [
+  {
+    id: "presentation", number: "1", title: "Présentation de l'application",
+    keywords: ["geid", "archives", "présentation", "introduction", "objectif", "utilité", "qu'est-ce"],
+    body: "GEID Archives est un système de gestion documentaire développé pour centraliser, organiser et protéger l'ensemble des archives d'une organisation. L'application permet de gérer simultanément deux dimensions complémentaires : les archives numériques sous forme de fichiers électroniques, et les archives physiques conservées dans des espaces de stockage réels.",
+  },
+  {
+    id: "connexion", number: "2", title: "Connexion et interface",
+    keywords: ["connexion", "login", "interface", "navigation", "onglet", "menu"],
+    body: "Pour accéder à GEID Archives vous devez disposer d'un compte créé par votre administrateur. Saisissez votre identifiant et mot de passe sur la page d'accueil. L'interface principale est organisée autour d'un menu de navigation à gauche donnant accès aux quatre sections principales.",
+  },
+  {
+    id: "tableau-de-bord", number: "3", title: "Le tableau de bord",
+    keywords: ["tableau de bord", "dashboard", "statistiques", "indicateurs", "alertes", "activité récente"],
+    body: "Le tableau de bord est la première page qui s'affiche après connexion. Il présente une synthèse en temps réel de l'état du système. Vous y trouverez les compteurs d'archives par statut, les alertes prioritaires, l'activité récente et l'état de l'inventaire physique.",
+  },
+  {
+    id: "archives-numeriques", number: "4", title: "Les archives numériques",
+    keywords: ["archive numérique", "document", "fichier", "dépôt", "soumettre", "créer", "ajouter"],
+    body: "Une archive numérique représente un document électronique conservé dans le système. Elle peut être un contrat, un rapport, une décision administrative, un procès-verbal ou tout autre document officiel. Chaque archive suit un cycle de vie structuré depuis sa soumission jusqu'à sa destruction ou conservation définitive.",
+  },
+  {
+    id: "formulaire-creation", number: "4.1", title: "Soumettre une nouvelle archive",
+    keywords: ["formulaire", "création", "désignation", "type", "description", "fichier", "dossier", "référence"],
+    body: "Pour soumettre une archive cliquez sur le bouton Ajouter dans la barre de navigation gauche. Un formulaire s'ouvre avec les champs suivants : désignation obligatoire nom du document, type documentaire catégorie administrative, numéro de classe, numéro de référence, dossier de rattachement, description, pièce jointe PDF ou autre.",
+  },
+  {
+    id: "cycle-de-vie", number: "5", title: "Le cycle de vie d'une archive",
+    keywords: ["cycle de vie", "statut", "lifecycle", "transition", "état", "PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"],
+    body: "Chaque archive passe par des états successifs depuis sa création jusqu'à sa destination finale. Les cinq états sont en attente de validation, active, intermédiaire, historique et détruite. La progression est linéaire et chaque transition nécessite une action explicite d'un utilisateur habilité.",
+  },
+  {
+    id: "etat-pending", number: "5.1", title: "En attente de validation",
+    keywords: ["en attente", "pending", "validation", "soumission", "vérification"],
+    body: "L'état en attente correspond aux archives fraîchement déposées par un agent et qui n'ont pas encore été examinées par un archiviste. Durant cette phase le document est visible dans la liste des archives mais ne peut pas être modifié. L'archiviste peut accepter ou refuser la validation.",
+  },
+  {
+    id: "etat-active", number: "5.2", title: "Archive active",
+    keywords: ["active", "validée", "en cours", "utilisation", "courante"],
+    body: "Une archive active est un document validé qui fait partie du fonds documentaire courant de l'organisation. Elle est accessible à tous les utilisateurs autorisés et peut faire l'objet de consultations régulières. C'est l'état normal d'un document en cours d'utilisation.",
+  },
+  {
+    id: "etat-intermediaire", number: "5.3", title: "Archive intermédiaire",
+    keywords: ["intermédiaire", "semi-actif", "DUA", "durée administrative", "conservation"],
+    body: "L'état intermédiaire correspond à des archives dont l'utilisation courante est terminée mais dont la conservation reste obligatoire pendant une durée déterminée appelée Durée d'Utilité Administrative. Ces archives sont moins consultées mais restent accessibles en cas de besoin légal ou réglementaire.",
+  },
+  {
+    id: "etat-permanent", number: "5.4", title: "Archive historique",
+    keywords: ["historique", "permanent", "patrimonial", "conservation définitive"],
+    body: "L'état historique indique que l'archive est conservée définitivement dans le fonds patrimonial de l'organisation. Ces documents ont une valeur historique, juridique ou probatoire qui justifie leur conservation sans limite de durée. Ils ne peuvent pas être détruits.",
+  },
+  {
+    id: "etat-detruit", number: "5.5", title: "Archive détruite",
+    keywords: ["détruite", "destroyed", "suppression", "fin de vie", "élimination"],
+    body: "L'état détruit signale qu'une archive a été éliminée conformément aux règles de gestion documentaire. Cette action est irréversible. Elle est réservée aux administrateurs et ne peut s'appliquer qu'après validation de la procédure d'élimination.",
+  },
+  {
+    id: "dua", number: "6", title: "La Durée d'Utilité Administrative",
+    keywords: ["DUA", "durée", "utilité administrative", "sort final", "délai", "conservation"],
+    body: "La Durée d'Utilité Administrative est la période pendant laquelle une archive doit être conservée de manière obligatoire avant d'être éliminée ou versée aux archives définitives. Elle est exprimée en jours, mois ou années et prend effet à partir d'une date de départ configurable.",
+  },
+  {
+    id: "dua-configuration", number: "6.1", title: "Configurer une DUA",
+    keywords: ["configurer", "paramétrer", "DUA", "valeur", "unité", "date de départ", "sort final"],
+    body: "Pour configurer la DUA d'une archive cliquez sur le bouton DUA dans le panneau de détail. Saisissez la valeur numérique, l'unité de temps jours mois ou années, la date de départ et le sort final conservation définitive ou élimination. Le système calculera automatiquement la date d'expiration et vous alertera quand elle approche.",
+  },
+  {
+    id: "validation", number: "7", title: "Valider une archive",
+    keywords: ["validation", "valider", "archiviste", "approuver", "accepter", "refuser"],
+    body: "La validation est l'acte par lequel un archiviste certifie qu'une archive soumise est conforme aux exigences documentaires. Elle fait passer l'archive de l'état en attente à l'état active. Seuls les utilisateurs ayant le rôle archiviste ou administrateur peuvent effectuer cette action.",
+  },
+  {
+    id: "modification", number: "8", title: "Modifier une archive",
+    keywords: ["modifier", "éditer", "mettre à jour", "corriger", "changer"],
+    body: "Pour modifier une archive cliquez sur la ligne correspondante dans la liste pour ouvrir le panneau de détail puis cliquez sur le bouton Modifier. Un formulaire prérempli s'ouvre vous permettant de corriger les informations. Seuls les champs modifiables sont accessibles selon votre rôle.",
+  },
+  {
+    id: "suppression", number: "9", title: "Supprimer des archives",
+    keywords: ["supprimer", "effacer", "éliminer", "delete", "suppression"],
+    body: "La suppression est une action irréversible réservée aux administrateurs. Vous pouvez supprimer une seule archive via le panneau de détail ou plusieurs archives simultanément en cochant les cases à gauche puis en utilisant le menu Actions. Une confirmation explicite est toujours demandée avant l'exécution.",
+  },
+  {
+    id: "archivage-physique", number: "10", title: "L'archivage physique",
+    keywords: ["archivage physique", "inventaire", "local", "étagère", "classeur", "document physique", "hiérarchie"],
+    body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à cinq niveaux correspondant à la réalité d'un centre d'archives physiques.",
+  },
+  {
+    id: "hierarchie-physique", number: "10.1", title: "La hiérarchie des espaces physiques",
+    keywords: ["local", "étagère", "section", "classeur", "document", "hiérarchie", "niveau", "arborescence"],
+    body: "La hiérarchie physique est organisée de la manière suivante. Le Local ou emplacement représente le bâtiment ou la salle de conservation. L'Étagère est un meuble ou un rayonnage à l'intérieur du local. La Section correspond à un niveau ou compartiment de l'étagère. Le Classeur est une unité de rangement contenant des chemises ou dossiers. Le Document est la fiche physique représentant un dossier réel qui peut contenir une ou plusieurs archives numériques.",
+  },
+  {
+    id: "rattachement", number: "10.2", title: "Rattacher une archive numérique à un document physique",
+    keywords: ["rattacher", "lier", "associer", "archive numérique", "document physique", "support"],
+    body: "Le rattachement permet d'associer une archive numérique à son document physique correspondant. Cela crée un lien bidirectionnel : depuis l'archive numérique vous pouvez accéder à la fiche physique, et depuis la fiche physique vous pouvez consulter toutes les archives numériques associées. Pour effectuer le rattachement ouvrez le panneau de détail de l'archive et cliquez sur le bouton Dossier physique.",
+  },
+  {
+    id: "qrcode", number: "10.3", title: "Le code QR d'un document physique",
+    keywords: ["QR code", "code QR", "étiquette", "identification", "scan"],
+    body: "Chaque document physique se voit attribuer automatiquement un code QR unique lors de sa création. Ce code peut être imprimé et collé sur la chemise physique pour permettre une identification rapide par scan. Il contient le numéro interne du document et permet de retrouver immédiatement sa fiche dans le système.",
+  },
+  {
+    id: "recherche", number: "11", title: "Rechercher dans le système",
+    keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte"],
+    body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents physiques. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents physiques le sujet, la catégorie et la nature.",
+  },
+  {
+    id: "export", number: "12", title: "Exporter la liste des archives",
+    keywords: ["exporter", "export", "CSV", "Excel", "liste", "télécharger"],
+    body: "Vous pouvez exporter la liste courante des archives dans un fichier CSV compatible Excel en cliquant sur l'icône de téléchargement dans la barre de navigation gauche. L'export prend en compte les filtres actifs : si vous avez filtré par statut ou par filtre rapide seules les archives correspondantes sont exportées.",
+  },
+  {
+    id: "roles-permissions", number: "13", title: "Rôles et permissions",
+    keywords: ["rôle", "permission", "administrateur", "archiviste", "agent", "droits", "accès"],
+    body: "L'application distingue trois niveaux d'accès. L'agent peut soumettre des archives et les consulter. L'archiviste peut valider les archives, configurer les DUA et gérer les transitions du cycle de vie. L'administrateur dispose de tous les droits y compris la suppression, la gestion des utilisateurs et la modification de la structure physique.",
+  },
+  {
+    id: "glossaire", number: "14", title: "Glossaire",
+    keywords: ["glossaire", "définition", "terme", "vocabulaire", "DUA", "lifecycle", "cycle de vie"],
+    body: "Archive numérique : fichier électronique conservé dans le système avec ses métadonnées. Archive physique : document papier ou objet conservé dans un espace de stockage réel. DUA : Durée d'Utilité Administrative, délai légal ou réglementaire de conservation. Cycle de vie : ensemble des états successifs traversés par une archive depuis sa création jusqu'à sa destination finale. Sort final : décision prise à l'expiration de la DUA entre conservation définitive et élimination. Rattachement : lien créé entre une archive numérique et son support physique.",
+  },
+  {
+    id: "faq", number: "15", title: "Questions fréquentes",
+    keywords: ["FAQ", "questions", "problème", "fréquent", "aide", "erreur", "impossible"],
+    body: "Pourquoi mon archive reste-t-elle en attente ? Une archive reste en attente jusqu'à ce qu'un archiviste la valide. Si elle reste bloquée trop longtemps contactez votre responsable. Pourquoi ne puis-je pas supprimer une archive ? La suppression est réservée aux administrateurs. Si vous n'avez pas ce rôle vous ne verrez pas le bouton. Comment retrouver un document physique ? Utilisez la recherche globale Ctrl+K et saisissez le numéro interne ou le sujet du document. Comment configurer une DUA ? Ouvrez le panneau de détail de l'archive et cliquez sur le bouton DUA.",
+  },
+];
+
+// ── Fuse.js index ─────────────────────────────────────────────
+
+const fuse = new Fuse(SECTIONS, {
+  keys: [
+    { name: "title",    weight: 0.5 },
+    { name: "keywords", weight: 0.3 },
+    { name: "body",     weight: 0.2 },
+  ],
+  threshold:      0.4,
+  includeScore:   true,
+  minMatchCharLength: 2,
+});
+
+// ── Composants internes ───────────────────────────────────────
+
+function SectionTitle({ id, number, children }: { id: string; number: string; children: React.ReactNode }) {
   return (
     <Typography
       id={id}
       variant="h6"
       fontWeight={700}
       gutterBottom
-      sx={{ scrollMarginTop: 80, mt: 3 }}>
+      sx={{ scrollMarginTop: 80, mt: 4, display: "flex", alignItems: "baseline", gap: 1 }}>
+      <Box component="span" sx={{ color: "primary.main", fontVariantNumeric: "tabular-nums", minWidth: 32 }}>
+        {number}.
+      </Box>
       {children}
     </Typography>
   );
@@ -54,59 +214,64 @@ function SectionTitle({ id, children }: { id: string; children: React.ReactNode 
 
 function SubTitle({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
-    <Typography
-      id={id}
-      variant="subtitle1"
-      fontWeight={600}
-      sx={{ mt: 2.5, mb: 0.5, scrollMarginTop: 80 }}>
+    <Typography id={id} variant="subtitle1" fontWeight={600} sx={{ mt: 2.5, mb: 0.75, scrollMarginTop: 80 }}>
       {children}
     </Typography>
   );
 }
 
-function Desc({ children }: { children: React.ReactNode }) {
+function Paragraph({ children }: { children: React.ReactNode }) {
   return (
-    <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.8 }}>
+    <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.85 }}>
       {children}
     </Typography>
   );
 }
 
-function FieldDoc({
-  label,
-  required,
-  example,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  example?: string;
-  children: React.ReactNode;
+function InfoBox({ children, severity = "info" }: { children: React.ReactNode; severity?: "info" | "warning" | "success" }) {
+  const Icon = severity === "warning" ? WarningAmberOutlinedIcon : severity === "success" ? CheckCircleOutlineIcon : InfoOutlinedIcon;
+  const color = severity === "warning" ? "warning.main" : severity === "success" ? "success.main" : "info.main";
+  return (
+    <Box sx={{ display: "flex", gap: 1.5, bgcolor: "action.hover", borderRadius: 1.5, p: 1.75, mb: 2, borderLeft: 3, borderColor: color }}>
+      <Icon fontSize="small" sx={{ color, flexShrink: 0, mt: 0.15 }} />
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+        {children}
+      </Typography>
+    </Box>
+  );
+}
+
+function Step({ number, children }: { number: number; children: React.ReactNode }) {
+  return (
+    <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mb: 1.25 }}>
+      <Box sx={{
+        minWidth: 24, height: 24, borderRadius: "50%",
+        bgcolor: "primary.main", color: "primary.contrastText",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "0.7rem", fontWeight: 700, flexShrink: 0, mt: 0.15,
+      }}>
+        {number}
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>{children}</Typography>
+    </Stack>
+  );
+}
+
+function FieldDoc({ label, required, example, children }: {
+  label: string; required?: boolean; example?: string; children: React.ReactNode;
 }) {
   return (
     <Paper variant="outlined" sx={{ p: 1.5, mb: 1.2, borderRadius: 1.5 }}>
       <Stack direction="row" alignItems="center" spacing={1} mb={0.5}>
-        <Typography variant="body2" fontWeight={700}>
-          {label}
-        </Typography>
+        <Typography variant="body2" fontWeight={700}>{label}</Typography>
         {required && (
-          <Chip
-            label="Obligatoire"
-            size="small"
-            color="error"
-            variant="outlined"
-            sx={{ height: 18, fontSize: "0.65rem" }}
-          />
+          <Chip label="Obligatoire" size="small" color="error" variant="outlined"
+            sx={{ height: 18, fontSize: "0.65rem" }} />
         )}
       </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-        {children}
-      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{children}</Typography>
       {example && (
-        <Typography
-          variant="caption"
-          color="text.disabled"
-          sx={{ mt: 0.5, display: "block" }}>
+        <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block" }}>
           Exemple : <em>{example}</em>
         </Typography>
       )}
@@ -114,1076 +279,873 @@ function FieldDoc({
   );
 }
 
-function InfoBox({ children }: { children: React.ReactNode }) {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: 1.5,
-        bgcolor: "action.hover",
-        borderRadius: 1.5,
-        p: 1.5,
-        mb: 2,
-      }}>
-      <InfoOutlinedIcon fontSize="small" sx={{ color: "text.secondary", flexShrink: 0, mt: 0.1 }} />
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-        {children}
-      </Typography>
-    </Box>
-  );
+function StatusBadge({ label, color }: { label: string; color: "warning" | "success" | "info" | "secondary" | "error" }) {
+  return <Chip label={label} size="small" color={color} sx={{ mr: 0.5 }} />;
 }
 
-// ── Composant principal ──────────────────────────────────────
+// ── Composant principal ───────────────────────────────────────
 
 export default function HelpContent() {
   const location = useLocation();
-  const anchor = (location.state as Record<string, unknown> | null)?.helpAnchor as
-    | string
-    | undefined;
-  const scrolledRef = useRef(false);
+  const anchor   = (location.state as Record<string, unknown> | null)?.helpAnchor as string | undefined;
+  const scrolled = useRef(false);
+  const docRef   = useRef<HTMLDivElement>(null);
 
+  const [query,       setQuery]       = useState("");
+  const [suggestions, setSuggestions] = useState<ManualSection[]>([]);
+  const [pdfLoading,  setPdfLoading]  = useState(false);
+
+  // Scroll automatique depuis ancre externe
   useEffect(() => {
-    if (anchor && !scrolledRef.current) {
-      scrolledRef.current = true;
+    if (anchor && !scrolled.current) {
+      scrolled.current = true;
       const el = document.getElementById(anchor);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [anchor]);
 
+  // Recherche Fuse
+  useEffect(() => {
+    if (query.trim().length < 2) { setSuggestions([]); return; }
+    const results = fuse.search(query.trim()).slice(0, 6).map(r => r.item);
+    setSuggestions(results);
+  }, [query]);
+
+  const scrollTo = useCallback((id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setQuery("");
+    setSuggestions([]);
+  }, []);
+
+  // Export PDF — tentative navigateur (@react-pdf/renderer), fallback serveur
+  const handlePdfDownload = useCallback(async () => {
+    setPdfLoading(true);
+    try {
+      // Chargement dynamique pour ne pas alourdir le bundle initial
+      const [{ pdf }, { default: ManualDocument }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("./ManualPDF"),
+      ]);
+      const blob = await pdf(ManualDocument()).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `GEID_Archives_Manuel_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Fallback : téléchargement via l'API serveur
+      try {
+        const res = await fetch("/api/stuff/archives/manual/pdf", {
+          headers: { Authorization: document.cookie.match(/token=([^;]+)/)?.[1] ?? "" },
+        });
+        if (!res.ok) throw new Error("server pdf failed");
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `GEID_Archives_Manuel_${new Date().toISOString().slice(0, 10)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch {
+        alert("La génération du PDF a échoué. Veuillez réessayer ou contacter l'administrateur.");
+      }
+    } finally {
+      setPdfLoading(false);
+    }
+  }, []);
+
+  const toc = useMemo(() => SECTIONS.filter(s => !s.number.includes(".")), []);
+
   return (
-    <Box sx={{ maxWidth: 820, mx: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
+    <Box sx={{ maxWidth: 860, mx: "auto", px: { xs: 2, sm: 3 }, py: 3 }}>
 
-      {/* ── En-tête ── */}
-      <Typography variant="h5" fontWeight={800} gutterBottom>
-        Manuel utilisateur — GEID Archives
-      </Typography>
-      <Typography variant="body2" color="text.secondary" paragraph>
-        Ce manuel décrit en détail le fonctionnement de l'application de gestion documentaire GEID
-        Archives. Il est destiné à tous les utilisateurs : agents soumetteurs, archivistes et
-        administrateurs. Lisez chaque section correspondant à votre rôle pour maîtriser
-        l'application rapidement.
-      </Typography>
+      {/* ── En-tête ──────────────────────────────────────── */}
+      <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ sm: "flex-start" }}
+        justifyContent="space-between" gap={2} mb={2}>
+        <Box>
+          <Typography variant="h5" fontWeight={800} gutterBottom>
+            Manuel utilisateur — GEID Archives
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Guide complet à destination des agents, archivistes et administrateurs.
+          </Typography>
+        </Box>
+        <Tooltip title={pdfLoading ? "Génération en cours…" : "Télécharger ce manuel en PDF"}>
+          <span>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={pdfLoading ? <CircularProgress size={14} /> : <PictureAsPdfOutlinedIcon />}
+              onClick={handlePdfDownload}
+              disabled={pdfLoading}
+              sx={{ whiteSpace: "nowrap" }}>
+              {pdfLoading ? "Génération…" : "Télécharger PDF"}
+            </Button>
+          </span>
+        </Tooltip>
+      </Stack>
 
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 1.5 }}>
-        Ce guide est accessible à tout moment depuis l'onglet <strong>Aide</strong> dans le menu de
-        navigation à gauche. Utilisez les sections ci-dessous pour naviguer.
-      </Alert>
+      {/* ── Recherche ────────────────────────────────────── */}
+      <Box position="relative" mb={3}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Rechercher dans le manuel… (ex. : DUA, validation, rattachement…)"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          InputProps={{
+            startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment>,
+            endAdornment: query ? (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => { setQuery(""); setSuggestions([]); }}>
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }}
+        />
+        <Collapse in={suggestions.length > 0}>
+          <Paper variant="outlined" sx={{ position: "absolute", zIndex: 10, left: 0, right: 0, mt: 0.5 }}>
+            {suggestions.map(s => (
+              <Stack
+                key={s.id}
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                px={1.5}
+                py={1}
+                sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" } }}
+                onClick={() => scrollTo(s.id)}>
+                <BookmarkBorderOutlinedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+                <Box flex={1}>
+                  <Typography variant="body2" fontWeight={600}>{s.number}. {s.title}</Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {s.body.slice(0, 80)}…
+                  </Typography>
+                </Box>
+                <ArrowRightRoundedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+              </Stack>
+            ))}
+          </Paper>
+        </Collapse>
+      </Box>
 
       <Divider sx={{ mb: 2 }} />
 
-      {/* ══════════════════════════════════════════════════
-          TABLE DES MATIÈRES
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="sommaire">Sommaire</SectionTitle>
-      <List dense sx={{ mb: 1 }}>
-        {[
-          { id: "vue-ensemble", label: "1. Vue d'ensemble de l'application" },
-          { id: "navigation", label: "2. Navigation et interface" },
-          { id: "tableau-de-bord", label: "3. Tableau de bord" },
-          { id: "a-valider", label: "4. À valider — soumettre et valider des documents" },
-          { id: "archives-validees", label: "5. Archives validées — gérer les archives officielles" },
-          { id: "cycle-de-vie", label: "6. Cycle de vie des documents — transitions et historique" },
-          { id: "archivage-physique", label: "7. Archivage physique — gestion des espaces de stockage" },
-          { id: "roles-permissions", label: "8. Rôles, permissions et visibilité" },
-          { id: "glossaire", label: "9. Glossaire complet" },
-        ].map(({ id, label }) => (
-          <ListItem key={id} disableGutters sx={{ py: 0.3 }}>
-            <ListItemIcon sx={{ minWidth: 20 }}>
-              <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: "primary.main" }} />
-            </ListItemIcon>
-            <ListItemText
-              primary={
-                <Typography
-                  variant="body2"
-                  component="a"
-                  href={`#${id}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      {/* Zone imprimée / capturable en PDF */}
+      <Box ref={docRef}>
+
+        {/* ── Sommaire ──────────────────────────────────── */}
+        <SectionTitle id="sommaire" number="0">Sommaire</SectionTitle>
+        <Paper variant="outlined" sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+          <List dense disablePadding>
+            {toc.map(s => (
+              <ListItem key={s.id} disablePadding>
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1}
+                  width="100%"
+                  sx={{
+                    cursor: "pointer", py: 0.5, px: 1, borderRadius: 1,
+                    "&:hover": { bgcolor: "action.hover" },
                   }}
-                  sx={{ color: "primary.main", cursor: "pointer", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
-                  {label}
-                </Typography>
-              }
-            />
-          </ListItem>
-        ))}
-      </List>
+                  onClick={() => scrollTo(s.id)}>
+                  <Typography color="primary.main" variant="body2" fontWeight={700} minWidth={28}>
+                    {s.number}
+                  </Typography>
+                  <Typography variant="body2">{s.title}</Typography>
+                </Stack>
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
 
-      <Divider sx={{ my: 2 }} />
+        <Divider sx={{ mb: 3 }} />
 
-      {/* ══════════════════════════════════════════════════
-          1. VUE D'ENSEMBLE
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="vue-ensemble">1. Vue d'ensemble de l'application</SectionTitle>
-      <Desc>
-        GEID Archives est une plateforme numérique centralisée de gestion documentaire. Elle permet
-        à une organisation de soumettre, valider, retrouver et archiver ses documents officiels, en
-        maintenant un registre structuré et traçable de toutes les pièces administratives. Elle gère
-        également le rangement physique des documents papier dans des locaux d'archivage.
-      </Desc>
+        {/* ══════════════════════════════════════════════════
+            1. PRÉSENTATION DE L'APPLICATION
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="presentation" number="1">Présentation de l'application</SectionTitle>
 
-      <SubTitle>À quoi sert cette application ?</SubTitle>
-      <List dense>
-        {[
-          "Centraliser tous les documents officiels de l'organisation dans un seul espace numérique sécurisé.",
-          "Soumettre facilement un document numérique (PDF, image, etc.) pour qu'il soit examiné et validé par le service des archives.",
-          "Valider un document en lui attribuant un numéro de classification officiel et un numéro de référence, le rendant consultable et traçable.",
-          "Gérer les archives validées : modifier les métadonnées, supprimer un document obsolète, retrouver rapidement un fichier.",
-          "Organiser et inventorier les archives physiques (documents papier) rangés dans les locaux, avec une hiérarchie à 5 niveaux.",
-        ].map((text, i) => (
-          <ListItem key={i} disableGutters>
-            <ListItemIcon sx={{ minWidth: 32 }}>
-              <Chip label={i + 1} size="small" color="primary" sx={{ width: 24, height: 24, fontSize: "0.7rem" }} />
-            </ListItemIcon>
-            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
-          </ListItem>
-        ))}
-      </List>
+        <Paragraph>
+          GEID Archives est un système de gestion documentaire développé pour centraliser, organiser
+          et protéger l'ensemble des archives d'une organisation. L'application permet de gérer
+          simultanément deux dimensions complémentaires : les archives numériques sous forme de
+          fichiers électroniques, et les archives physiques conservées dans des espaces de stockage
+          réels.
+        </Paragraph>
+        <Paragraph>
+          L'objectif principal de GEID Archives est de garantir la traçabilité complète du cycle
+          de vie de chaque document, depuis sa création jusqu'à sa conservation définitive ou sa
+          destruction réglementaire. Le système assure également la conformité aux obligations
+          légales en matière d'archivage en s'appuyant sur le concept de Durée d'Utilité
+          Administrative (DUA), qui définit la durée minimale de conservation obligatoire pour
+          chaque type de document.
+        </Paragraph>
 
-      <SubTitle>Cycle de vie complet d'un document</SubTitle>
-      <Desc>
-        Chaque document passe par un cycle de vie rigoureux dans GEID Archives. Comprendre ce cycle
-        est essentiel pour utiliser l'application correctement :
-      </Desc>
-      <Stack spacing={1} mb={2}>
-        {[
-          { step: "Soumission (En attente)", desc: "Un agent remplit le formulaire d'envoi et joint le fichier numérique. Le document est enregistré avec le statut « En attente » (puce orange)." },
-          { step: "Examen", desc: "L'archiviste consulte la liste « À valider » et examine chaque document en attente. Il vérifie la désignation, le type documentaire, la description et le fichier joint." },
-          { step: "Validation (Validé)", desc: "L'archiviste attribue un numéro de classification officiel et un numéro de référence. Le statut passe à « Validé » (puce verte). Le document est désormais dans les Archives validées." },
-          { step: "Archivage (Archivé)", desc: "Un archiviste peut clôturer le document en le faisant passer au statut « Archivé » (puce bleue). Il est conservé mais ne peut plus être traité comme un document actif." },
-          { step: "Élimination (Éliminé)", desc: "Réservé aux administrateurs. Marque définitivement un document comme éliminé (puce rouge) à l'issue de sa durée d'utilité administrative." },
-          { step: "Archivage physique (optionnel)", desc: "Si le document a une version papier, il peut être rattaché à un dossier physique dans un classeur, lui-même rangé dans un étage, une étagère et un conteneur." },
-        ].map(({ step, desc }, i) => (
-          <Paper key={i} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1.5} alignItems="flex-start">
-              <Chip label={i + 1} size="small" color="primary" sx={{ width: 24, height: 24, fontSize: "0.7rem", flexShrink: 0, mt: 0.2 }} />
-              <Box>
-                <Typography variant="body2" fontWeight={700}>{step}</Typography>
-                <Typography variant="body2" color="text.secondary">{desc}</Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
+        <SubTitle>À qui s'adresse ce manuel ?</SubTitle>
+        <Paragraph>
+          Ce manuel est destiné à trois catégories d'utilisateurs. Les agents soumetteurs, qui
+          sont les personnes chargées de déposer les documents dans le système. Les archivistes,
+          qui valident les dépôts, configurent les paramètres de conservation et gèrent les
+          transitions du cycle de vie. Enfin les administrateurs, qui disposent de la plénitude
+          des droits sur le système et sont responsables de la configuration de la structure
+          physique et de la gestion des utilisateurs.
+        </Paragraph>
 
-      <Divider sx={{ my: 2 }} />
+        <InfoBox>
+          Si vous venez de recevoir vos identifiants et que vous vous connectez pour la première
+          fois, nous vous recommandons de commencer par la section 2 (Connexion et interface)
+          puis de lire la section correspondant à votre rôle.
+        </InfoBox>
 
-      {/* ══════════════════════════════════════════════════
-          2. NAVIGATION ET INTERFACE
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="navigation">2. Navigation et interface</SectionTitle>
-      <Desc>
-        L'interface de GEID Archives est divisée en zones distinctes que vous utiliserez
-        quotidiennement. Comprendre la disposition de ces zones vous permettra de travailler
-        efficacement.
-      </Desc>
+        <Divider sx={{ my: 3 }} />
 
-      <SubTitle>Zones de l'interface</SubTitle>
-      <Stack spacing={1.2} mb={2}>
-        {[
-          {
-            zone: "En-tête (Header)",
-            desc: "Barre supérieure fixe affichant le nom de l'application, les informations de l'utilisateur connecté et les options de déconnexion. Toujours visible.",
-          },
-          {
-            zone: "Panneau de navigation (gauche)",
-            desc: "Panneau vertical contenant les onglets de navigation (Tableau de bord, Archivage physique, Archives validées, À valider, Aide). Sur mobile, ce panneau se rétracte en tiroir accessible via le bouton menu ☰.",
-          },
-          {
-            zone: "Zone de contenu principal",
-            desc: "Zone centrale qui affiche le contenu de l'onglet actif : tableau de données, formulaire, graphiques, etc. C'est ici que vous effectuez la majorité des opérations.",
-          },
-          {
-            zone: "Barre d'actions (sous l'en-tête)",
-            desc: "Barre contextuelle qui apparaît sur certains onglets (ex : Archives validées). Elle affiche des boutons d'action selon les éléments sélectionnés : Valider, Modifier, Supprimer.",
-          },
-        ].map(({ zone, desc }) => (
-          <Paper key={zone} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Typography variant="body2" fontWeight={700} gutterBottom>{zone}</Typography>
-            <Typography variant="body2" color="text.secondary">{desc}</Typography>
-          </Paper>
-        ))}
-      </Stack>
+        {/* ══════════════════════════════════════════════════
+            2. CONNEXION ET INTERFACE
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="connexion" number="2">Connexion et interface</SectionTitle>
 
-      <SubTitle>Onglets de navigation</SubTitle>
-      <Table size="small" sx={{ mb: 2 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Onglet</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Accès</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Description courte</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {[
-            { tab: "Tableau de bord", access: "Tous", desc: "Vue synthétique : statistiques, indicateurs et résumé de l'activité." },
-            { tab: "À valider", access: "Archivistes / Agents", desc: "Liste des documents en attente de validation. Permet de soumettre et de valider." },
-            { tab: "Archives validées", access: "Tous", desc: "Liste de tous les documents officiellement archivés. Actions : modifier, supprimer, valider." },
-            { tab: "Archivage physique", access: "Archivistes", desc: "Gestion de la hiérarchie de stockage physique (conteneur → dossier)." },
-            { tab: "Aide", access: "Tous", desc: "Ce manuel utilisateur. Toujours accessible." },
-          ].map(({ tab, access, desc }) => (
-            <TableRow key={tab}>
-              <TableCell><Typography variant="body2" fontWeight={600}>{tab}</Typography></TableCell>
-              <TableCell><Chip label={access} size="small" variant="outlined" /></TableCell>
-              <TableCell><Typography variant="body2" color="text.secondary">{desc}</Typography></TableCell>
+        <SubTitle>Accéder à l'application</SubTitle>
+        <Paragraph>
+          Pour accéder à GEID Archives, vous devez disposer d'un compte créé par votre
+          administrateur système. Ouvrez l'URL de l'application dans votre navigateur, puis
+          saisissez votre adresse de messagerie et votre mot de passe dans les champs prévus à
+          cet effet.
+        </Paragraph>
+        <Step number={1}>Saisissez votre adresse e-mail dans le champ identifiant.</Step>
+        <Step number={2}>Entrez votre mot de passe. Le mot de passe est sensible à la casse.</Step>
+        <Step number={3}>Cliquez sur le bouton de connexion. Vous serez redirigé vers le tableau de bord.</Step>
+
+        <SubTitle>Structure de l'interface</SubTitle>
+        <Paragraph>
+          L'interface principale de GEID Archives est organisée en quatre grandes zones. En haut
+          de l'écran se trouve la barre d'en-tête qui affiche le nom de l'application et les
+          options de profil. Sur la gauche se trouve le menu de navigation vertical donnant accès
+          aux quatre sections principales de l'application. La zone centrale occupe l'essentiel
+          de l'écran et affiche le contenu de la section sélectionnée. Sur mobile, le menu de
+          navigation se transforme en barre de navigation horizontale en bas de l'écran.
+        </Paragraph>
+
+        <Table size="small" sx={{ mb: 2 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Section</strong></TableCell>
+              <TableCell><strong>Description</strong></TableCell>
+              <TableCell><strong>Accès requis</strong></TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {[
+              ["Tableau de bord", "Vue synthétique de l'état du système, alertes et statistiques", "Tous"],
+              ["Archives", "Gestion complète des archives numériques", "Tous (lecture) / Archiviste (écriture)"],
+              ["Archivage physique", "Inventaire des espaces et supports physiques", "Tous (lecture) / Administrateur (écriture)"],
+              ["Aide", "Manuel utilisateur et glossaire", "Tous"],
+            ].map(([s, d, a]) => (
+              <TableRow key={s}>
+                <TableCell>{s}</TableCell>
+                <TableCell>{d}</TableCell>
+                <TableCell>{a}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-      <SubTitle>Notifications</SubTitle>
-      <Desc>
-        L'application affiche des notifications dans le coin inférieur droit de l'écran pour vous
-        informer du résultat de vos actions (succès, erreur, information, avertissement). Chaque
-        notification disparaît automatiquement après quelques secondes. Certaines notifications
-        disposent d'un bouton « Annuler » qui vous permet de revenir en arrière dans les premières
-        secondes.
-      </Desc>
-      <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" gap={1}>
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            3. TABLEAU DE BORD
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="tableau-de-bord" number="3">Le tableau de bord</SectionTitle>
+
+        <Paragraph>
+          Le tableau de bord est la première page qui s'affiche après connexion. Il présente une
+          synthèse en temps réel de l'état du système. Toutes les informations affichées sont
+          rafraîchies automatiquement à chaque modification effectuée dans l'application.
+        </Paragraph>
+
+        <SubTitle>Les cartes statistiques</SubTitle>
+        <Paragraph>
+          En haut du tableau de bord, une rangée de six cartes présente les compteurs clés du
+          système. Chaque carte est cliquable et vous conduit directement vers la section
+          correspondante. Le premier compteur indique le nombre total d'archives enregistrées
+          dans le système. Le second affiche le nombre d'archives en attente de validation, une
+          information particulièrement utile pour les archivistes. Les troisième et quatrième
+          compteurs présentent respectivement les archives actives et les archives intermédiaires.
+          Les deux derniers compteurs concernent l'inventaire physique avec le nombre de locaux
+          et le nombre de documents physiques.
+        </Paragraph>
+
+        <SubTitle>Les alertes prioritaires</SubTitle>
+        <Paragraph>
+          Lorsque le système détecte des situations nécessitant une attention particulière, des
+          alertes colorées apparaissent en haut du tableau de bord. Une alerte orange vous
+          signale le nombre d'archives en attente de validation. Une alerte rouge vous avertit
+          que des DUA ont expiré. Une alerte orange vous indique que des classeurs physiques
+          approchent de leur capacité maximale. Chaque alerte comporte un bouton pour accéder
+          directement à la section concernée.
+        </Paragraph>
+
+        <SubTitle>L'activité récente</SubTitle>
+        <Paragraph>
+          La liste d'activité récente affiche les huit dernières archives ajoutées ou modifiées
+          dans le système, triées par date décroissante. Chaque ligne indique la désignation du
+          document, la date d'ajout et le statut actuel sous forme de pastille colorée. Cliquez
+          sur une ligne pour accéder directement à la gestion des archives.
+        </Paragraph>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            4. LES ARCHIVES NUMÉRIQUES
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="archives-numeriques" number="4">Les archives numériques</SectionTitle>
+
+        <Paragraph>
+          Une archive numérique représente un document électronique conservé dans le système. Elle
+          peut être un contrat, un rapport, une décision administrative, un procès-verbal, une
+          correspondance officielle ou tout autre document officiel. Chaque archive est décrite
+          par un ensemble de métadonnées qui permettent de l'identifier, de la classer et de la
+          retrouver facilement.
+        </Paragraph>
+        <Paragraph>
+          Les archives numériques sont gérées depuis la section Archives du menu de navigation.
+          L'interface présente un tableau listant toutes les archives auxquelles vous avez accès,
+          avec la possibilité de filtrer par statut, par date ou par recherche globale. Sur la
+          gauche du tableau, une barre de navigation permet de naviguer rapidement entre les
+          différents états du cycle de vie.
+        </Paragraph>
+
+        <SectionTitle id="formulaire-creation" number="4.1">Soumettre une nouvelle archive</SectionTitle>
+        <Paragraph>
+          Pour soumettre une archive, cliquez sur le bouton Ajouter en haut de la barre de
+          navigation gauche. Si ce bouton n'est pas visible, c'est que votre rôle ne vous permet
+          pas de créer des archives. Un formulaire s'ouvre dans une fenêtre de dialogue.
+        </Paragraph>
+
+        <FieldDoc label="Désignation" required example="Rapport d'activité annuel 2024 — Direction générale">
+          Le nom principal du document. Soyez le plus précis possible car c'est la première
+          information visible dans la liste des archives et dans les résultats de recherche.
+          Évitez les abréviations qui ne seraient pas comprises par tous les utilisateurs.
+        </FieldDoc>
+
+        <FieldDoc label="Type documentaire" required example="Rapport — Administratif">
+          Sélectionnez le type et le sous-type qui correspondent le mieux à la nature du document.
+          Cette classification est utilisée pour les statistiques et peut conditionner certaines
+          règles de gestion documentaire dans votre organisation.
+        </FieldDoc>
+
+        <FieldDoc label="Numéro de classe" example="ADM-2024-001">
+          Le numéro de classement interne selon le plan de classement de votre organisation. Ce
+          champ est utilisé par le moteur de recherche et permet de regrouper les documents par
+          famille documentaire.
+        </FieldDoc>
+
+        <FieldDoc label="Numéro de référence" example="REF-2024-042">
+          La référence unique attribuée au document lors de sa création dans votre organisation.
+          Si votre organisation utilise un système de numérotation, reportez-le ici.
+        </FieldDoc>
+
+        <FieldDoc label="Dossier" required example="Ressources humaines / Contrats">
+          Le dossier thématique ou fonctionnel auquel appartient le document. Ce champ structure
+          la hiérarchie documentaire et facilite le regroupement des archives par domaine d'activité.
+        </FieldDoc>
+
+        <FieldDoc label="Description">
+          Un résumé du contenu du document en quelques phrases. Une bonne description améliore
+          significativement la pertinence des résultats de recherche.
+        </FieldDoc>
+
+        <FieldDoc label="Pièce jointe">
+          Le fichier numérique correspondant à l'archive. Les formats acceptés sont généralement
+          PDF, Word, Excel et les formats images courants. La taille maximale dépend de la
+          configuration de votre serveur.
+        </FieldDoc>
+
+        <InfoBox>
+          Après soumission, votre archive est immédiatement visible dans la liste mais son statut
+          est en attente de validation. Elle ne sera considérée comme active qu'après validation
+          par un archiviste habilité.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            5. CYCLE DE VIE
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="cycle-de-vie" number="5">Le cycle de vie d'une archive</SectionTitle>
+
+        <Paragraph>
+          L'un des concepts fondamentaux de GEID Archives est le cycle de vie documentaire. Chaque
+          archive passe par des états successifs depuis sa création jusqu'à sa destination finale.
+          Ces états ne sont pas arbitraires : ils correspondent à une réalité administrative et
+          juridique précise qui encadre la conservation des documents dans les organisations
+          publiques et privées.
+        </Paragraph>
+
+        <Box my={2} p={2} bgcolor="action.hover" borderRadius={2}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center" justifyContent="center" flexWrap="wrap">
+            {[
+              { label: "En attente",    color: "warning" as const },
+              { label: "Active",        color: "success" as const },
+              { label: "Intermédiaire", color: "info"    as const },
+              { label: "Historique",    color: "secondary" as const },
+              { label: "Détruite",      color: "error"  as const },
+            ].map((s, i, arr) => (
+              <Stack key={s.label} direction="row" alignItems="center" spacing={0.5}>
+                <StatusBadge label={s.label} color={s.color} />
+                {i < arr.length - 1 && (
+                  <ArrowRightRoundedIcon sx={{ color: "text.disabled", display: { xs: "none", sm: "block" } }} />
+                )}
+              </Stack>
+            ))}
+          </Stack>
+          <Typography variant="caption" color="text.secondary" display="block" textAlign="center" mt={1}>
+            Progression typique du cycle de vie d'une archive
+          </Typography>
+        </Box>
+
+        <SectionTitle id="etat-pending" number="5.1">En attente de validation</SectionTitle>
+        <Paragraph>
+          C'est l'état initial de toute archive nouvellement déposée. L'archive est enregistrée
+          dans le système mais n'a pas encore été examinée par un archiviste. Durant cette phase,
+          le déposant peut encore annuler sa soumission s'il constate une erreur. L'archiviste,
+          de son côté, reçoit une notification et doit examiner le document pour décider de le
+          valider ou non. Les archives en attente sont signalées par un compteur orange sur le
+          tableau de bord et dans la barre de navigation gauche.
+        </Paragraph>
+
+        <SectionTitle id="etat-active" number="5.2">Archive active</SectionTitle>
+        <Paragraph>
+          Une archive active est un document validé qui fait partie du fonds documentaire courant
+          de l'organisation. Elle est accessible à tous les utilisateurs autorisés et peut faire
+          l'objet de consultations régulières. C'est l'état normal d'un document dont l'utilisation
+          opérationnelle est encore fréquente. La transition vers cet état est déclenchée par
+          l'action de validation d'un archiviste.
+        </Paragraph>
+
+        <SectionTitle id="etat-intermediaire" number="5.3">Archive intermédiaire</SectionTitle>
+        <Paragraph>
+          Lorsqu'un document n'est plus utilisé de manière courante mais doit encore être conservé
+          pour des raisons légales, réglementaires ou probatoires, il passe en état intermédiaire.
+          Cette phase correspond typiquement à la conservation dans un local d'archives secondaires.
+          C'est à ce stade que la Durée d'Utilité Administrative entre en jeu : le système calculera
+          automatiquement la date à laquelle l'archive devra être traitée.
+        </Paragraph>
+
+        <SectionTitle id="etat-permanent" number="5.4">Archive historique</SectionTitle>
+        <Paragraph>
+          L'état historique est attribué aux archives qui présentent une valeur patrimoniale,
+          historique ou juridique suffisante pour justifier une conservation définitive. Ces
+          documents sont versés aux archives définitives et ne peuvent plus être détruits. Ils
+          constitueront le fonds historique de l'organisation pour les générations futures.
+        </Paragraph>
+
+        <SectionTitle id="etat-detruit" number="5.5">Archive détruite</SectionTitle>
+        <Paragraph>
+          La destruction d'une archive est l'acte terminal du cycle de vie documentaire. Elle
+          intervient lorsque la DUA a expiré et que le sort final décidé est l'élimination. C'est
+          une action irréversible qui doit être effectuée avec la plus grande prudence. GEID
+          Archives enregistre systématiquement l'historique de toutes les transitions, de sorte
+          qu'il est toujours possible de retracer le parcours d'un document même après sa
+          destruction.
+        </Paragraph>
+
+        <InfoBox severity="warning">
+          La destruction d'une archive est définitive et irréversible. Assurez-vous d'avoir vérifié
+          que la DUA est bien expirée et que le sort final retenu est bien l'élimination avant de
+          procéder. En cas de doute, consultez votre responsable de service.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            6. DUA
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="dua" number="6">La Durée d'Utilité Administrative</SectionTitle>
+
+        <Paragraph>
+          La Durée d'Utilité Administrative, couramment abrégée DUA, est un concept fondamental
+          de la gestion des archives. Elle désigne la période pendant laquelle une organisation
+          est tenue de conserver un document avant de pouvoir l'éliminer ou le verser aux archives
+          définitives. Cette durée est généralement fixée par des textes réglementaires ou par la
+          politique interne de l'organisation.
+        </Paragraph>
+        <Paragraph>
+          Dans GEID Archives, la DUA est associée à chaque archive de type intermédiaire. Le
+          système calcule automatiquement la date d'expiration et vous alerte par des indicateurs
+          visuels dans le tableau de bord et dans la liste des archives dès que l'échéance approche.
+        </Paragraph>
+
+        <SectionTitle id="dua-configuration" number="6.1">Configurer une DUA</SectionTitle>
+        <Paragraph>
+          Pour configurer la DUA d'une archive, ouvrez son panneau de détail en cliquant sur sa
+          ligne dans la liste, puis cliquez sur le bouton DUA dans la barre d'actions rapides
+          en haut du panneau.
+        </Paragraph>
+        <Step number={1}>Saisissez la valeur numérique dans le champ prévu. Par exemple, saisissez 5 pour cinq années.</Step>
+        <Step number={2}>Choisissez l'unité de temps dans la liste : jours, mois ou années.</Step>
+        <Step number={3}>Indiquez la date de départ de la DUA. Il s'agit souvent de la date de clôture du dossier ou de la date de la dernière action administrative.</Step>
+        <Step number={4}>Choisissez le sort final : conservation définitive pour verser l'archive aux archives historiques, ou élimination pour la détruire à l'expiration.</Step>
+        <Step number={5}>Confirmez en cliquant sur Enregistrer. La date d'expiration calculée s'affiche immédiatement.</Step>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            7. VALIDATION
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="validation" number="7">Valider une archive</SectionTitle>
+
+        <Paragraph>
+          La validation est l'acte par lequel un archiviste certifie qu'une archive soumise est
+          complète, correctement renseignée et conforme aux exigences documentaires de
+          l'organisation. C'est une étape de contrôle qualité essentielle qui garantit l'intégrité
+          du fonds d'archives.
+        </Paragraph>
+
+        <SubTitle>Procédure de validation</SubTitle>
+        <Step number={1}>Accédez à la section Archives depuis le menu de navigation.</Step>
+        <Step number={2}>Cliquez sur la ligne de l'archive en attente pour ouvrir son panneau de détail.</Step>
+        <Step number={3}>Examinez les informations saisies par le déposant : désignation, type, dossier, description et fichier joint.</Step>
+        <Step number={4}>Si tout est conforme, cliquez sur le bouton Valider dans la barre d'actions rapides. Un message de confirmation s'affiche.</Step>
+        <Step number={5}>Si le document comporte des erreurs, contactez le déposant pour qu'il corrige sa soumission.</Step>
+
+        <InfoBox severity="success">
+          Après validation, l'archive passe immédiatement en état actif. Le déposant est informé
+          par une notification si les notifications sont activées dans votre configuration.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            8. MODIFICATION
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="modification" number="8">Modifier une archive</SectionTitle>
+
+        <Paragraph>
+          Il est possible de modifier les métadonnées d'une archive après sa création et même
+          après sa validation. Cette fonctionnalité est utile pour corriger des erreurs de saisie,
+          compléter des informations manquantes ou mettre à jour des références.
+        </Paragraph>
+        <Step number={1}>Cliquez sur la ligne de l'archive dans la liste pour ouvrir le panneau de détail.</Step>
+        <Step number={2}>Cliquez sur le bouton Modifier (icône crayon) dans la barre d'actions rapides.</Step>
+        <Step number={3}>Le formulaire s'ouvre prérempli avec les données actuelles de l'archive.</Step>
+        <Step number={4}>Apportez vos modifications puis cliquez sur Enregistrer.</Step>
+
+        <InfoBox>
+          La modification d'une archive ne modifie pas son statut dans le cycle de vie. Elle
+          enregistre uniquement les métadonnées descriptives du document. L'historique des
+          transitions de cycle de vie reste inchangé.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            9. SUPPRESSION
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="suppression" number="9">Supprimer des archives</SectionTitle>
+
+        <Paragraph>
+          La suppression est une action irréversible réservée aux utilisateurs disposant du rôle
+          administrateur. Elle efface définitivement l'archive du système, y compris son fichier
+          joint et toutes ses métadonnées.
+        </Paragraph>
+
+        <SubTitle>Supprimer une seule archive</SubTitle>
+        <Step number={1}>Ouvrez le panneau de détail de l'archive à supprimer.</Step>
+        <Step number={2}>Cliquez sur le bouton Supprimer (icône corbeille) en haut du panneau.</Step>
+        <Step number={3}>Une fenêtre de confirmation s'affiche avec le nom de l'archive. Lisez attentivement ce message.</Step>
+        <Step number={4}>Confirmez en cliquant sur Supprimer définitivement.</Step>
+
+        <SubTitle>Supprimer plusieurs archives en même temps</SubTitle>
+        <Step number={1}>Cochez les cases à gauche de chaque archive à supprimer dans la liste.</Step>
+        <Step number={2}>Ouvrez le menu Actions en haut à droite du tableau.</Step>
+        <Step number={3}>Choisissez Supprimer la sélection.</Step>
+        <Step number={4}>Confirmez la suppression dans la fenêtre qui s'ouvre.</Step>
+
+        <InfoBox severity="warning">
+          Une archive supprimée ne peut pas être récupérée. Avant de procéder, assurez-vous que
+          le document n'est plus nécessaire et que toutes les personnes concernées en ont été
+          informées. La suppression doit toujours être la décision de dernier recours.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            10. ARCHIVAGE PHYSIQUE
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="archivage-physique" number="10">L'archivage physique</SectionTitle>
+
+        <Paragraph>
+          L'archivage physique est le module de GEID Archives qui permet de gérer l'inventaire
+          des espaces et supports de conservation réels. Il modélise fidèlement la réalité d'un
+          centre d'archives physiques, depuis la salle de conservation jusqu'à la fiche de document
+          individuelle.
+        </Paragraph>
+
+        <SectionTitle id="hierarchie-physique" number="10.1">La hiérarchie des espaces physiques</SectionTitle>
+        <Paragraph>
+          L'organisation physique est représentée sous forme d'une arborescence à cinq niveaux
+          imbriqués. Chaque niveau dépend du niveau supérieur et peut contenir un nombre illimité
+          d'éléments du niveau inférieur.
+        </Paragraph>
+
         {[
-          { label: "Succès", color: "success" as const, desc: "Opération réussie (vert)" },
-          { label: "Erreur", color: "error" as const, desc: "Opération échouée (rouge)" },
-          { label: "Avertissement", color: "warning" as const, desc: "Attention requise (orange)" },
-          { label: "Information", color: "info" as const, desc: "Message neutre (bleu)" },
-        ].map(({ label, color, desc }) => (
-          <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Chip label={label} size="small" color={color} variant="outlined" />
-            <Typography variant="caption" color="text.secondary">{desc}</Typography>
+          { level: "Local / Emplacement", desc: "Représente le bâtiment, la salle ou l'espace de conservation. C'est le point d'entrée de la hiérarchie physique. Un local peut correspondre à une armoire forte, une salle de coffre ou un entrepôt d'archives." },
+          { level: "Étagère", desc: "Un meuble ou un rayonnage situé à l'intérieur d'un local. L'étagère regroupe plusieurs sections ou compartiments superposés." },
+          { level: "Section", desc: "Un niveau, un plateau ou un compartiment à l'intérieur d'une étagère. La section permet d'affiner la localisation physique d'un document au sein d'un meuble de rangement." },
+          { level: "Classeur", desc: "Une unité de rangement, une boîte ou un portefeuille contenant des dossiers. Le classeur peut avoir une capacité maximale définie, ce qui permet au système de surveiller son taux de remplissage." },
+          { level: "Document physique", desc: "La fiche représentant un dossier physique réel. C'est le niveau le plus fin de la hiérarchie. Chaque document physique reçoit un code QR unique et peut être associé à une ou plusieurs archives numériques." },
+        ].map(({ level, desc }) => (
+          <Box key={level} mb={1.5} pl={1} borderLeft={2} borderColor="primary.main">
+            <Typography variant="body2" fontWeight={700}>{level}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>{desc}</Typography>
           </Box>
         ))}
-      </Stack>
 
-      <Divider sx={{ my: 2 }} />
+        <SectionTitle id="rattachement" number="10.2">Rattacher une archive numérique à un document physique</SectionTitle>
+        <Paragraph>
+          Le rattachement est l'opération qui crée le lien entre le monde numérique et le monde
+          physique. Concrètement, il permet d'indiquer que le fichier numérique correspond au
+          document papier rangé dans tel classeur, à telle section, sur telle étagère, dans tel
+          local. Ce lien est bidirectionnel : depuis la fiche numérique vous pouvez voir la
+          localisation physique, et depuis le document physique vous pouvez lister toutes les
+          archives numériques rattachées.
+        </Paragraph>
+        <Step number={1}>Ouvrez le panneau de détail de l'archive numérique à rattacher.</Step>
+        <Step number={2}>Cliquez sur le bouton Dossier physique dans la barre d'actions rapides.</Step>
+        <Step number={3}>Une fenêtre s'ouvre avec la liste des documents physiques disponibles. Recherchez le dossier concerné.</Step>
+        <Step number={4}>Sélectionnez le document physique et confirmez le rattachement.</Step>
+        <Step number={5}>L'archive affiche maintenant la référence physique dans son panneau de détail.</Step>
 
-      {/* ══════════════════════════════════════════════════
-          3. TABLEAU DE BORD
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="tableau-de-bord">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <DashboardOutlinedIcon fontSize="small" />
-          <span>3. Tableau de bord</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        Le tableau de bord est le point d'entrée par défaut de l'application. Il offre une vue
-        synthétique et instantanée de l'état du service d'archivage. Vous n'avez aucune action à
-        effectuer ici — c'est une page de lecture seule dédiée à la surveillance et au suivi.
-      </Desc>
-      <Desc>
-        À partir du tableau de bord, vous pouvez rapidement évaluer :
-      </Desc>
-      <List dense>
-        {[
-          "Le nombre de documents en attente de validation, vous alertant sur la charge de travail à traiter.",
-          "Le nombre total d'archives validées dans le système.",
-          "Les statistiques de l'archivage physique : taux d'occupation des classeurs, nombre de dossiers par étage.",
-          "Les indicateurs de capacité des classeurs (nombre de dossiers actuels vs capacité maximale).",
-        ].map((text, i) => (
-          <ListItem key={i} disableGutters>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <CheckCircleOutlineIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
-          </ListItem>
-        ))}
-      </List>
-      <InfoBox>
-        Le tableau de bord se rafraîchit automatiquement dès qu'une opération est effectuée (ajout,
-        validation, suppression). Vous n'avez pas besoin de recharger la page.
-      </InfoBox>
+        <SectionTitle id="qrcode" number="10.3">Le code QR d'un document physique</SectionTitle>
+        <Paragraph>
+          Chaque document physique se voit attribuer automatiquement un code QR unique lors de
+          sa création dans le système. Ce code identifiant contient le numéro interne du document
+          et est généré de manière à être globalement unique. Il peut être imprimé sur une
+          étiquette adhésive et collé sur la chemise ou le dossier physique correspondant.
+        </Paragraph>
+        <Paragraph>
+          Lors d'une consultation physique des archives, il suffit de scanner ce code avec un
+          appareil photo ou un lecteur de QR code pour retrouver instantanément la fiche du
+          document dans le système et y accéder à toutes les archives numériques rattachées.
+        </Paragraph>
 
-      <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 3 }} />
 
-      {/* ══════════════════════════════════════════════════
-          4. À VALIDER
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="a-valider">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <InventoryOutlinedIcon fontSize="small" />
-          <span>4. À valider — documents en attente</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        Cette section est le cœur du processus documentaire. Elle liste tous les documents
-        numériques soumis au service d'archivage et qui n'ont pas encore été officiellement validés.
-        Chaque ligne du tableau représente un document en attente de traitement. L'archiviste
-        examine ces documents un par un et leur attribue un identifiant officiel.
-      </Desc>
+        {/* ══════════════════════════════════════════════════
+            11. RECHERCHE
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="recherche" number="11">Rechercher dans le système</SectionTitle>
 
-      <SubTitle id="formulaire-soumission">4.1 Soumettre un nouveau document</SubTitle>
-      <Desc>
-        Pour ajouter un document à la file d'attente de validation, cliquez sur le bouton
-        <strong> Ajouter</strong> dans la barre d'outils du tableau. Un formulaire s'ouvre et vous
-        demande de renseigner les informations suivantes avec précision — ces données sont la base de
-        travail de l'archiviste.
-      </Desc>
-      <FieldDoc label="Désignation" required example="Rapport annuel Ressources Humaines 2024">
-        Intitulé principal et descriptif du document. C'est le titre qui sera affiché dans toutes
-        les listes et recherches. Il doit être suffisamment précis pour identifier le document sans
-        avoir besoin de l'ouvrir. Évitez les abréviations et les titres trop vagues comme « Rapport »
-        ou « Document ». Préférez des intitulés complets incluant l'objet, le service émetteur et
-        l'année si pertinent.
-      </FieldDoc>
-      <FieldDoc label="Type documentaire" required example="Rapport / Rapport annuel">
-        Catégorie principale du document (famille documentaire), puis sa sous-catégorie (typologie).
-        Ces valeurs sont prédéfinies par le service des archives selon la nomenclature officielle de
-        l'organisation. Sélectionnez d'abord le type général (ex : Rapport), puis la spécialisation
-        (ex : Rapport annuel). Ce classement thématique facilite les recherches ultérieures et les
-        statistiques documentaires.
-      </FieldDoc>
-      <FieldDoc label="Activité / Mission / Dossier" required example="Gestion des ressources humaines — Bilan 2024">
-        Nom du projet, de la mission, du dossier thématique ou du service émetteur du document.
-        Ce champ permet de regrouper les archives par activité métier et de reconstituer le contexte
-        de production du document. Utilisez le nom officiel de la mission ou du dossier tel qu'il
-        figure dans vos référentiels internes.
-      </FieldDoc>
-      <FieldDoc label="Description" required example="Synthèse annuelle des effectifs, des bilans de formation, des indicateurs de performance RH et des perspectives pour l'année 2025.">
-        Résumé libre et détaillé du contenu du document. C'est la principale source d'information
-        pour retrouver un document lors d'une recherche ultérieure. Décrivez le sujet principal,
-        les informations clés contenues dans le document et sa portée (période concernée, services
-        impliqués, décisions ou données importantes). Plus cette description est précise, plus le
-        document sera facilement retrouvable.
-      </FieldDoc>
-      <FieldDoc label="Fichier joint" required example="rapport_rh_2024.pdf">
-        Fichier numérique correspondant au document (PDF, image JPG/PNG, etc.). C'est le document
-        original qui sera archivé. Assurez-vous que le fichier est lisible, complet et ne dépasse
-        pas la taille maximale autorisée par le système. Le nom du fichier n'a pas d'importance
-        particulière mais il est conseillé d'utiliser un nom descriptif.
-      </FieldDoc>
+        <Paragraph>
+          GEID Archives dispose d'un moteur de recherche unifié qui explore simultanément toutes
+          les archives numériques et tous les documents physiques enregistrés dans le système.
+          Cette recherche globale est accessible à tout moment depuis n'importe quelle section
+          de l'application.
+        </Paragraph>
 
-      <Alert severity="info" sx={{ mb: 2, borderRadius: 1.5 }}>
-        Une fois soumis, le document apparaît immédiatement dans la liste « À valider » avec le
-        statut <strong>En attente</strong>. Il ne sera modifiable que par l'archiviste lors de la
-        validation.
-      </Alert>
+        <SubTitle>Accéder à la recherche</SubTitle>
+        <Paragraph>
+          Deux méthodes permettent d'ouvrir la fenêtre de recherche. Vous pouvez utiliser le
+          raccourci clavier Ctrl+K sur Windows et Linux ou la touche Commande+K sur Mac.
+          Vous pouvez également cliquer sur l'icône loupe dans la barre de navigation gauche
+          de la section Archives.
+        </Paragraph>
 
-      <SubTitle id="validation">4.2 Valider un document</SubTitle>
-      <Desc>
-        La validation est l'acte officiel par lequel l'archiviste certifie qu'un document est
-        conforme et lui attribue ses identifiants définitifs dans le plan de classement. Pour
-        valider un document, cliquez sur le bouton <strong>Valider</strong> sur la ligne
-        correspondante dans le tableau. Un formulaire s'ouvre avec les champs suivants :
-      </Desc>
-      <FieldDoc label="Numéro de classification" required example="2024-ADM-001">
-        Code alphanumérique structuré issu du plan de classement officiel de l'organisation.
-        Ce numéro est attribué par l'archiviste selon les règles de codification internes. Il
-        identifie de façon unique le document dans l'ensemble du système d'archives et permet de
-        le localiser dans les répertoires physiques et numériques. Le format typique est :
-        ANNÉE-DÉPARTEMENT-NUMÉRO-SÉQUENCE. Ce numéro doit comporter au minimum 5 caractères.
-      </FieldDoc>
-      <FieldDoc label="Numéro de référence" required example="REF-DRH-2024-042">
-        Identifiant interne utilisé dans les autres systèmes d'information de l'organisation
-        (système de gestion électronique de documents, ERP, logiciel métier, etc.). Ce numéro
-        permet de faire le lien entre GEID Archives et les autres bases de données de
-        l'organisation. Il suit généralement un format propre à chaque organisation : préfixe du
-        service, année, numéro de séquence.
-      </FieldDoc>
-      <FieldDoc label="Profil d'accès" example="Ressources humaines, Direction générale">
-        Indique quel service ou rôle est autorisé à consulter ce document archivé. Si le document
-        est accessible à tous, laissez ce champ vide. Si l'accès doit être restreint à un service
-        particulier (ex : Direction, RH), saisissez le nom du profil correspondant. Ce champ est
-        utilisé pour filtrer les archives selon les droits des utilisateurs.
-      </FieldDoc>
+        <SubTitle>Critères de recherche</SubTitle>
+        <Paragraph>
+          La recherche s'effectue sur l'ensemble des champs descriptifs des documents. Pour les
+          archives numériques, elle explore la désignation, la description, le numéro de classe,
+          le numéro de référence, le dossier et les étiquettes. Pour les documents physiques,
+          elle explore le numéro interne, le numéro de référence, le sujet, la catégorie et la
+          nature du document.
+        </Paragraph>
+        <Paragraph>
+          Saisissez au moins deux caractères pour déclencher la recherche. Les résultats
+          s'affichent immédiatement, groupés en deux sections distinctes : Archives numériques
+          et Documents physiques. Le nombre total de résultats est indiqué en bas de la fenêtre.
+        </Paragraph>
 
-      <Desc>
-        Après avoir rempli les champs, cliquez sur <strong>Valider</strong>. Une notification
-        apparaît vous informant que la validation est en cours. Vous disposez de quelques secondes
-        pour <strong>Annuler</strong> si vous avez commis une erreur. Une fois le délai écoulé, le
-        document est définitivement validé, son statut passe à <strong>Validé</strong> (puce verte)
-        et il migre vers la section « Archives validées ».
-      </Desc>
+        <Divider sx={{ my: 3 }} />
 
-      <SubTitle>4.3 Colonnes du tableau « À valider »</SubTitle>
-      <Table size="small" sx={{ mb: 2 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Colonne</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {[
-            { col: "Désignation", desc: "Titre du document tel que saisi lors de la soumission." },
-            { col: "Type de document", desc: "Famille documentaire (type principal sélectionné à la soumission)." },
-            { col: "N° classement", desc: "Numéro de classification attribué lors de la validation. Vide si non encore validé." },
-            { col: "N° référence", desc: "Référence interne attribuée lors de la validation. Vide si non encore validé." },
-            { col: "Description", desc: "Résumé du contenu saisi lors de la soumission." },
-            { col: "Statut", desc: "Puce colorée : « Validé » (vert) ou « En attente » (orange)." },
-            { col: "Date", desc: "Date et heure de soumission du document dans le système." },
-            { col: "Valider", desc: "Bouton d'action permettant d'ouvrir le formulaire de validation pour ce document." },
-          ].map(({ col, desc }) => (
-            <TableRow key={col}>
-              <TableCell><Typography variant="body2" fontWeight={600}>{col}</Typography></TableCell>
-              <TableCell><Typography variant="body2" color="text.secondary">{desc}</Typography></TableCell>
+        {/* ══════════════════════════════════════════════════
+            12. EXPORT
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="export" number="12">Exporter la liste des archives</SectionTitle>
+
+        <Paragraph>
+          GEID Archives permet d'exporter la liste des archives dans un fichier tabulaire
+          compatible avec Microsoft Excel, LibreOffice Calc et la plupart des outils de traitement
+          de données. Cette fonctionnalité est utile pour produire des rapports périodiques,
+          partager l'état du fonds avec des partenaires ou effectuer des analyses statistiques
+          complémentaires.
+        </Paragraph>
+        <Step number={1}>Appliquez les filtres souhaités dans la section Archives (par statut, par filtre rapide ou via la recherche).</Step>
+        <Step number={2}>Cliquez sur l'icône de téléchargement (flèche vers le bas) dans la barre de navigation gauche.</Step>
+        <Step number={3}>Le fichier CSV est téléchargé automatiquement avec un nom incluant la date du jour.</Step>
+
+        <InfoBox>
+          L'export prend en compte exactement les données visibles dans le tableau au moment du
+          clic. Si vous souhaitez exporter l'ensemble des archives sans filtre, assurez-vous
+          d'abord que le filtre Toutes est sélectionné dans la barre de navigation.
+        </InfoBox>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            13. RÔLES ET PERMISSIONS
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="roles-permissions" number="13">Rôles et permissions</SectionTitle>
+
+        <Paragraph>
+          GEID Archives repose sur un système de contrôle d'accès basé sur des rôles. Chaque
+          utilisateur se voit attribuer un rôle qui détermine les actions qu'il est autorisé à
+          effectuer. Ce système garantit que les opérations sensibles comme la validation ou
+          la suppression ne peuvent être réalisées que par des personnes habilitées.
+        </Paragraph>
+
+        <Table size="small" sx={{ mb: 2 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Action</strong></TableCell>
+              <TableCell align="center"><strong>Agent</strong></TableCell>
+              <TableCell align="center"><strong>Archiviste</strong></TableCell>
+              <TableCell align="center"><strong>Administrateur</strong></TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {[
+              ["Soumettre une archive",                  "✓", "✓", "✓"],
+              ["Consulter les archives",                  "✓", "✓", "✓"],
+              ["Valider une archive",                     "—", "✓", "✓"],
+              ["Modifier une archive",                    "—", "✓", "✓"],
+              ["Configurer la DUA",                       "—", "✓", "✓"],
+              ["Gérer les transitions du cycle de vie",   "—", "✓", "✓"],
+              ["Supprimer des archives",                  "—", "—", "✓"],
+              ["Gérer la structure physique",             "—", "—", "✓"],
+              ["Rattacher archives numériques/physiques", "—", "✓", "✓"],
+              ["Gérer les utilisateurs",                  "—", "—", "✓"],
+            ].map(([action, ...cols]) => (
+              <TableRow key={action}>
+                <TableCell>{action}</TableCell>
+                {cols.map((v, i) => (
+                  <TableCell key={i} align="center" sx={{ color: v === "✓" ? "success.main" : "text.disabled", fontWeight: v === "✓" ? 700 : 400 }}>
+                    {v}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-      <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 3 }} />
 
-      {/* ══════════════════════════════════════════════════
-          5. ARCHIVES VALIDÉES
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="archives-validees">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <ManageHistoryIcon fontSize="small" />
-          <span>5. Archives validées</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        Cette section est le registre officiel de tous les documents qui ont été validés par le
-        service des archives. Chaque document y est référencé, classé et consultable. C'est la
-        section que vous utiliserez le plus souvent pour retrouver un document, vérifier ses
-        métadonnées ou effectuer des corrections.
-      </Desc>
+        {/* ══════════════════════════════════════════════════
+            14. GLOSSAIRE
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="glossaire" number="14">Glossaire</SectionTitle>
 
-      <SubTitle>5.1 Lire et filtrer les archives</SubTitle>
-      <Desc>
-        Le tableau affiche l'ensemble des archives validées auxquelles vous avez accès. Vous pouvez
-        utiliser les outils de la barre d'outils pour personnaliser l'affichage :
-      </Desc>
-      <List dense>
+        <Paragraph>
+          Cette section réunit les définitions des termes techniques et administratifs utilisés
+          dans GEID Archives et dans ce manuel.
+        </Paragraph>
+
         {[
-          "Cliquez sur « Colonnes » pour afficher ou masquer des colonnes selon vos besoins.",
-          "Cliquez sur « Filtres » pour appliquer des critères de recherche : filtrer par désignation, par type, par numéro de classement, etc.",
-          "Cliquez sur l'en-tête d'une colonne pour trier le tableau par cette colonne (ordre croissant ou décroissant).",
-          "Utilisez la pagination en bas de page pour naviguer entre les pages si le nombre d'archives est important.",
-        ].map((text, i) => (
-          <ListItem key={i} disableGutters>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <CheckCircleOutlineIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
-          </ListItem>
-        ))}
-      </List>
-
-      <SubTitle>5.2 Sélectionner des archives pour une action</SubTitle>
-      <Desc>
-        Pour effectuer une action sur une ou plusieurs archives (modifier, supprimer, valider),
-        vous devez d'abord les sélectionner en cochant les cases à gauche de chaque ligne. Une fois
-        la sélection effectuée, les boutons d'action dans la barre au-dessus du tableau s'activent.
-      </Desc>
-      <Stack spacing={1} mb={2}>
-        {[
-          {
-            action: "Valider",
-            cond: "1 seul document · statut « En attente »",
-            access: "Écriture",
-            desc: "Ouvre le formulaire de validation permettant d'attribuer ou de modifier les numéros de classification et de référence. Le document passe au statut « Validé ».",
-          },
-          {
-            action: "Modifier",
-            cond: "1 seul document",
-            access: "Écriture",
-            desc: "Ouvre le formulaire de modification des métadonnées : désignation, description, mots-clés. Le fichier joint ne peut pas être remplacé.",
-          },
-          {
-            action: "Archiver",
-            cond: "1 seul document · statut « Validé »",
-            access: "Écriture",
-            desc: "Fait passer le document au statut « Archivé » (puce bleue). Le document est clôturé et ne peut plus être revalidé directement — il faut d'abord le rouvrir.",
-          },
-          {
-            action: "Rouvrir",
-            cond: "1 seul document · statut « Validé » ou « Archivé »",
-            access: "Écriture",
-            desc: "Ramène le document au statut « En attente » pour retraitement. Utile en cas d'erreur ou de modification nécessaire après validation.",
-          },
-          {
-            action: "Supprimer",
-            cond: "1 ou plusieurs documents",
-            access: "Écriture",
-            desc: "Supprime définitivement les archives sélectionnées. Le fichier associé sur le serveur est également supprimé. Action irréversible.",
-          },
-        ].map(({ action, cond, access, desc }) => (
-          <Paper key={action} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5} flexWrap="wrap" gap={0.5}>
-              <Typography variant="body2" fontWeight={700}>{action}</Typography>
-              <Chip label={cond} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
-              <Chip label={access} size="small" color="warning" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />
-            </Stack>
-            <Typography variant="body2" color="text.secondary">{desc}</Typography>
-          </Paper>
-        ))}
-      </Stack>
-
-      <SubTitle id="modifier-archive">5.3 Modifier une archive validée</SubTitle>
-      <Desc>
-        La modification permet de corriger ou d'enrichir les métadonnées d'un document après
-        validation. Notez que le fichier joint lui-même ne peut pas être remplacé via cette
-        interface — seules les informations descriptives sont modifiables.
-      </Desc>
-      <FieldDoc label="Désignation" required example="Rapport annuel RH 2024 — version corrigée">
-        Titre du document. Modifiez-le pour corriger une faute de frappe, préciser l'intitulé ou
-        ajouter une information manquante (ex : numéro de version, date de mise à jour).
-      </FieldDoc>
-      <FieldDoc label="Description" required>
-        Résumé du contenu. Peut être enrichi après une relecture attentive du document ou suite à
-        de nouvelles informations. Maintenez un niveau de détail suffisant pour faciliter les
-        recherches futures.
-      </FieldDoc>
-      <FieldDoc label="Mots-clés" example="rapport annuel, RH, effectifs, formation, 2024">
-        Liste de termes libres séparés par des virgules. Ces mots-clés enrichissent les capacités
-        de recherche plein texte. Ajoutez des synonymes, des thèmes transversaux, des noms de
-        projets ou des codes internes susceptibles d'être utilisés lors d'une recherche.
-      </FieldDoc>
-
-      <Alert severity="warning" sx={{ mt: 1, mb: 2, borderRadius: 1.5 }}>
-        La suppression d'une archive est <strong>irréversible et permanente</strong>. Le fichier
-        associé sur le serveur est également supprimé. Assurez-vous d'avoir une sauvegarde si
-        nécessaire avant de procéder.
-      </Alert>
-
-      <SubTitle>5.4 Ouvrir un document</SubTitle>
-      <Desc>
-        Pour consulter le fichier original d'une archive validée, cliquez directement sur la ligne
-        correspondante dans le tableau (sans cocher la case). Si le document est accessible, il
-        s'ouvre dans un nouvel onglet de votre navigateur. Assurez-vous que les fenêtres
-        contextuelles (pop-ups) ne sont pas bloquées par votre navigateur pour ce site.
-      </Desc>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* ══════════════════════════════════════════════════
-          6. CYCLE DE VIE DES DOCUMENTS
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="cycle-de-vie">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <HistoryOutlinedIcon fontSize="small" />
-          <span>6. Cycle de vie des documents</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        GEID Archives gère le cycle de vie complet de chaque document selon les principes modernes
-        de l'archivistique. Chaque document passe par des <strong>états successifs</strong> qui
-        reflètent son stade de traitement et sa durée d'utilité administrative (DUA). Ces transitions
-        sont tracées dans l'historique du document et sont irréversibles une fois validées (sauf
-        retour en arrière explicite via « Rouvrir »).
-      </Desc>
-
-      <SubTitle>6.1 Les quatre statuts</SubTitle>
-      <Stack spacing={1} mb={2}>
-        {[
-          {
-            status: "En attente",
-            color: "warning" as const,
-            desc: "Statut initial d'un document soumis. L'archiviste n'a pas encore examiné ni validé ce document. Il est visible dans l'onglet « À valider ».",
-            transitions: "→ Validé (après validation par un archiviste)",
-          },
-          {
-            status: "Validé",
-            color: "success" as const,
-            desc: "Le document a été examiné et certifié conforme. Un numéro de classification et un numéro de référence lui ont été attribués. Il est actif et pleinement consultable.",
-            transitions: "→ Archivé (clôture) · → En attente (réouverture en cas d'erreur)",
-          },
-          {
-            status: "Archivé",
-            color: "info" as const,
-            desc: "Le document a atteint la fin de sa durée d'utilité courante. Il est conservé pour des raisons réglementaires ou historiques mais n'est plus un document de travail actif.",
-            transitions: "→ Éliminé (administrateur uniquement)",
-          },
-          {
-            status: "Éliminé",
-            color: "error" as const,
-            desc: "Le document a atteint la fin de sa durée d'utilité administrative. Il est marqué comme éliminé. Cette transition est définitive et réservée aux administrateurs.",
-            transitions: "Aucune transition possible — état terminal",
-          },
-        ].map(({ status, color, desc, transitions }) => (
-          <Paper key={status} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1.5} alignItems="flex-start">
-              <Chip label={status} size="small" color={color} variant="outlined" sx={{ mt: 0.2, flexShrink: 0 }} />
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{desc}</Typography>
-                <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: "block" }}>
-                  Transitions : <em>{transitions}</em>
-                </Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-
-      <SubTitle>6.2 Tableau des transitions autorisées</SubTitle>
-      <Table size="small" sx={{ mb: 2 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Depuis</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Vers</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Qui peut le faire</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {[
-            { from: "En attente", to: "Validé",     action: "Valider",  who: "Archiviste (accès écriture)" },
-            { from: "Validé",     to: "Archivé",    action: "Archiver", who: "Archiviste (accès écriture)" },
-            { from: "Validé",     to: "En attente", action: "Rouvrir",  who: "Archiviste (accès écriture)" },
-            { from: "Archivé",    to: "En attente", action: "Rouvrir",  who: "Archiviste (accès écriture)" },
-            { from: "Archivé",    to: "Éliminé",    action: "Éliminer", who: "Administrateur uniquement" },
-          ].map(({ from, to, action, who }, i) => (
-            <TableRow key={i}>
-              <TableCell><Typography variant="body2">{from}</Typography></TableCell>
-              <TableCell><Typography variant="body2">{to}</Typography></TableCell>
-              <TableCell><Typography variant="body2" fontWeight={600}>{action}</Typography></TableCell>
-              <TableCell><Typography variant="body2" color="text.secondary">{who}</Typography></TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <SubTitle>6.3 Historique du cycle de vie</SubTitle>
-      <Desc>
-        Chaque transition est enregistrée automatiquement dans l'historique du document avec :
-        la date et l'heure exactes de la transition, l'utilisateur qui a effectué l'action, le
-        statut de départ et le statut d'arrivée, et une note optionnelle justifiant la décision.
-        Cet historique garantit la traçabilité complète des documents et permet de rendre compte
-        des décisions prises sur chaque archive. Il n'est pas modifiable.
-      </Desc>
-      <InfoBox>
-        La suppression physique d'un document (<strong>Supprimer</strong>) efface définitivement
-        l'enregistrement et le fichier associé. Elle est distincte du statut « Éliminé » qui
-        conserve la trace de l'existence du document à des fins d'audit. Préférez le statut
-        « Éliminé » à la suppression pour les documents ayant une valeur probatoire ou historique.
-      </InfoBox>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* ══════════════════════════════════════════════════
-          7. ARCHIVAGE PHYSIQUE
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="archivage-physique">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <AccountBalanceOutlinedIcon fontSize="small" />
-          <span>7. Archivage physique</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        Cette section permet de gérer et d'inventorier l'espace de stockage physique des archives
-        papier de l'organisation. Elle est organisée selon une hiérarchie stricte à 5 niveaux,
-        du plus grand (le conteneur) au plus petit (le dossier physique). Chaque niveau doit être
-        créé séquentiellement — vous ne pouvez pas créer une étagère sans avoir d'abord créé un
-        conteneur.
-      </Desc>
-
-      <SubTitle>6.1 Hiérarchie des 5 niveaux</SubTitle>
-      <Desc>
-        Comprendre la hiérarchie est fondamental avant de commencer à utiliser cette section :
-      </Desc>
-      <Stack spacing={1} mb={2}>
-        {[
-          {
-            icon: <WarehouseOutlinedIcon />,
-            label: "Niveau 1 — Conteneur",
-            desc: "La plus grande unité de stockage physique. Représente une armoire, un local dédié, une salle, une pièce ou tout espace physique fermé pouvant contenir des étagères. C'est le point de départ de toute la hiérarchie. Exemple : « Armoire A — Bâtiment principal ».",
-          },
-          {
-            icon: <LayersOutlinedIcon />,
-            label: "Niveau 2 — Étagère",
-            desc: "Rangée physique à l'intérieur d'un conteneur. Un conteneur peut contenir plusieurs étagères. Exemple : « Étagère 1 — Rangée haute » dans l'Armoire A.",
-          },
-          {
-            icon: <FolderOutlinedIcon />,
-            label: "Niveau 3 — Étage",
-            desc: "Compartiment numéroté d'une étagère. Chaque étage est associé à une unité administrative (service ou département) responsable des documents qui y sont rangés. Exemple : Étage 2 sur l'Étagère 1, rattaché au service des Ressources Humaines.",
-          },
-          {
-            icon: <BookmarkBorderOutlinedIcon />,
-            label: "Niveau 4 — Classeur",
-            desc: "Reliure ou chemise physique contenant des dossiers papier. Chaque classeur a une nature thématique (ex : RH, FINANCE, JURIDIQUE en majuscules) et une capacité maximale de dossiers. Quand la capacité est atteinte, le système vous en avertit. Exemple : « Classeur Contrats 2024 » de nature RH, capacité 50.",
-          },
-          {
-            icon: <ArticleOutlinedIcon />,
-            label: "Niveau 5 — Dossier physique",
-            desc: "Document ou ensemble de pièces physiques constituant un dossier rangé dans un classeur. C'est le niveau le plus fin de la hiérarchie. Chaque dossier doit avoir la même nature que son classeur parent (vérification effectuée automatiquement par le système). Exemple : Contrat de travail de M. Dupont dans le classeur RH.",
-          },
-        ].map(({ icon, label, desc }) => (
-          <Paper key={label} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1.5} alignItems="flex-start">
-              <Box sx={{ color: "primary.main", mt: 0.25, flexShrink: 0 }}>{icon}</Box>
-              <Box>
-                <Typography variant="body2" fontWeight={700}>{label}</Typography>
-                <Typography variant="body2" color="text.secondary">{desc}</Typography>
-              </Box>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-
-      <InfoBox>
-        La suppression d'un élément est possible uniquement s'il ne contient pas d'éléments
-        enfants. Par exemple, vous ne pouvez pas supprimer un conteneur s'il contient des étagères.
-        Supprimez d'abord tous les niveaux inférieurs (dossiers → classeurs → étages → étagères →
-        conteneur).
-      </InfoBox>
-
-      <SubTitle id="conteneur">6.2 Créer un conteneur</SubTitle>
-      <Desc>
-        Le conteneur est le premier niveau à créer. Cliquez sur le bouton <strong>+ Ajouter</strong>
-        dans l'onglet « Conteneur » de la section Archivage physique.
-      </Desc>
-      <FieldDoc label="Nom" required example="Armoire A — Bâtiment Principal, Rez-de-chaussée">
-        Identifiant lisible du conteneur. Choisissez un nom qui reflète précisément l'emplacement
-        physique et qui distingue ce conteneur de tous les autres de l'organisation. Incluez si
-        possible le bâtiment, l'étage ou la salle. Ce nom sera utilisé dans les rapports et les
-        listes de l'interface.
-      </FieldDoc>
-      <FieldDoc label="Localisation" example="Salle des archives, Niveau 0, Couloir B, Deuxième allée">
-        Adresse précise du conteneur dans les locaux. Cette information est indispensable pour que
-        quiconque puisse trouver physiquement le document sans connaissance préalable des locaux.
-        Soyez aussi précis que possible : salle, couloir, allée, rangée.
-      </FieldDoc>
-      <FieldDoc label="Description" example="Armoire métallique à 4 portes verrouillée. Réservée exclusivement aux dossiers RH antérieurs à 2020. Clé disponible auprès du responsable archives.">
-        Informations complémentaires utiles sur le conteneur : type de meuble, matériaux, conditions
-        de conservation (température, hygrométrie), restrictions d'accès, contact pour obtenir
-        l'accès, ou toute particularité importante à connaître.
-      </FieldDoc>
-
-      <SubTitle id="etagere">6.3 Créer une étagère</SubTitle>
-      <Desc>
-        Une étagère se crée à l'intérieur d'un conteneur existant. Sélectionnez le conteneur
-        parent dans la vue arborescente, puis cliquez sur <strong>+ Ajouter une étagère</strong>.
-      </Desc>
-      <FieldDoc label="Nom" required example="Étagère 3 — Rangée basse">
-        Désignation de la rangée physique. Indiquez sa position relative dans le conteneur (haute,
-        milieu, basse) ou son numéro d'ordre pour faciliter la localisation physique lors d'une
-        consultation.
-      </FieldDoc>
-      <FieldDoc label="Description" example="Réservée aux classeurs classés par ordre alphabétique. Contient principalement les dossiers antérieurs à 2018.">
-        Description optionnelle du contenu prévu ou effectif de cette rangée. Utile pour guider
-        les archivistes lors du classement de nouveaux dossiers.
-      </FieldDoc>
-
-      <SubTitle id="etage">6.4 Créer un étage</SubTitle>
-      <Desc>
-        Un étage se crée à l'intérieur d'une étagère. Il représente un compartiment numéroté
-        rattaché à une unité administrative responsable.
-      </Desc>
-      <FieldDoc label="Numéro" required example="1 (premier compartiment), 2 (deuxième), 3…">
-        Numéro entier identifiant la position de ce compartiment sur l'étagère. La numérotation
-        commence généralement à 1 depuis le bas ou depuis la gauche selon les conventions de
-        votre organisation.
-      </FieldDoc>
-      <FieldDoc label="Libellé" example="Dossiers actifs 2023-2024 — Direction">
-        Description libre de ce niveau, utilisée dans les rapports d'inventaire et les listes.
-        Indique généralement le contenu, la période couverte ou le service concerné.
-      </FieldDoc>
-      <FieldDoc label="Unité administrative" required example="ID MongoDB du service RH dans la base de données">
-        Identifiant technique (_id) du service ou de l'unité organisationnelle responsable des
-        documents stockés à cet étage. Cet identifiant est un code interne du système — consultez
-        l'administrateur de GEID pour obtenir l'identifiant correspondant à votre service.
-      </FieldDoc>
-
-      <SubTitle id="classeur">6.5 Créer un classeur</SubTitle>
-      <Desc>
-        Un classeur se crée à l'intérieur d'un étage. Il représente la reliure physique qui va
-        contenir les dossiers papier. La nature du classeur est déterminante car elle sera vérifiée
-        lors de l'ajout de chaque dossier.
-      </Desc>
-      <FieldDoc label="Nom" required example="Classeur Contrats CDI — RH — 2024 (01)">
-        Titre du classeur. Doit permettre d'identifier rapidement son contenu thématique et
-        temporel sans avoir à l'ouvrir. Incluez la nature, le type de documents et la période
-        si possible.
-      </FieldDoc>
-      <FieldDoc label="Nature" required example="RH, FINANCE, JURIDIQUE, MARCHÉS, TECHNIQUE">
-        Catégorie thématique du classeur, obligatoirement en <strong>MAJUSCULES</strong>. La nature
-        détermine quels types de dossiers peuvent être rangés dans ce classeur — le système vérifie
-        automatiquement que tout dossier ajouté partage la même nature. Choisissez une nature
-        cohérente avec le contenu prévu et les standards de nomenclature de votre organisation.
-      </FieldDoc>
-      <FieldDoc label="Capacité maximale" required example="50 dossiers">
-        Nombre maximum de dossiers physiques pouvant être rangés dans ce classeur. Cette limite
-        reflète la capacité physique réelle de la reliure. Quand le nombre de dossiers atteint ce
-        seuil, le tableau de bord l'indique et vous invite à créer un nouveau classeur. Une
-        capacité typique est entre 30 et 100 dossiers selon l'épaisseur des pièces.
-      </FieldDoc>
-
-      <SubTitle id="dossier-physique">6.6 Créer un dossier physique</SubTitle>
-      <Desc>
-        Le dossier physique est l'unité documentaire élémentaire de l'archivage physique. Il
-        représente un document ou un ensemble de pièces papier physiquement rangé dans un classeur.
-        Sa <strong>nature doit impérativement correspondre</strong> à celle du classeur parent,
-        sous peine de rejet par le système.
-      </Desc>
-      <FieldDoc label="N° interne" required example="DOS-RH-2024-0042">
-        Code unique attribué à ce dossier par le service des archives. Ce numéro suit généralement
-        le format standardisé de votre organisation : NATURE-SERVICE-ANNÉE-SÉQUENCE. Il permet
-        d'identifier et de retrouver le dossier physique en cas de perte ou de déplacement.
-      </FieldDoc>
-      <FieldDoc label="N° de référence" required example="REF-DRH-042">
-        Référence croisée avec le système d'information de l'organisation (GED, ERP, logiciel RH,
-        etc.). Ce numéro fait le lien entre le document physique et son équivalent numérique dans
-        les autres systèmes. Utilisez le même format que dans vos autres outils pour faciliter
-        les recoupements.
-      </FieldDoc>
-      <FieldDoc label="Objet" required example="Contrat de travail à durée indéterminée — M. Jean Dupont — Poste : Technicien">
-        Intitulé précis du dossier décrivant son contenu principal. Soyez suffisamment descriptif
-        pour identifier le dossier sans avoir à l'ouvrir : incluez le type d'acte, les parties
-        concernées et la nature de la transaction ou du document.
-      </FieldDoc>
-      <FieldDoc label="Catégorie" required example="Contrats, Correspondances, Marchés publics, Rapports, Factures">
-        Famille documentaire à laquelle appartient ce dossier. Utilisée pour le filtrage et les
-        statistiques d'archivage. Choisissez la catégorie qui correspond le mieux à la nature
-        juridique ou administrative du document.
-      </FieldDoc>
-      <FieldDoc label="Nature" required example="RH (doit correspondre à la nature du classeur parent)">
-        Doit correspondre <strong>exactement</strong> à la nature du classeur dans lequel ce
-        dossier est rangé, en <strong>MAJUSCULES</strong>. Le système effectue une vérification
-        automatique lors de l'enregistrement et rejettera le dossier si les natures ne concordent
-        pas. Cette contrainte garantit la cohérence thématique du classeur.
-      </FieldDoc>
-      <FieldDoc label="Date d'édition" required example="15/03/2024">
-        Date à laquelle le document original a été produit, signé ou émis. Format : JJ/MM/AAAA.
-        Cette date est distincte de la date d'archivage — elle correspond à la date figurant sur
-        le document lui-même.
-      </FieldDoc>
-      <FieldDoc label="Date d'archivage" required example="20/03/2024 (date du jour de classement)">
-        Date à laquelle ce dossier a été physiquement intégré dans les archives. Généralement
-        la date du jour. Cette date permet de retracer chronologiquement l'activité d'archivage
-        et de respecter les délais réglementaires de conservation.
-      </FieldDoc>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* ══════════════════════════════════════════════════
-          8. RÔLES ET PERMISSIONS
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="roles-permissions">
-        <Stack direction="row" alignItems="center" spacing={1} component="span">
-          <SecurityOutlinedIcon fontSize="small" />
-          <span>8. Rôles, permissions et visibilité</span>
-        </Stack>
-      </SectionTitle>
-      <Desc>
-        GEID Archives utilise un système d'autorisations granulaires basé sur les
-        <strong> unités administratives</strong> (services, départements) et les
-        <strong> niveaux d'accès</strong> (lecture seule ou lecture/écriture). Ces permissions
-        sont attribuées par l'administrateur du système pour chaque compte utilisateur. Elles
-        déterminent ce que vous voyez dans l'interface et les actions que vous pouvez effectuer.
-      </Desc>
-
-      <SubTitle>8.1 Les deux niveaux d'accès</SubTitle>
-      <Stack spacing={1} mb={2}>
-        {[
-          {
-            level: "Lecture seule",
-            color: "info" as const,
-            desc: "Vous pouvez consulter les archives de votre unité administrative. Vous voyez les tableaux et les documents mais aucun bouton de modification n'est affiché. Le bouton « Valider » dans le tableau « À valider » n'est pas visible.",
-          },
-          {
-            level: "Lecture / Écriture",
-            color: "success" as const,
-            desc: "Vous pouvez soumettre, valider, modifier, archiver et supprimer des documents dans les unités administratives pour lesquelles vous avez cet accès. Les boutons d'action sont visibles et actifs selon le statut du document sélectionné.",
-          },
-        ].map(({ level, color, desc }) => (
-          <Paper key={level} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-              <Chip label={level} size="small" color={color} variant="outlined" />
-            </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{desc}</Typography>
-          </Paper>
-        ))}
-      </Stack>
-
-      <SubTitle>8.2 Visibilité selon les unités administratives</SubTitle>
-      <Desc>
-        Vos permissions sont liées à des <strong>unités administratives spécifiques</strong>.
-        Le système filtre automatiquement l'affichage des archives en fonction de ces unités :
-      </Desc>
-      <List dense>
-        {[
-          "Vous ne voyez que les archives appartenant aux unités pour lesquelles vous avez au moins un accès (lecture ou écriture).",
-          "Un document soumis sans unité administrative explicite peut être visible selon la configuration du système.",
-          "Si vous avez des accès sur plusieurs unités, vous voyez les archives de toutes ces unités dans un seul tableau.",
-          "Les actions disponibles (Valider, Modifier, Archiver, etc.) ne s'affichent que si vous avez un accès en écriture sur l'unité du document sélectionné.",
-        ].map((text, i) => (
-          <ListItem key={i} disableGutters>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <CheckCircleOutlineIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
-          </ListItem>
-        ))}
-      </List>
-
-      <SubTitle>8.3 Profil Administrateur</SubTitle>
-      <Desc>
-        Le profil Administrateur est un niveau d'accès spécial qui dépasse les restrictions
-        par unité administrative. Un administrateur possède les caractéristiques suivantes :
-      </Desc>
-      <List dense>
-        {[
-          "Voit toutes les archives du système, quelle que soit leur unité administrative, sans exception.",
-          "Peut effectuer toutes les opérations (soumettre, valider, modifier, archiver, supprimer) sur n'importe quel document.",
-          "Est le seul à pouvoir effectuer la transition vers le statut « Éliminé » — transition réservée aux administrateurs pour des raisons de conformité réglementaire.",
-          "Voit les boutons d'action pour tous les documents, y compris ceux d'autres services.",
-        ].map((text, i) => (
-          <ListItem key={i} disableGutters>
-            <ListItemIcon sx={{ minWidth: 28 }}>
-              <CheckCircleOutlineIcon fontSize="small" color="warning" />
-            </ListItemIcon>
-            <ListItemText primary={<Typography variant="body2">{text}</Typography>} />
-          </ListItem>
-        ))}
-      </List>
-
-      <SubTitle>8.4 Tableau récapitulatif des permissions</SubTitle>
-      <Table size="small" sx={{ mb: 2 }}>
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Lecture</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Écriture</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: "center" }}>Admin</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {[
-            { action: "Consulter les archives de son unité",   read: "✓", write: "✓", admin: "✓" },
-            { action: "Consulter toutes les archives",          read: "–", write: "–", admin: "✓" },
-            { action: "Soumettre un document",                  read: "–", write: "✓", admin: "✓" },
-            { action: "Valider un document (En attente → Validé)", read: "–", write: "✓", admin: "✓" },
-            { action: "Modifier les métadonnées",               read: "–", write: "✓", admin: "✓" },
-            { action: "Archiver (Validé → Archivé)",            read: "–", write: "✓", admin: "✓" },
-            { action: "Rouvrir (Validé/Archivé → En attente)", read: "–", write: "✓", admin: "✓" },
-            { action: "Éliminer (Archivé → Éliminé)",           read: "–", write: "–", admin: "✓" },
-            { action: "Supprimer définitivement",               read: "–", write: "✓", admin: "✓" },
-            { action: "Gérer l'archivage physique",             read: "–", write: "✓", admin: "✓" },
-          ].map(({ action, read, write, admin }) => (
-            <TableRow key={action}>
-              <TableCell><Typography variant="body2">{action}</Typography></TableCell>
-              <TableCell sx={{ textAlign: "center" }}>
-                <Typography variant="body2" color={read === "✓" ? "success.main" : "text.disabled"}>{read}</Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: "center" }}>
-                <Typography variant="body2" color={write === "✓" ? "success.main" : "text.disabled"}>{write}</Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: "center" }}>
-                <Typography variant="body2" color={admin === "✓" ? "success.main" : "text.disabled"}>{admin}</Typography>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      <InfoBox>
-        Si vous ne voyez pas certaines archives ou fonctionnalités, contactez votre administrateur
-        GEID pour vérifier les permissions associées à votre compte. L'accès aux archives est
-        filtré selon les unités administratives auxquelles vous êtes rattaché. Les boutons d'action
-        n'apparaissent dans l'interface que si vous avez les droits nécessaires — si un bouton est
-        absent, c'est intentionnel et lié à vos permissions.
-      </InfoBox>
-
-      <Divider sx={{ my: 2 }} />
-
-      {/* ══════════════════════════════════════════════════
-          8. GLOSSAIRE
-      ════════════════════════════════════════════════════ */}
-      <SectionTitle id="glossaire">9. Glossaire complet</SectionTitle>
-      <Desc>
-        Définitions des termes techniques et métier utilisés dans GEID Archives :
-      </Desc>
-      <Stack spacing={1}>
-        {[
-          {
-            term: "Archive",
-            def: "Document numérique soumis au service d'archivage. Une archive passe par plusieurs statuts au cours de son cycle de vie : En attente, Validé, Archivé, ou Éliminé.",
-          },
-          {
-            term: "Cycle de vie",
-            def: "Ensemble des étapes successives qu'un document traverse dans le système : soumission (En attente) → validation (Validé) → clôture (Archivé) → élimination réglementaire (Éliminé). Chaque transition est tracée dans l'historique.",
-          },
-          {
-            term: "DUA (Durée d'Utilité Administrative)",
-            def: "Durée pendant laquelle un document doit être conservé à des fins administratives, légales ou réglementaires. À l'expiration de la DUA, le document peut être éliminé ou versé aux archives définitives.",
-          },
-          {
-            term: "Transition de statut",
-            def: "Changement d'un document d'un statut à un autre dans le cycle de vie. Chaque transition est validée selon des règles strictes et enregistrée dans l'historique avec la date, l'utilisateur et une note optionnelle.",
-          },
-          {
-            term: "Historique du cycle de vie",
-            def: "Journal horodaté de toutes les transitions de statut d'un document. Garantit la traçabilité complète : qui a fait quoi, quand, et pourquoi. Non modifiable.",
-          },
-          {
-            term: "Validation",
-            def: "Processus officiel par lequel un archiviste certifie la conformité d'un document et lui attribue ses identifiants définitifs (numéro de classification et numéro de référence), le rendant officiellement archivé.",
-          },
-          {
-            term: "Numéro de classification",
-            def: "Code structuré issu du plan de classement officiel de l'organisation (ex : 2024-ADM-001). Unique dans le système. Permet de localiser un document dans les répertoires physiques et numériques. Attribué uniquement par l'archiviste lors de la validation.",
-          },
-          {
-            term: "Numéro de référence",
-            def: "Identifiant interne du document dans les systèmes d'information de l'organisation (GED, ERP, logiciel métier). Permet de faire le lien entre GEID Archives et les autres bases de données.",
-          },
-          {
-            term: "Plan de classement",
-            def: "Référentiel documentaire officiel de l'organisation définissant la structure hiérarchique des codes de classification. C'est la nomenclature de référence utilisée par les archivistes pour attribuer les numéros de classification.",
-          },
-          {
-            term: "Profil d'accès",
-            def: "Rôle ou service autorisé à consulter un document archivé. Correspond aux entrées du référentiel des unités administratives de l'organisation. Si vide, le document est accessible à tous les utilisateurs ayant accès aux archives.",
-          },
-          {
-            term: "Unité administrative",
-            def: "Service, département ou entité organisationnelle de l'organisation (ex : Direction des Ressources Humaines, Service Financier). Utilisé pour filtrer les archives selon les périmètres de responsabilité de chaque utilisateur.",
-          },
-          {
-            term: "Nature",
-            def: "Catégorie thématique d'un classeur ou d'un dossier physique, toujours en MAJUSCULES (ex : RH, FINANCE, JURIDIQUE, MARCHÉS). La nature d'un dossier doit correspondre exactement à celle de son classeur parent.",
-          },
-          {
-            term: "Conteneur",
-            def: "Unité physique de stockage de niveau supérieur. Représente une armoire, un local ou tout espace physique fermé utilisé pour stocker des étagères d'archives.",
-          },
-          {
-            term: "Étagère",
-            def: "Rangée physique à l'intérieur d'un conteneur. Un conteneur peut contenir plusieurs étagères.",
-          },
-          {
-            term: "Étage",
-            def: "Compartiment numéroté d'une étagère, rattaché à une unité administrative responsable des documents qu'il contient.",
-          },
-          {
-            term: "Classeur",
-            def: "Reliure ou chemise physique contenant des dossiers papier. Chaque classeur a une nature thématique (en majuscules) et une capacité maximale de dossiers.",
-          },
-          {
-            term: "Dossier physique",
-            def: "Unité documentaire physique élémentaire rangée dans un classeur. Représente un document ou un ensemble de pièces papier. Sa nature doit correspondre à celle du classeur parent.",
-          },
-          {
-            term: "Mots-clés (tags)",
-            def: "Termes libres séparés par des virgules, associés à une archive validée pour enrichir les capacités de recherche plein texte. Exemples : nom de projet, acronyme, thème transversal.",
-          },
-          {
-            term: "Type documentaire",
-            def: "Famille documentaire à deux niveaux (type principal + sous-type) selon la nomenclature du service des archives. Exemples : Rapport / Rapport annuel, Contrat / Contrat de travail.",
-          },
-          {
-            term: "Capacité maximale (classeur)",
-            def: "Nombre maximum de dossiers physiques pouvant être rangés dans un classeur. Défini lors de la création du classeur selon sa capacité physique réelle.",
-          },
-          {
-            term: "Version",
-            def: "Numéro de version interne attribué automatiquement à chaque archive lors de sa modification. Permet de suivre l'historique des mises à jour.",
-          },
+          { term: "Archive numérique",    def: "Document électronique enregistré dans GEID Archives avec l'ensemble de ses métadonnées descriptives et son fichier attaché." },
+          { term: "Archive physique",     def: "Document papier ou objet matériel conservé dans un espace de stockage réel, représenté dans le système par une fiche physique." },
+          { term: "Cycle de vie",         def: "Ensemble des états successifs traversés par une archive depuis sa création jusqu'à sa destination finale : conservation définitive ou élimination." },
+          { term: "DUA",                  def: "Durée d'Utilité Administrative. Période pendant laquelle un document doit être conservé de manière obligatoire avant d'être traité selon son sort final." },
+          { term: "Métadonnée",           def: "Information descriptive attachée à un document : désignation, type, référence, date, auteur, etc. Les métadonnées permettent d'identifier, de classer et de retrouver les archives." },
+          { term: "Rattachement",         def: "Lien créé entre une archive numérique et un document physique. Ce lien permet de retrouver la localisation physique d'un document numérique." },
+          { term: "Sort final",           def: "Décision prise à l'expiration de la DUA : soit conservation définitive (versement aux archives historiques), soit élimination (destruction contrôlée)." },
+          { term: "Transition",           def: "Passage d'un état à un autre dans le cycle de vie d'une archive. Chaque transition est enregistrée dans l'historique du document avec la date et l'auteur." },
+          { term: "Validation",           def: "Acte par lequel un archiviste certifie qu'une archive soumise est conforme aux exigences documentaires et l'admet dans le fonds actif." },
+          { term: "Versement",            def: "Transfert d'archives d'un service producteur vers un service d'archives pour conservation définitive." },
         ].map(({ term, def }) => (
-          <Paper key={term} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-            <Typography variant="body2" fontWeight={700} gutterBottom>
-              {term}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
-              {def}
-            </Typography>
-          </Paper>
+          <Box key={term} mb={1.25} pl={1.5} borderLeft={2} borderColor="divider">
+            <Typography variant="body2" fontWeight={700} color="text.primary">{term}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>{def}</Typography>
+          </Box>
         ))}
-      </Stack>
 
-      <Box height={60} />
+        <Divider sx={{ my: 3 }} />
+
+        {/* ══════════════════════════════════════════════════
+            15. FAQ
+        ════════════════════════════════════════════════════ */}
+        <SectionTitle id="faq" number="15">Questions fréquentes</SectionTitle>
+
+        {[
+          {
+            q: "Pourquoi mon archive reste-t-elle en attente depuis plusieurs jours ?",
+            a: "Une archive reste dans l'état en attente jusqu'à ce qu'un archiviste ou un administrateur l'examine et la valide. Si vous soumettez une archive et qu'elle reste en attente plus longtemps que prévu, contactez votre responsable de service ou votre archiviste référent pour les alerter.",
+          },
+          {
+            q: "Pourquoi le bouton Supprimer n'est-il pas visible pour moi ?",
+            a: "La suppression est une action réservée aux administrateurs. Si votre rôle est agent ou archiviste, ce bouton ne s'affichera pas. Si vous pensez avoir besoin de supprimer un document, adressez une demande à votre administrateur en lui indiquant l'identifiant de l'archive concernée.",
+          },
+          {
+            q: "Comment retrouver rapidement un document dont je ne connais que le sujet aproximatif ?",
+            a: "Utilisez la recherche globale en appuyant sur Ctrl+K. Saisissez les mots clés qui vous semblent caractériser le document : un mot de la désignation, un numéro partiel, un terme du dossier. Le moteur de recherche effectue une recherche approximative qui trouvera des résultats même si votre saisie n'est pas exacte.",
+          },
+          {
+            q: "Est-il possible de modifier une archive après validation ?",
+            a: "Oui, les archivistes et les administrateurs peuvent modifier les métadonnées d'une archive à tout stade de son cycle de vie. En revanche, le fichier attaché ne peut pas être remplacé après validation pour préserver l'intégrité du document archivé.",
+          },
+          {
+            q: "Comment configurer une DUA si je ne connais pas la durée réglementaire applicable ?",
+            a: "La durée de conservation réglementaire dépend du type de document et du secteur d'activité de votre organisation. Référez-vous au tableau de gestion documentaire de votre organisation ou consultez votre archiviste référent. En l'absence de règle spécifique, une durée minimale de cinq à dix ans est souvent appliquée à titre conservatoire.",
+          },
+          {
+            q: "Que se passe-t-il si je rattache une archive numérique au mauvais document physique ?",
+            a: "Vous pouvez à tout moment défaire un rattachement et en créer un nouveau. Ouvrez le panneau de détail de l'archive numérique, cliquez sur le bouton Dossier physique, puis choisissez Détacher. L'opération est instantanée et vous pourrez ensuite effectuer le bon rattachement.",
+          },
+        ].map(({ q, a }, i) => (
+          <FaqItem key={i} question={q} answer={a} />
+        ))}
+
+        <Box mt={4} pt={2} borderTop={1} borderColor="divider">
+          <Typography variant="caption" color="text.disabled">
+            GEID Archives — Manuel utilisateur · Version {new Date().getFullYear()} · Document généré le {new Date().toLocaleDateString("fr-FR")}
+          </Typography>
+        </Box>
+
+      </Box>
+    </Box>
+  );
+}
+
+// ── FAQ accordéon ────────────────────────────────────────────
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box mb={1}>
+      <Stack
+        direction="row"
+        alignItems="flex-start"
+        justifyContent="space-between"
+        spacing={1}
+        sx={{ cursor: "pointer", p: 1.25, borderRadius: 1.5, bgcolor: open ? "action.selected" : "action.hover", "&:hover": { bgcolor: "action.selected" } }}
+        onClick={() => setOpen(o => !o)}>
+        <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Typography color="primary.main" variant="body2" fontWeight={700} sx={{ mt: 0.1, flexShrink: 0 }}>Q.</Typography>
+          <Typography variant="body2" fontWeight={600}>{question}</Typography>
+        </Stack>
+        <ExpandMoreRoundedIcon
+          fontSize="small"
+          sx={{ flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none", color: "text.secondary" }}
+        />
+      </Stack>
+      <Collapse in={open}>
+        <Box px={2} pt={1} pb={1.5}>
+          <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.85 }}>{answer}</Typography>
+        </Box>
+      </Collapse>
     </Box>
   );
 }
