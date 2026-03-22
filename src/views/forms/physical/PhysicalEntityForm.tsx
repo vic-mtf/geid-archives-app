@@ -26,7 +26,7 @@ import {
   IconButton,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useSnackbar } from "notistack";
@@ -34,6 +34,8 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import useAxios from "../../../hooks/useAxios";
 import type { FieldValues } from "react-hook-form";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -297,7 +299,7 @@ export default function PhysicalEntityForm({
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(config.schema),
     mode: "onTouched",
   });
@@ -404,20 +406,42 @@ export default function PhysicalEntityForm({
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogContent>
           <Stack spacing={2} mt={0.5}>
-            {config.fields.map((field) => (
-              <TextField
-                key={field.name}
-                {...register(field.name)}
-                label={field.label}
-                type={field.type ?? "text"}
-                multiline={field.multiline}
-                rows={field.rows}
-                fullWidth
-                InputLabelProps={field.type === "date" ? { shrink: true } : undefined}
-                error={!!errors[field.name]}
-                helperText={(errors[field.name]?.message as string) ?? field.helperText}
-              />
-            ))}
+            {config.fields.map((field) =>
+              field.type === "date" ? (
+                <Controller
+                  key={field.name}
+                  name={field.name}
+                  control={control}
+                  render={({ field: { onChange, value } }) => (
+                    <DatePicker
+                      label={field.label}
+                      value={value ? dayjs(value as string) : null}
+                      onChange={(v) => onChange(v ? v.format("YYYY-MM-DD") : "")}
+                      format="DD/MM/YYYY"
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          error: !!errors[field.name],
+                          helperText: (errors[field.name]?.message as string) ?? field.helperText,
+                        },
+                      }}
+                    />
+                  )}
+                />
+              ) : (
+                <TextField
+                  key={field.name}
+                  {...register(field.name)}
+                  label={field.label}
+                  type={field.type ?? "text"}
+                  multiline={field.multiline}
+                  rows={field.rows}
+                  fullWidth
+                  error={!!errors[field.name]}
+                  helperText={(errors[field.name]?.message as string) ?? field.helperText}
+                />
+              )
+            )}
           </Stack>
         </DialogContent>
 
