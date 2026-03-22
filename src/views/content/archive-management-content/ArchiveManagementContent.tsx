@@ -886,7 +886,7 @@ export default function ArchiveManagementContent() {
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}
       <MuiBox
         sx={{
-          width: 200,
+          width: { md: 180, lg: 200 },
           flexShrink: 0,
           borderRight: 1,
           borderColor: "divider",
@@ -1166,7 +1166,7 @@ export default function ArchiveManagementContent() {
       {detailOpen && !!focusedDoc && !isMobile && (
         <MuiBox
           sx={{
-            width: 300,
+            width: { md: 280, lg: 320, xl: 380 },
             flexShrink: 0,
             borderLeft: 1,
             borderColor: "divider",

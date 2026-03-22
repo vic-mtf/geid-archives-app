@@ -375,7 +375,7 @@ export default function HelpContent() {
       <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ sm: "flex-start" }}
         justifyContent="space-between" gap={2} mb={2}>
         <Box>
-          <Typography variant="h5" fontWeight={800} gutterBottom>
+          <Typography sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem" }, fontWeight: 800 }} gutterBottom>
             Manuel utilisateur — GEID Archives
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -540,7 +540,8 @@ export default function HelpContent() {
           navigation se transforme en barre de navigation horizontale en bas de l'écran.
         </Paragraph>
 
-        <Table size="small" sx={{ mb: 2 }}>
+        <Box sx={{ overflowX: "auto", mb: 2 }}>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell><strong>Section</strong></TableCell>
@@ -563,6 +564,7 @@ export default function HelpContent() {
             ))}
           </TableBody>
         </Table>
+        </Box>
 
         <Divider sx={{ my: 3 }} />
 
@@ -1018,7 +1020,8 @@ export default function HelpContent() {
           la suppression ne peuvent être réalisées que par des personnes habilitées.
         </Paragraph>
 
-        <Table size="small" sx={{ mb: 2 }}>
+        <Box sx={{ overflowX: "auto", mb: 2 }}>
+        <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell><strong>Action</strong></TableCell>
@@ -1051,6 +1054,7 @@ export default function HelpContent() {
             ))}
           </TableBody>
         </Table>
+        </Box>
 
         <Divider sx={{ my: 3 }} />
 
