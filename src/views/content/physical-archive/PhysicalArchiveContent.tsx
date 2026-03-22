@@ -33,6 +33,7 @@ import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon from "@mui/icons-material/StyleOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import KeyboardReturnOutlinedIcon from "@mui/icons-material/KeyboardReturnOutlined";
 import TopicOutlinedIcon from "@mui/icons-material/TopicOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
@@ -431,7 +432,7 @@ export default function PhysicalArchiveContent() {
               gap={1}
               sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, borderBottom: "1px solid", borderColor: "divider" }}
               onClick={() => handleBreadcrumb(breadcrumb.length - 1)}>
-              <FolderOpenOutlinedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+              <KeyboardReturnOutlinedIcon fontSize="small" sx={{ color: "text.disabled", transform: "scaleX(-1)" }} />
               <Typography variant="body2" color="text.secondary">..</Typography>
             </Box>
           )}
