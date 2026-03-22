@@ -349,14 +349,14 @@ export default function LinkToPhysicalRecordDialog() {
         data: { record: selected.record._id },
       });
       enqueueSnackbar(
-        `Archive rattachée à « ${selected.record.internalNumber as string} » avec succès.`,
-        { variant: "success", title: "Rattachement effectué" }
+        `L'archive numérique est maintenant rattachée au dossier physique « ${selected.record.internalNumber as string} ». Vous pouvez la retrouver dans la section Archivage physique.`,
+        { variant: "success", title: "Rattachement effectué avec succès" }
       );
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Impossible de rattacher l'archive. Vérifiez vos droits et réessayez.", {
-        variant: "error", title: "Erreur",
+      enqueueSnackbar("Le rattachement a échoué. L'archive n'a pas été modifiée. Vérifiez vos droits et réessayez.", {
+        variant: "error", title: "Rattachement impossible",
       });
     } finally {
       setLinking(false);
@@ -372,11 +372,11 @@ export default function LinkToPhysicalRecordDialog() {
         url : `/api/stuff/archives/${doc._id ?? doc.id}`,
         data: { record: null },
       });
-      enqueueSnackbar("Archive détachée du dossier physique.", { variant: "success", title: "Détachement effectué" });
+      enqueueSnackbar("L'archive a été détachée de son dossier physique. Elle n'est plus associée à aucun support physique.", { variant: "success", title: "Détachement effectué" });
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Impossible de détacher l'archive.", { variant: "error", title: "Erreur" });
+      enqueueSnackbar("Le détachement a échoué. L'archive est toujours liée à son dossier physique. Vérifiez vos droits et réessayez.", { variant: "error", title: "Détachement impossible" });
     } finally {
       setLinking(false);
     }

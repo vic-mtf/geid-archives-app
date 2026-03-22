@@ -41,25 +41,28 @@ export default function ArchiveDeleteConfirm() {
 
   const handleConfirm = async () => {
     const count = ids.length;
-    const key = enqueueSnackbar("Suppression en cours, veuillez patienter…", {
-      autoHideDuration: null,
-    });
+    const key = enqueueSnackbar(
+      count > 1
+        ? `Suppression des ${count} archives en cours, veuillez patienter…`
+        : "Suppression de l'archive en cours, veuillez patienter…",
+      { autoHideDuration: null }
+    );
     try {
       await Promise.all(
         ids.map((id) => execute({ url: `/api/stuff/archives/${id}` }))
       );
       enqueueSnackbar(
         count > 1
-          ? `Les ${count} archives sélectionnées ont été supprimées.`
-          : "L'archive a été supprimée définitivement.",
-        { variant: "success", title: count > 1 ? "Suppression réussie" : "Supprimé" }
+          ? `Les ${count} archives sélectionnées ont été supprimées définitivement. Elles ne peuvent plus être récupérées.`
+          : "L'archive a été supprimée définitivement. Elle ne peut plus être récupérée.",
+        { variant: "success", title: count > 1 ? `${count} archives supprimées` : "Archive supprimée" }
       );
       dispatch(incrementVersion());
       handleClose();
     } catch {
       enqueueSnackbar(
-        "La suppression a échoué. Vérifiez votre connexion et réessayez.",
-        { variant: "error", title: "Erreur" }
+        "La suppression a échoué. Les archives sélectionnées n'ont pas été affectées. Vérifiez votre connexion et réessayez.",
+        { variant: "error", title: "Suppression impossible" }
       );
     } finally {
       enqueueSnackbar("", { key, persist: false });

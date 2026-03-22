@@ -5,6 +5,7 @@ import ArchiveEditForm from "./archives/ArchiveEditForm";
 import ArchiveDeleteConfirm from "./archives/ArchiveDeleteConfirm";
 import LinkToPhysicalRecordDialog from "./archives/LinkToPhysicalRecordDialog";
 import DuaConfigDialog from "./archives/DuaConfigDialog";
+import GlobalSearchDialog from "./search/GlobalSearchDialog";
 
 export default function Forms() {
   return (
@@ -16,6 +17,7 @@ export default function Forms() {
       <ArchiveDeleteConfirm />
       <LinkToPhysicalRecordDialog />
       <DuaConfigDialog />
+      <GlobalSearchDialog />
     </>
   );
 }

@@ -30,9 +30,9 @@ export default function ValidateForm() {
       };
 
       const pendingKey = enqueueSnackbar(
-        "Le document est en cours de validation… vous pouvez annuler.",
+        "Le document est en cours de validation. Vous pouvez encore annuler si vous avez fait une erreur.",
         {
-          title: "Validation en cours",
+          title: "Validation en cours…",
           action: (id) => (
             <Button
               color="inherit"
@@ -55,9 +55,9 @@ export default function ValidateForm() {
           .then(() => {
             closeSnackbar(pendingKey);
             dispatch(incrementVersion());
-            enqueueSnackbar("Le document a été validé avec succès.", {
+            enqueueSnackbar("Le document a été validé avec succès. Il entre maintenant dans le cycle de vie actif et est accessible dans la liste des archives.", {
               variant: "success",
-              title: "Validation réussie !",
+              title: "Document validé !",
             });
           })
           .catch((err) => {
@@ -65,7 +65,7 @@ export default function ValidateForm() {
             const msg =
               (err?.response?.data?.error as string) ??
               "Une erreur est survenue. Impossible de valider ce document.";
-            enqueueSnackbar(msg, { variant: "error", title: "Validation impossible" });
+            enqueueSnackbar(msg, { variant: "error", title: "Validation échouée — vérifiez les informations" });
           });
       }, 1500);
     },
