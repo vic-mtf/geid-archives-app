@@ -92,12 +92,12 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
     ...(norm === "PENDING" && canWrite
       ? [{ title: "Valider", icon: <VerifiedOutlinedIcon />, action: "verify", color: "success" as const }]
       : []),
-    ...(canWrite ? [{ title: "Modifier", icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
-    ...(canWrite ? [{ title: "Dossier physique", icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
+    ...(canWrite && norm !== "DESTROYED" ? [{ title: "Modifier", icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
+    ...(canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") ? [{ title: "Dossier physique", icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
       ? [{ title: "Configurer DUA", icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
       : []),
-    ...(canWrite ? [{ title: "Supprimer", icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
+    ...(isAdmin && norm !== "DESTROYED" ? [{ title: "Supprimer", icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
   ];
 
   // ── Transitions du cycle de vie ────────────────────────────

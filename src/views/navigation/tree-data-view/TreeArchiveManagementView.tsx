@@ -162,63 +162,87 @@ export default function TreeArchiveManagementView({ filter = "" }: TreeArchiveMa
         })}
       </TreeView>
 
-      {/* Menu contextuel */}
-      <Menu
-        open={contextMenu !== null}
+      {/* Menu contextuel — options selon le statut réel de l'archive */}
+      <ArchiveContextMenu
+        contextMenu={contextMenu}
         onClose={() => setContextMenu(null)}
-        anchorReference="anchorPosition"
-        anchorPosition={contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
-        slotProps={{ paper: { sx: { minWidth: 200, borderRadius: 1.5 } } }}>
-
-        <MenuItem onClick={() => dispatchAction("__tree_archive_select", { id: contextMenu?.docId, doc: contextMenu?.doc })}>
-          <ListItemIcon><VisibilityOutlinedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Voir le détail</ListItemText>
-        </MenuItem>
-
-        {canWrite && (() => {
-          const norm = contextMenu?.doc ? normalizeStatus(contextMenu.doc.status as string, contextMenu.doc.validated as boolean) : "";
-          return norm === "PENDING" ? (
-            <MenuItem onClick={() => dispatchAction("__validate_archive_doc", { doc: contextMenu?.docId, name: "__validate_archive_doc" })}>
-              <ListItemIcon><VerifiedOutlinedIcon fontSize="small" color="success" /></ListItemIcon>
-              <ListItemText>Valider</ListItemText>
-            </MenuItem>
-          ) : null;
-        })()}
-
-        {canWrite && (
-          <MenuItem onClick={() => dispatchAction("__edit_archive_doc", { doc: contextMenu?.doc })}>
-            <ListItemIcon><EditNoteOutlinedIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>Modifier</ListItemText>
-          </MenuItem>
-        )}
-
-        {canWrite && (
-          <MenuItem onClick={() => dispatchAction("__link_physical_record", { doc: contextMenu?.doc })}>
-            <ListItemIcon><LinkRoundedIcon fontSize="small" /></ListItemIcon>
-            <ListItemText>Dossier physique</ListItemText>
-          </MenuItem>
-        )}
-
-        {canWrite && (() => {
-          const norm = contextMenu?.doc ? normalizeStatus(contextMenu.doc.status as string, contextMenu.doc.validated as boolean) : "";
-          return norm === "SEMI_ACTIVE" ? (
-            <MenuItem onClick={() => dispatchAction("__configure_dua", { doc: contextMenu?.doc })}>
-              <ListItemIcon><AccessTimeOutlinedIcon fontSize="small" color="info" /></ListItemIcon>
-              <ListItemText>Configurer DUA</ListItemText>
-            </MenuItem>
-          ) : null;
-        })()}
-
-        {isAdmin && <Divider />}
-
-        {isAdmin && (
-          <MenuItem onClick={() => { dispatchAction("__delete_archive_docs", { ids: [contextMenu?.docId] }); }}
-            sx={{ color: "error.main" }}>
-            <ListItemIcon><DeleteOutlineRoundedIcon fontSize="small" color="error" /></ListItemIcon>
-            <ListItemText>Supprimer</ListItemText>
-          </MenuItem>
-        )}
-      </Menu>
+        canWrite={canWrite}
+        isAdmin={isAdmin}
+        dispatchAction={dispatchAction}
+      />
     </MuiBox>
+  );
+}
+
+// ── Menu contextuel — options dynamiques selon le statut ──────
+
+function ArchiveContextMenu({ contextMenu, onClose, canWrite, isAdmin, dispatchAction }: {
+  contextMenu: ContextMenuState | null;
+  onClose: () => void;
+  canWrite: boolean;
+  isAdmin: boolean;
+  dispatchAction: (event: string, detail: unknown) => void;
+}) {
+  if (!contextMenu) return null;
+
+  const doc = contextMenu.doc;
+  const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
+
+  return (
+    <Menu
+      open
+      onClose={onClose}
+      anchorReference="anchorPosition"
+      anchorPosition={{ top: contextMenu.mouseY, left: contextMenu.mouseX }}
+      slotProps={{ paper: { sx: { minWidth: 200, borderRadius: 1.5 } } }}>
+
+      {/* Toujours visible */}
+      <MenuItem onClick={() => { dispatchAction("__tree_archive_select", { id: contextMenu.docId, doc }); onClose(); }}>
+        <ListItemIcon><VisibilityOutlinedIcon fontSize="small" /></ListItemIcon>
+        <ListItemText>Voir le détail</ListItemText>
+      </MenuItem>
+
+      {/* Valider — uniquement si PENDING et canWrite */}
+      {canWrite && norm === "PENDING" && (
+        <MenuItem onClick={() => { dispatchAction("__validate_archive_doc", { doc: contextMenu.docId, name: "__validate_archive_doc" }); onClose(); }}>
+          <ListItemIcon><VerifiedOutlinedIcon fontSize="small" color="success" /></ListItemIcon>
+          <ListItemText>Valider</ListItemText>
+        </MenuItem>
+      )}
+
+      {/* Modifier — si canWrite et pas DESTROYED */}
+      {canWrite && norm !== "DESTROYED" && (
+        <MenuItem onClick={() => { dispatchAction("__edit_archive_doc", { doc }); onClose(); }}>
+          <ListItemIcon><EditNoteOutlinedIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>Modifier</ListItemText>
+        </MenuItem>
+      )}
+
+      {/* Dossier physique — si canWrite et ACTIVE ou SEMI_ACTIVE */}
+      {canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") && (
+        <MenuItem onClick={() => { dispatchAction("__link_physical_record", { doc }); onClose(); }}>
+          <ListItemIcon><LinkRoundedIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>Dossier physique</ListItemText>
+        </MenuItem>
+      )}
+
+      {/* DUA — uniquement si SEMI_ACTIVE et canWrite */}
+      {canWrite && norm === "SEMI_ACTIVE" && (
+        <MenuItem onClick={() => { dispatchAction("__configure_dua", { doc }); onClose(); }}>
+          <ListItemIcon><AccessTimeOutlinedIcon fontSize="small" color="info" /></ListItemIcon>
+          <ListItemText>Configurer DUA</ListItemText>
+        </MenuItem>
+      )}
+
+      {/* Supprimer — admin uniquement, pas si déjà DESTROYED */}
+      {isAdmin && norm !== "DESTROYED" && <Divider />}
+      {isAdmin && norm !== "DESTROYED" && (
+        <MenuItem onClick={() => { dispatchAction("__delete_archive_docs", { ids: [contextMenu.docId] }); onClose(); }}
+          sx={{ color: "error.main" }}>
+          <ListItemIcon><DeleteOutlineRoundedIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemText>Supprimer définitivement</ListItemText>
+        </MenuItem>
+      )}
+    </Menu>
   );
 }
