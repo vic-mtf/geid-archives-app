@@ -13,7 +13,6 @@ import {
   CardActionArea,
   CardContent,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   LinearProgress,
@@ -266,7 +265,7 @@ export default function DashboardContent() {
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {anyLoading ? (
-                <Stack spacing={0.5}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={40} />)}</Stack>
+                <Stack spacing={0.5} flex={1}>{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} variant="rounded" height={36} />)}</Stack>
               ) : recentArchives.length === 0 ? (
                 <EmptyPlaceholder label="Aucune archive récente" />
               ) : (
@@ -309,7 +308,7 @@ export default function DashboardContent() {
               <Typography variant="body1" fontWeight="bold" mb={1}>Répartition par statut</Typography>
               <Divider sx={{ mb: 1.5 }} />
               {anyLoading ? (
-                <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
+                <Box display="flex" justifyContent="center" alignItems="center" flex={1} minHeight={260}>
                   <Skeleton variant="circular" width={190} height={190} />
                 </Box>
               ) : pieData.length === 0 ? (
@@ -448,7 +447,7 @@ export default function DashboardContent() {
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
                 {containersLoading || bindersLoading || recordsLoading ? (
-                  <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={20} />)}</Stack>
+                  <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={18} />)}</Stack>
                 ) : (
                   <Stack spacing={0.75}>
                     {[
@@ -489,7 +488,7 @@ export default function DashboardContent() {
                   </Stack>
                   <Divider sx={{ mb: 1 }} />
                   {statsLoading ? (
-                    <Stack spacing={0.75}>{[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={20} />)}</Stack>
+                    <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={18} />)}</Stack>
                   ) : globalStats ? (
                     <Stack spacing={0.75}>
                       {[
@@ -581,13 +580,9 @@ function StatCard({ label, value, loading, icon, color, onClick, highlight }: St
             </Typography>
             <Box sx={{ color }}>{icon}</Box>
           </Stack>
-          {loading ? (
-            <CircularProgress size={20} />
-          ) : (
-            <Typography variant="h5" fontWeight="bold" color={color}>
-              {value}
-            </Typography>
-          )}
+          <Typography variant="h5" fontWeight="bold" color={color} sx={{ minHeight: 32, display: "flex", alignItems: "center" }}>
+            {loading ? <Skeleton width={48} height={32} /> : value}
+          </Typography>
         </CardContent>
       </CardActionArea>
     </Card>
