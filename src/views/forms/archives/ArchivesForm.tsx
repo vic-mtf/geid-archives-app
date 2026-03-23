@@ -55,12 +55,18 @@ export default function ArchivesFrom() {
     if (fieldsError.length) setFieldsError([]);
     Object.keys(docFields).forEach((key) => {
       const fieldKey = key as keyof typeof docFields;
-      if (!docFields[fieldKey]?.current) errors.push(key);
-      else data[key] = docFields[fieldKey]?.current;
+      // subType est facultatif — ne pas le valider comme obligatoire
+      if (fieldKey === "subType") {
+        if (docFields[fieldKey]?.current) data[key] = docFields[fieldKey]?.current;
+      } else if (!docFields[fieldKey]?.current) {
+        errors.push(key);
+      } else {
+        data[key] = docFields[fieldKey]?.current;
+      }
     });
     data.type = {
       type: data.type,
-      subType: data.subType,
+      subType: data.subType || undefined,
     };
 
     delete data.subType;

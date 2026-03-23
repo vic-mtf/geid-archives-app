@@ -74,8 +74,13 @@ export default function Typology({
   useLayoutEffect(() => {
     if (type && subType && values.type) {
       type.current = values.type;
-      if (values.subType) subType.current = values.subType;
-      if (values.subTypes.length <= 1) subType.current = values.subTypes[0];
+      if (values.subType) {
+        subType.current = values.subType;
+      } else if (values.subTypes.length === 1) {
+        subType.current = values.subTypes[0];
+      } else {
+        subType.current = null;
+      }
     }
     if (type && subType && !values.type) {
       type.current = null;
