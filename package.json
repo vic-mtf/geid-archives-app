@@ -17,6 +17,7 @@
     "@mui/icons-material": "^5.11.0",
     "@mui/lab": "^5.0.0-alpha.116",
     "@mui/material": "^5.11.4",
+    "@mui/x-charts": "^8.28.0",
     "@mui/x-data-grid": "^7.16.0",
     "@mui/x-data-grid-pro": "^7.23.6",
     "@mui/x-date-pickers": "^8.27.2",
