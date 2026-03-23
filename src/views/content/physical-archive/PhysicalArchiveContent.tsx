@@ -50,7 +50,10 @@ import { incrementVersion } from "@/redux/data";
 import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
 import scrollBarSx   from "@/utils/scrollBarSx";
 import PhysicalEntityForm from "@/views/forms/physical/PhysicalEntityForm";
+import useArchivePermissions from "@/hooks/useArchivePermissions";
 import PhysicalTreeView  from "./PhysicalTreeView";
+import PhysicalSearch    from "./PhysicalSearch";
+import PhysicalContextMenu, { type ContextMenuState } from "./PhysicalContextMenu";
 
 // ── Types locaux ───────────────────────────────────────────
 
@@ -73,9 +76,15 @@ export default function PhysicalArchiveContent() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { enqueueSnackbar } = useSnackbar();
+  const { canWrite } = useArchivePermissions();
 
   // Formulaire de création
   const [formOpen, setFormOpen] = useState(false);
+  const [formParentId, setFormParentId] = useState<string | undefined>(undefined);
+  const [formLevel, setFormLevel] = useState<Level>("container");
+
+  // Menu contextuel (clic droit)
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
   // Dialogue de suppression
   const [deleteTarget, setDeleteTarget] = useState<{
@@ -306,11 +315,8 @@ export default function PhysicalArchiveContent() {
   );
 
   const handleSelect = (id: string, label: string, itemType?: string) => {
-    // Les archives sont des feuilles — pas de navigation, seulement sélection
-    if (itemType === "archive") {
-      // On ne navigue pas dans une archive, on la sélectionne seulement
-      return;
-    }
+    // Les archives sont des feuilles — pas de navigation
+    if (itemType === "archive") return;
 
     const raw = getItemRaw(id);
     if (raw) setSelected({ level: currentLevel, item: raw as Container });
@@ -319,10 +325,30 @@ export default function PhysicalArchiveContent() {
     setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
   };
 
+  /** Navigation depuis l'arbre ou la recherche → synchronise l'explorateur */
+  const handleNavigateTo = useCallback((id: string, level: Level, label: string) => {
+    // Construire le breadcrumb pour pointer vers cet élément
+    // On simplifie : on met l'élément comme dernier breadcrumb
+    setBreadcrumb([{ id, label, level }]);
+    setSelected(null);
+  }, []);
+
   const handleBreadcrumb = (index: number) => {
     setBreadcrumb((prev) => prev.slice(0, index));
     setSelected(null);
   };
+
+  /** Clic droit sur un élément → menu contextuel */
+  const handleContextMenu = useCallback((e: React.MouseEvent, id: string, label: string) => {
+    e.preventDefault();
+    setContextMenu({
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      itemId: id,
+      itemLabel: label,
+      level: currentLevel,
+    });
+  }, [currentLevel]);
 
   const levelConfig: Record<Level, { icon: React.ReactNode; label: string; color: string }> = {
     container: { icon: <WarehouseOutlinedIcon />,          label: "Conteneur", color: "#5C6BC0" },
@@ -367,8 +393,12 @@ export default function PhysicalArchiveContent() {
           </React.Fragment>
         ))}
         <Box flex={1} />
+        {/* Recherche indexée */}
+        <Box sx={{ width: { xs: 150, sm: 220, md: 260 }, flexShrink: 0 }}>
+          <PhysicalSearch headers={headers} onNavigate={handleNavigateTo} />
+        </Box>
         <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
-          <IconButton size="small" onClick={() => setFormOpen(true)}>
+          <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
             <AddRoundedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -396,19 +426,8 @@ export default function PhysicalArchiveContent() {
             </Box>
             <PhysicalTreeView
               headers={headers}
-              selectedId={selected ? (selected.item as { _id: string })._id : null}
-              onSelect={(nodeId, level, label) => {
-                // Synchroniser l'explorateur avec l'arbre :
-                // naviguer en construisant le breadcrumb approprié
-                const raw = getItemRaw(nodeId);
-                if (raw) {
-                  setSelected({ level, item: raw as Container });
-                } else {
-                  // L'item n'est pas dans la liste courante — naviguer via breadcrumb
-                  setBreadcrumb([{ id: nodeId, label, level }]);
-                  setSelected(null);
-                }
-              }}
+              selectedId={selected ? (selected.item as { _id: string })._id : parentId ?? null}
+              onSelect={handleNavigateTo}
             />
           </Box>
         ) : null}
@@ -502,7 +521,8 @@ export default function PhysicalArchiveContent() {
                       borderBottom: "1px solid",
                       borderColor: "divider",
                     }}
-                    onClick={() => handleSelect(item.id, item.label, item.itemType)}>
+                    onClick={() => handleSelect(item.id, item.label, item.itemType)}
+                    onContextMenu={(e) => handleContextMenu(e, item.id, item.label)}>
                     {/* Icône — document vs archive */}
                     <Box sx={{
                       color: item.itemType === "archive" ? "#43A047" : levelConfig[currentLevel].color,
@@ -587,12 +607,34 @@ export default function PhysicalArchiveContent() {
       {/* Formulaire de création */}
       <PhysicalEntityForm
         open={formOpen}
-        level={currentLevel as PhysicalLevel}
-        parentId={parentId}
+        level={formLevel as PhysicalLevel}
+        parentId={formParentId}
         onClose={() => setFormOpen(false)}
         onSuccess={() => {
           setFormOpen(false);
           dispatch(incrementVersion());
+        }}
+      />
+
+      {/* Menu contextuel (clic droit) */}
+      <PhysicalContextMenu
+        state={contextMenu}
+        onClose={() => setContextMenu(null)}
+        canWrite={canWrite}
+        onAdd={(level, pid) => {
+          // Ouvrir le formulaire pour créer un enfant du niveau suivant
+          const nextLevels: Record<Level, Level> = {
+            container: "shelf", shelf: "floor", floor: "binder",
+            binder: "record", record: "document", document: "document",
+          };
+          setFormLevel(nextLevels[level]);
+          setFormParentId(pid);
+          setFormOpen(true);
+        }}
+        onDelete={(id, label, level) => setDeleteTarget({ level, id, label })}
+        onViewDetail={(id, level) => {
+          const raw = getItemRaw(id);
+          if (raw) setSelected({ level, item: raw as Container });
         }}
       />
 
