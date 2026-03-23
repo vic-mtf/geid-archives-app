@@ -46,6 +46,7 @@ import DetailPanel   from "./DetailPanel";
 import { useSnackbar } from "notistack";
 import { useLocation } from "react-router-dom";
 import type { DeepTarget } from "@/utils/deepNavigate";
+import useHighlightElement from "@/hooks/useHighlightElement";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { incrementVersion, setCacheEntry, invalidateCache as invalidateCacheAction } from "@/redux/data";
@@ -382,6 +383,11 @@ export default function PhysicalArchiveContent() {
     setSelected(null);
   }, [location.state?.deepTarget]);
 
+  // Flash + scroll vers le dernier élément du chemin physique
+  const deepPhysicalPath = (location.state?.deepTarget as DeepTarget | undefined)?.physicalPath;
+  const deepPhysicalLastId = deepPhysicalPath?.length ? deepPhysicalPath[deepPhysicalPath.length - 1].id : null;
+  useHighlightElement(deepPhysicalLastId);
+
   const showDetail = selected !== null;
 
   return (
@@ -546,6 +552,7 @@ export default function PhysicalArchiveContent() {
                 return (
                   <Box
                     key={item.id}
+                    data-highlight-id={item.id}
                     px={2}
                     py={0.75}
                     display="flex"

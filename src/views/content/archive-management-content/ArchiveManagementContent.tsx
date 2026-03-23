@@ -73,6 +73,7 @@ import NavigationMenuButton  from "@/views/navigation/NavigationMenuButton";
 import { useSnackbar }       from "notistack";
 import { useLocation }       from "react-router-dom";
 import type { DeepTarget }   from "@/utils/deepNavigate";
+import useHighlightElement   from "@/hooks/useHighlightElement";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 import archiveColumns from "./columns";
 import DetailPanel    from "./DetailPanel";
@@ -244,6 +245,10 @@ export default function ArchiveManagementContent() {
       setStatusFilter(target.statusFilter as StatusFilter);
     }
   }, [location.state?.deepTarget]);
+
+  // Flash + scroll vers l'archive ciblée par deep navigate
+  const deepArchiveId = (location.state?.deepTarget as DeepTarget | undefined)?.archiveId;
+  useHighlightElement(deepArchiveId);
 
   // ── Rows ──────────────────────────────────────────────────────
 
