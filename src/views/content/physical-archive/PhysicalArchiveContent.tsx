@@ -377,31 +377,41 @@ export default function PhysicalArchiveContent() {
       {/* ── Contenu principal : arbre + explorateur + détail ────── */}
       <Box display="flex" flex={1} overflow="hidden">
 
-        {/* ── Sidebar arborescence (lg+ uniquement) ──────────── */}
-        <Box
-          sx={{
-            width: { lg: 240, xl: 280 },
-            flexShrink: 0,
-            display: { xs: "none", lg: "flex" },
-            flexDirection: "column",
-            borderRight: "1px solid",
-            borderColor: "divider",
-            overflow: "hidden",
-          }}>
-          <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-              Arborescence
-            </Typography>
+        {/* ── Sidebar arborescence (lg+ uniquement, si des conteneurs existent) ── */}
+        {items.length > 0 || breadcrumb.length > 0 ? (
+          <Box
+            sx={{
+              width: { lg: 240, xl: 280 },
+              flexShrink: 0,
+              display: { xs: "none", lg: "flex" },
+              flexDirection: "column",
+              borderRight: "1px solid",
+              borderColor: "divider",
+              overflow: "hidden",
+            }}>
+            <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
+              <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+                Arborescence
+              </Typography>
+            </Box>
+            <PhysicalTreeView
+              headers={headers}
+              selectedId={selected ? (selected.item as { _id: string })._id : null}
+              onSelect={(nodeId, level, label) => {
+                // Synchroniser l'explorateur avec l'arbre :
+                // naviguer en construisant le breadcrumb approprié
+                const raw = getItemRaw(nodeId);
+                if (raw) {
+                  setSelected({ level, item: raw as Container });
+                } else {
+                  // L'item n'est pas dans la liste courante — naviguer via breadcrumb
+                  setBreadcrumb([{ id: nodeId, label, level }]);
+                  setSelected(null);
+                }
+              }}
+            />
           </Box>
-          <PhysicalTreeView
-            headers={headers}
-            onSelect={(nodeId, level) => {
-              // Naviguer vers l'élément sélectionné dans l'explorateur
-              const raw = { _id: nodeId } as Container;
-              setSelected({ level, item: raw });
-            }}
-          />
-        </Box>
+        ) : null}
 
         {/* ── Panneau central : explorateur de fichiers ──────── */}
         <Box

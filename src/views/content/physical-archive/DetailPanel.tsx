@@ -76,33 +76,45 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
 
 // ── Détail par niveau ────────────────────────────────────────
 
+/** Formate une date ISO en date locale française */
+function fmtDate(d?: string) {
+  return d ? new Date(d).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" }) : null;
+}
+
 function ContainerDetail({ item }: { item: Container }) {
   return (
     <Stack spacing={1}>
       <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
       {item.location && <DetailRow icon={<LocationOnOutlinedIcon fontSize="small" />} label="Localisation" value={item.location} />}
       {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
+      {item.updatedAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Modifié le" value={fmtDate(item.updatedAt)} />}
     </Stack>
   );
 }
 
 function ShelfDetail({ item }: { item: Shelf }) {
+  const containerName = typeof item.container === "object" && item.container ? (item.container as { name?: string }).name : null;
   return (
     <Stack spacing={1}>
       <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
+      {containerName && <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Conteneur" value={containerName} />}
       {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
 
 function FloorDetail({ item }: { item: Floor }) {
+  const shelfName = typeof item.shelf === "object" && item.shelf ? (item.shelf as { name?: string }).name : null;
+  const unitName = typeof item.administrativeUnit === "object" && item.administrativeUnit ? (item.administrativeUnit as { name: string }).name : null;
   return (
     <Stack spacing={1}>
       <DetailRow icon={<ViewStreamOutlinedIcon fontSize="small" />} label="Numéro" value={`${item.number}`} />
       {item.label && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Libellé" value={item.label} />}
-      {item.administrativeUnit && typeof item.administrativeUnit === "object" && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Unité admin." value={(item.administrativeUnit as { name: string }).name} />
-      )}
+      {shelfName && <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Étagère" value={shelfName} />}
+      {unitName && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Unité administrative" value={unitName} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
@@ -124,6 +136,7 @@ function BinderDetail({ item }: { item: Binder }) {
           sx={{ height: 6, borderRadius: 2 }}
         />
       </Box>
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
@@ -143,9 +156,13 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
       <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Objet" value={item.subject} />
       <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Catégorie" value={item.category} />
       <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
-      {item.editionDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'édition" value={new Date(item.editionDate).toLocaleDateString("fr-FR")} />}
-      {item.archivingDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'archivage" value={new Date(item.archivingDate).toLocaleDateString("fr-FR")} />}
+      {item.editionDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'édition" value={fmtDate(item.editionDate)} />}
+      {item.archivingDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'archivage" value={fmtDate(item.archivingDate)} />}
       {item.qrCode && <DetailRow icon={<QrCode2RoundedIcon fontSize="small" />} label="Code QR" value={item.qrCode} />}
+      {item.agent && typeof item.agent === "object" && (
+        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Agent" value={`${(item.agent as { firstName?: string }).firstName ?? ""} ${(item.agent as { lastName?: string }).lastName ?? ""}`.trim()} />
+      )}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
 
       {/* Archives numériques liées */}
       <Divider sx={{ my: 1 }} />

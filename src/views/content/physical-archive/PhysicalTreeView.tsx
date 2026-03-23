@@ -87,12 +87,16 @@ export interface PhysicalTreeViewProps {
   /** Headers HTTP (Authorization) */
   headers: Record<string, string>;
   /** Callback quand un noeud est sélectionné */
-  onSelect?: (nodeId: string, level: Level) => void;
+  onSelect?: (nodeId: string, level: Level, label: string) => void;
+  /** ID du noeud actuellement sélectionné dans l'explorateur (pour la surbrillance) */
+  selectedId?: string | null;
+  /** Nombre de conteneurs racines (si 0, l'arbre ne s'affiche pas) */
+  hasData?: boolean;
 }
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -175,7 +179,12 @@ export default function PhysicalTreeView({ headers, onSelect }: PhysicalTreeView
         }
         onClick={() => {
           loadChildren(node);
-          onSelect?.(node.id, node.level);
+          onSelect?.(node.id, node.level, node.label);
+        }}
+        sx={{
+          "& > .MuiTreeItem-content": selectedId === node.id
+            ? { bgcolor: "action.selected", fontWeight: "bold" }
+            : {},
         }}
       >
         {/* Placeholder pour que la flèche d'expansion s'affiche */}
