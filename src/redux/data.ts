@@ -17,7 +17,13 @@ type DataSliceUpdate = Partial<Omit<DataSliceState, "navigation">> & {
   navigation?: Partial<NavigationState>;
 };
 
-const initialState: DataSliceState = {
+/** Cache d'une réponse API */
+export interface ApiCacheEntry {
+  data: unknown;
+  timestamp: number;
+}
+
+const initialState: DataSliceState & { apiCache: Record<string, ApiCacheEntry> } = {
   loaded: false,
   docs: [],
   dialog: {
@@ -31,6 +37,7 @@ const initialState: DataSliceState = {
     },
   },
   dataVersion: 0,
+  apiCache: {},
 };
 
 const data = createSlice({
@@ -54,17 +61,32 @@ const data = createSlice({
     incrementVersion(state) {
       state.dataVersion = (state.dataVersion ?? 0) + 1;
     },
+    // Cache une réponse API par URL
+    setCacheEntry(state, action: PayloadAction<{ url: string; data: unknown }>) {
+      (state as typeof initialState).apiCache[action.payload.url] = {
+        data: action.payload.data,
+        timestamp: Date.now(),
+      };
+    },
+    // Invalide le cache pour les URLs qui matchent un préfixe
+    invalidateCache(state, action: PayloadAction<string>) {
+      const prefix = action.payload;
+      const cache = (state as typeof initialState).apiCache;
+      Object.keys(cache).forEach((key) => {
+        if (key.startsWith(prefix)) delete cache[key];
+      });
+    },
   },
 });
 
-export const { updateData, removeData, incrementVersion } = data.actions;
+export const { updateData, removeData, incrementVersion, setCacheEntry, invalidateCache } = data.actions;
 
 // Persistance en sessionStorage — les documents restent en cache
 // même si la connexion est coupée temporairement
 const dataPersistConfig = {
   key: "__ROOT_GEID_DATA_CACHE",
   storage,
-  whitelist: ["docs", "loaded"], // Ne persiste que les documents, pas la navigation ni les dialogues
+  whitelist: ["docs", "loaded", "apiCache"], // Persiste les documents + le cache API
 };
 
 export default persistReducer(dataPersistConfig, data.reducer);
