@@ -71,12 +71,14 @@ const searchCache = new Map<string, SearchResult[]>();
 
 // ── Props ────────────────────────────────────────────────────
 
-/** Niveaux navigables (sans archive — les archives redirigent vers document) */
-type NavigableLevel = Exclude<Level, "archive">;
+// Les archives redirigent vers le niveau document
+
+interface PathItem { id: string; label: string; level: string }
 
 export interface PhysicalSearchProps {
   headers: Record<string, string>;
-  onNavigate: (id: string, level: NavigableLevel, label: string) => void;
+  /** Reçoit le chemin complet depuis la racine (comme l'arbre) */
+  onNavigate: (path: PathItem[]) => void;
 }
 
 // ── Composant ────────────────────────────────────────────────
@@ -149,13 +151,27 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
     grouped[lvl]!.push(r);
   });
 
-  const handleSelect = useCallback((item: SearchResult) => {
-    const navLevel: NavigableLevel = item._level === "archive" ? "document" : item._level as NavigableLevel;
-    onNavigate(item._id, navLevel, item._label);
+  const handleSelect = useCallback(async (item: SearchResult) => {
     setQuery("");
     setResults([]);
     setShowDropdown(false);
-  }, [onNavigate]);
+
+    // Charger le chemin complet via l'API
+    const level = item._level === "archive" ? "document" : item._level;
+    try {
+      const res = await execute({ url: `/api/stuff/archives/physical/path/${level}/${item._id}` });
+      const path = ((res.data as unknown) as { path: PathItem[] }).path ?? [];
+      if (path.length > 0) {
+        onNavigate(path);
+      } else {
+        // Fallback — un seul item
+        onNavigate([{ id: item._id, label: item._label, level }]);
+      }
+    } catch {
+      // Fallback si l'API échoue
+      onNavigate([{ id: item._id, label: item._label, level }]);
+    }
+  }, [onNavigate, execute]);
 
   return (
     <Box sx={{ position: "relative" }}>

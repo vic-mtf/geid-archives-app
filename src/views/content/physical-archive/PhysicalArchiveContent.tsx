@@ -296,9 +296,9 @@ export default function PhysicalArchiveContent() {
     setSelected(null);
   }, []);
 
-  /** Navigation depuis la recherche → un seul item dans le breadcrumb */
-  const handleNavigateFromSearch = useCallback((id: string, level: Level, label: string) => {
-    setBreadcrumb([{ id, label, level }]);
+  /** Navigation depuis la recherche → chemin complet via API /path */
+  const handleNavigateFromSearch = useCallback((path: Array<{ id: string; label: string; level: string }>) => {
+    setBreadcrumb(path.map((p) => ({ id: p.id, label: p.label, level: p.level as Level })));
     setSelected(null);
   }, []);
 
