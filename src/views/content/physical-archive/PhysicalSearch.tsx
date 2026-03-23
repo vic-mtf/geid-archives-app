@@ -97,35 +97,36 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
       const allItems: SearchItem[] = [];
 
       try {
-        // Charger tous les niveaux en parallèle
-        const [cRes, sRes, fRes, bRes, rRes, dRes] = await Promise.all([
-          fetchData({ url: `${base}/containers` }),
-          fetchData({ url: `${base}/shelves` }),
-          fetchData({ url: `${base}/floors` }),
-          fetchData({ url: `${base}/binders` }),
-          fetchData({ url: `${base}/records` }),
-          fetchData({ url: `${base}/documents` }),
-        ]);
+        // Charger chaque niveau individuellement (ne pas tout planter si un échoue)
+        const endpoints: { url: string; level: Level; nameKey: string; subKey?: string }[] = [
+          { url: `${base}/containers`, level: "container", nameKey: "name", subKey: "location" },
+          { url: `${base}/shelves`, level: "shelf", nameKey: "name", subKey: "description" },
+          { url: `${base}/floors`, level: "floor", nameKey: "label", subKey: "number" },
+          { url: `${base}/binders`, level: "binder", nameKey: "name", subKey: "nature" },
+          { url: `${base}/records`, level: "record", nameKey: "internalNumber", subKey: "subject" },
+          { url: `${base}/documents`, level: "document", nameKey: "title", subKey: "description" },
+        ];
 
-        const addItems = (data: unknown, level: Level, nameKey: string, subKey?: string) => {
-          ((data as Record<string, unknown>[]) ?? []).forEach((item) => {
+        // Charger en parallèle, ignorer les erreurs individuelles
+        const results = await Promise.allSettled(
+          endpoints.map((ep) => fetchData({ url: ep.url }))
+        );
+
+        results.forEach((result, i) => {
+          if (result.status !== "fulfilled") return;
+          const ep = endpoints[i];
+          const data = result.value.data as Record<string, unknown>[] | null;
+          (data ?? []).forEach((item) => {
             allItems.push({
               id: item._id as string,
-              level,
-              name: (item[nameKey] as string) ?? String(item._id),
-              sub: subKey ? (item[subKey] as string) : undefined,
+              level: ep.level,
+              name: (item[ep.nameKey] as string) ?? String(item._id),
+              sub: ep.subKey ? String(item[ep.subKey] ?? "") : undefined,
             });
           });
-        };
+        });
 
-        addItems(cRes.data, "container", "name", "location");
-        addItems(sRes.data, "shelf", "name", "description");
-        addItems(fRes.data, "floor", "label", "number");
-        addItems(bRes.data, "binder", "name", "nature");
-        addItems(rRes.data, "record", "internalNumber", "subject");
-        addItems(dRes.data, "document", "title", "description");
-
-        if (cancelled) return;
+        if (cancelled || allItems.length === 0) return;
 
         // Construire l'index MiniSearch
         const ms = new MiniSearch<SearchItem>({
@@ -141,7 +142,7 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
         indexRef.current = ms;
         setIndexReady(true);
       } catch {
-        // Index échoué — la recherche sera désactivée
+        // Index échoué
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -253,6 +254,16 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
               </List>
             </Box>
           ))}
+        </Paper>
+      )}
+
+      {/* Index en cours de chargement */}
+      {query.trim().length >= 2 && !indexReady && (
+        <Paper elevation={4} sx={{ position: "absolute", zIndex: 20, left: 0, right: 0, mt: 0.5, p: 2, textAlign: "center", borderRadius: 1.5 }}>
+          <CircularProgress size={16} sx={{ mr: 1 }} />
+          <Typography variant="body2" color="text.secondary" component="span">
+            Construction de l&apos;index en cours…
+          </Typography>
         </Paper>
       )}
 

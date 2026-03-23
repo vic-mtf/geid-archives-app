@@ -415,18 +415,19 @@ export default function PhysicalArchiveContent() {
               borderColor: "divider",
               overflow: "hidden",
             }}>
-            {/* En-tête : titre + recherche + bouton ajouter */}
-            <Box px={1} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
-              <Box display="flex" alignItems="center" gap={0.5} mb={0.75}>
-                <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
-                  Arborescence
-                </Typography>
-                <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
-                  <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
-                    <AddRoundedIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            {/* En-tête : titre + bouton ajouter */}
+            <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center">
+              <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
+                Arborescence
+              </Typography>
+              <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
+                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
+                  <AddRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            {/* Recherche — entre le header et l'arbre */}
+            <Box px={1} py={0.75} borderBottom={1} borderColor="divider">
               <PhysicalSearch headers={headers} onNavigate={handleNavigateTo} />
             </Box>
             <PhysicalTreeView
