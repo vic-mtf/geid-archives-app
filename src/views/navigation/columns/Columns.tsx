@@ -3,7 +3,7 @@ import {
   Stack,
 } from "@mui/material";
 // import { useDispatch, useSelector } from "react-redux";
-// import { changeVisibilityColumn } from "../../../redux/data";
+// import { changeVisibilityColumn } from "@/redux/data";
 
 export default function Columns() {
   // const columns = useSelector(store => store?.data?.columns);

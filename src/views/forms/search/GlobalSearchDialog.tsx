@@ -35,14 +35,10 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
-import useToken from "../../../hooks/useToken";
-import useAxios from "../../../hooks/useAxios";
-import {
-  STATUS_LABEL,
-  STATUS_COLOR,
-  normalizeStatus,
-} from "../../content/archive-management-content/ArchiveManagementContent";
-import formatDate from "../../../utils/formatTime";
+import useToken from "@/hooks/useToken";
+import useAxios from "@/hooks/useAxios";
+import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
+import formatDate from "@/utils/formatTime";
 
 // ── Événement déclencheur ──────────────────────────────────
 const OPEN_EVENT = "__global_search_open";

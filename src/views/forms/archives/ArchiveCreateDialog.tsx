@@ -23,8 +23,8 @@ import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import { useSnackbar } from "notistack";
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
+import type { AppDispatch, RootState } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
 import Typology from "./Typology";
 
 const EVENT_NAME = "__open_archive_create";

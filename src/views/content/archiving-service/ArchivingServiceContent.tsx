@@ -1,16 +1,16 @@
-import useAxios from "../../../hooks/useAxios";
-import useToken from "../../../hooks/useToken";
+import useAxios from "@/hooks/useAxios";
+import useToken from "@/hooks/useToken";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import { columnsWithValidate } from "./columns";
 import baseColumns from "./columns";
-import useArchivePermissions from "../../../hooks/useArchivePermissions";
+import useArchivePermissions from "@/hooks/useArchivePermissions";
 import ArchivingServiceHeader from "./archiving-service-header/ArchivingServiceHeader";
 import { useEffect, useMemo } from "react";
-import scrollBarSx from "../../../utils/scrollBarSx";
+import scrollBarSx from "@/utils/scrollBarSx";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
+import type { RootState } from "@/redux/store";
 
 export default function ArchivingServiceContent() {
   const Authorization = useToken();

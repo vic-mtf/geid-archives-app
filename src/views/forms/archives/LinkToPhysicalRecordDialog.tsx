@@ -30,11 +30,11 @@ import ChevronRightIcon            from "@mui/icons-material/ChevronRight";
 import InfoOutlinedIcon            from "@mui/icons-material/InfoOutlined";
 import { useDispatch } from "react-redux";
 import { useSnackbar } from "notistack";
-import type { AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import useAxios from "../../../hooks/useAxios";
-import useToken from "../../../hooks/useToken";
-import type { ArchiveDocument } from "../../../types";
+import type { AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import useAxios from "@/hooks/useAxios";
+import useToken from "@/hooks/useToken";
+import type { ArchiveDocument } from "@/types";
 
 // ── Types ────────────────────────────────────────────────────
 

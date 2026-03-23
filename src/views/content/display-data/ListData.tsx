@@ -10,10 +10,10 @@ import {
 import FolderZipOutlinedIcon from "@mui/icons-material/FolderZipOutlined";
 import WorkHistoryOutlinedIcon from "@mui/icons-material/WorkHistoryOutlined";
 import EditCalendarOutlinedIcon from "@mui/icons-material/EditCalendarOutlined";
-import CollapseListItemButton from "../../../components/CollapseListItemButton";
-import formatDate from "../../../utils/formatTime";
-import timeElapsed from "../../../utils/timeElapsed";
-import capStr from "../../../utils/capStr";
+import CollapseListItemButton from "@/components/CollapseListItemButton";
+import formatDate from "@/utils/formatTime";
+import timeElapsed from "@/utils/timeElapsed";
+import capStr from "@/utils/capStr";
 
 interface Doc {
   designation?: string;

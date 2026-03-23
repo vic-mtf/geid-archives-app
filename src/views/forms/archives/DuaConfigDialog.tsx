@@ -32,10 +32,10 @@ import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import useAxios from "../../../hooks/useAxios";
-import useToken from "../../../hooks/useToken";
+import type { AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import useAxios from "@/hooks/useAxios";
+import useToken from "@/hooks/useToken";
 
 type DuaUnit = "years" | "months";
 type SortFinal = "conservation" | "elimination";

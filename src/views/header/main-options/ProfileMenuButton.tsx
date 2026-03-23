@@ -2,10 +2,10 @@ import { ThemeProvider } from "@emotion/react";
 import { Chip, createTheme, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
+import type { RootState } from "@/redux/store";
 import ProfileMenu from "../ProfileMenu";
-import getFullName from "../../../utils/getFullName";
-import Avatar from "../../../components/Avatar";
+import getFullName from "@/utils/getFullName";
+import Avatar from "@/components/Avatar";
 
 export default function ProfileMenuButton() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);

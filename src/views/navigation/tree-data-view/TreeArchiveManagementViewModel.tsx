@@ -2,12 +2,12 @@ import { useMemo, useRef } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { TreeView } from "@mui/x-tree-view/TreeView";
-import StyledTreeItem from "../../../components/StyledTreeItem";
+import StyledTreeItem from "@/components/StyledTreeItem";
 // import useDate from '../../../data/useData';
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
+import type { RootState } from "@/redux/store";
 import { SvgIconProps } from "@mui/material";
 
 interface TreeFolderDataItem {

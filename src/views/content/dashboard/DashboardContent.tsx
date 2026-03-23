@@ -39,18 +39,14 @@ import ArchiveOutlinedIcon       from "@mui/icons-material/ArchiveOutlined";
 import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
 
-import useAxios  from "../../../hooks/useAxios";
-import useToken  from "../../../hooks/useToken";
-import useNavigateSetState from "../../../hooks/useNavigateSetState";
+import useAxios  from "@/hooks/useAxios";
+import useToken  from "@/hooks/useToken";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { useSelector }   from "react-redux";
-import type { RootState } from "../../../redux/store";
-import formatDate from "../../../utils/formatTime";
-import type { Archive, PhysicalRecord, Container, Binder } from "../../../types";
-import {
-  STATUS_LABEL,
-  STATUS_COLOR,
-  normalizeStatus,
-} from "../archive-management-content/ArchiveManagementContent";
+import type { RootState } from "@/redux/store";
+import formatDate from "@/utils/formatTime";
+import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
+import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 
 // ── Helpers ──────────────────────────────────────────────────
 

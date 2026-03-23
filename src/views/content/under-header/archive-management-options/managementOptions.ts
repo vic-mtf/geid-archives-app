@@ -8,7 +8,7 @@ import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import store from "../../../../redux/store";
+import store from "@/redux/store";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
 

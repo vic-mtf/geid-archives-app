@@ -2,8 +2,8 @@ import React, { useMemo } from "react";
 import { Button } from "@mui/material";
 import managementOptions from "./managementOptions";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../../../redux/store";
-import useArchivePermissions from "../../../../hooks/useArchivePermissions";
+import type { RootState } from "@/redux/store";
+import useArchivePermissions from "@/hooks/useArchivePermissions";
 
 export default function ArchiveManagementOptions() {
   const { canWrite, isAdmin } = useArchivePermissions();

@@ -1,6 +1,6 @@
 import { Box, Stack } from "@mui/material";
 import React from "react";
-import InputControl from "../../../components/InputControl";
+import InputControl from "@/components/InputControl";
 import Typology from "./Typology";
 
 interface InputsDocProps {
