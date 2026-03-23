@@ -50,6 +50,7 @@ import { incrementVersion } from "@/redux/data";
 import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
 import scrollBarSx   from "@/utils/scrollBarSx";
 import PhysicalEntityForm from "@/views/forms/physical/PhysicalEntityForm";
+import PhysicalTreeView  from "./PhysicalTreeView";
 
 // ── Types locaux ───────────────────────────────────────────
 
@@ -373,13 +374,40 @@ export default function PhysicalArchiveContent() {
         </Tooltip>
       </Box>
 
-      {/* ── Contenu principal : explorateur + détail ────────────── */}
+      {/* ── Contenu principal : arbre + explorateur + détail ────── */}
       <Box display="flex" flex={1} overflow="hidden">
-        {/* ── Panneau gauche : explorateur de fichiers ───────── */}
+
+        {/* ── Sidebar arborescence (lg+ uniquement) ──────────── */}
         <Box
           sx={{
-            width: { xs: "100%", md: showDetail ? "45%" : "100%" },
+            width: { lg: 240, xl: 280 },
             flexShrink: 0,
+            display: { xs: "none", lg: "flex" },
+            flexDirection: "column",
+            borderRight: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}>
+          <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
+            <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+              Arborescence
+            </Typography>
+          </Box>
+          <PhysicalTreeView
+            headers={headers}
+            onSelect={(nodeId, level) => {
+              // Naviguer vers l'élément sélectionné dans l'explorateur
+              const raw = { _id: nodeId } as Container;
+              setSelected({ level, item: raw });
+            }}
+          />
+        </Box>
+
+        {/* ── Panneau central : explorateur de fichiers ──────── */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
             display: isMobile && showDetail ? "none" : "flex",
             flexDirection: "column",
             borderRight: showDetail ? { xs: "none", md: "1px solid" } : "none",
