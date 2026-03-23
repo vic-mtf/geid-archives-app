@@ -358,7 +358,7 @@ export default function PhysicalArchiveContent() {
               sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" }, fontSize: { xs: "0.75rem", sm: "0.875rem" }, maxWidth: { xs: 100, sm: 200 }, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               color={i === breadcrumb.length - 1 ? "text.primary" : "text.secondary"}
               onClick={() => handleBreadcrumb(i + 1)}>
-              {levelConfig[b.level]?.label} : {b.label}
+              {b.label}
             </Typography>
           </React.Fragment>
         ))}
