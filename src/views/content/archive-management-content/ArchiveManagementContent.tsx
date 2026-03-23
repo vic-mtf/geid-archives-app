@@ -71,6 +71,8 @@ import type { Archive, ArchiveDocument, NavigationState } from "@/types";
 import scrollBarSx           from "@/utils/scrollBarSx";
 import NavigationMenuButton  from "@/views/navigation/NavigationMenuButton";
 import { useSnackbar }       from "notistack";
+import { useLocation }       from "react-router-dom";
+import type { DeepTarget }   from "@/utils/deepNavigate";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 import archiveColumns from "./columns";
 import DetailPanel    from "./DetailPanel";
@@ -150,6 +152,7 @@ export default function ArchiveManagementContent() {
   const { canWrite, isAdmin } = useArchivePermissions();
   const theme    = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const location = useLocation();
 
   const dataVersion      = useSelector((store: RootState) => store.data.dataVersion);
   const selectedElements = useSelector(
@@ -228,6 +231,19 @@ export default function ArchiveManagementContent() {
     root?.addEventListener("__tree_archive_select", handler);
     return () => root?.removeEventListener("__tree_archive_select", handler);
   }, []);
+
+  // Écouter le deep navigate — ouvrir une archive ou appliquer un filtre
+  useEffect(() => {
+    const target = location.state?.deepTarget as DeepTarget | undefined;
+    if (!target) return;
+    if (target.archiveId) {
+      setFocusedId(target.archiveId);
+      setDetailOpen(true);
+    }
+    if (target.statusFilter) {
+      setStatusFilter(target.statusFilter as StatusFilter);
+    }
+  }, [location.state?.deepTarget]);
 
   // ── Rows ──────────────────────────────────────────────────────
 
