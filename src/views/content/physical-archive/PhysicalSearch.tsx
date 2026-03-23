@@ -7,6 +7,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { setCacheEntry } from "@/redux/data";
+import type { ApiCacheEntry } from "@/redux/data";
 import {
   Box,
   Chip,
@@ -65,9 +69,7 @@ const LEVEL_LABEL: Record<Level, string> = {
   archive:   "Archive",
 };
 
-// ── Cache local des résultats ────────────────────────────────
-
-const searchCache = new Map<string, SearchResult[]>();
+// Cache via Redux (store.data.apiCache) — pas de Map globale
 
 // ── Props ────────────────────────────────────────────────────
 
@@ -90,6 +92,10 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
   const [showDropdown, setShowDropdown] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelRef = useRef(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const apiCache = useSelector((store: RootState) =>
+    (store.data as unknown as Record<string, unknown>).apiCache as Record<string, ApiCacheEntry> | undefined
+  );
 
   const [, execute] = useAxios<{ query: string; total: number; results: SearchResult[] }>(
     { headers },
@@ -107,9 +113,11 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
       return;
     }
 
-    // Vérifier le cache
-    if (searchCache.has(q)) {
-      setResults(searchCache.get(q)!);
+    // Vérifier le cache Redux
+    const cacheKey = `physical_search:${q}`;
+    const cached = apiCache?.[cacheKey];
+    if (cached) {
+      setResults(cached.data as SearchResult[]);
       setShowDropdown(true);
       return;
     }
@@ -123,7 +131,7 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
         });
         if (!cancelRef.current) {
           const data = res.data.results ?? [];
-          searchCache.set(q, data);
+          dispatch(setCacheEntry({ url: cacheKey, data }));
           setResults(data);
           setShowDropdown(true);
         }
