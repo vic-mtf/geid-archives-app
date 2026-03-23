@@ -3,6 +3,7 @@ import DashboardContent from "../dashboard/DashboardContent";
 import HelpContent from "../help/HelpContent";
 import PhysicalArchiveContent from "../physical-archive/PhysicalArchiveContent";
 import UserManagementContent from "../user-management/UserManagementContent";
+import SettingsContent from "../settings/SettingsContent";
 import { ComponentType } from "react";
 
 const displays: Record<string, ComponentType> = {
@@ -10,6 +11,7 @@ const displays: Record<string, ComponentType> = {
   archiveManager:  ArchiveManagementContent,
   physicalArchive: PhysicalArchiveContent,
   userManagement:  UserManagementContent,
+  settings:        SettingsContent,
   help:            HelpContent,
 };
 
