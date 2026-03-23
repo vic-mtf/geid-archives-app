@@ -24,14 +24,14 @@ import type { PhysicalLevel } from "@/constants/physical";
 
 // ── Types ────────────────────────────────────────────────────
 
-/** Niveau enfant pour le label "Ajouter un(e) ..." */
+/** Label complet avec article pour le menu "Ajouter ..." */
 const CHILD_LABELS: Record<PhysicalLevel, string | null> = {
-  container: "étagère",
-  shelf:     "niveau",
-  floor:     "classeur",
-  binder:    "dossier",
-  record:    "document",
-  document:  "sous-document",
+  container: "une étagère",
+  shelf:     "un niveau",
+  floor:     "un classeur",
+  binder:    "un dossier",
+  record:    "un document",
+  document:  "un sous-document",
 };
 
 export interface ContextMenuState {
@@ -102,7 +102,7 @@ export default function PhysicalContextMenu({
       {canWrite && childLabel && (
         <MenuItem onClick={() => { onAdd(state.level, state.itemId); onClose(); }}>
           <ListItemIcon><AddRoundedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Ajouter un(e) {childLabel}</ListItemText>
+          <ListItemText>Ajouter {childLabel}</ListItemText>
         </MenuItem>
       )}
 

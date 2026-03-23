@@ -473,7 +473,7 @@ export default function PhysicalArchiveContent() {
               <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
                 Arborescence
               </Typography>
-              <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
+              <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
                 <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
