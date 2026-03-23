@@ -37,6 +37,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Stack,
   Toolbar,
   Tooltip,
   Typography,
@@ -740,8 +741,8 @@ export default function ArchiveManagementContent() {
         </MuiBox>
       </MuiBox>
 
-      {/* ── Panneau détail — desktop (inline) ────────────────── */}
-      {detailOpen && !!focusedDoc && !isMobile && (
+      {/* ── Panneau droit — détail ou résumé ────────────────── */}
+      {!isMobile && (
         <MuiBox
           sx={{
             width: { md: 280, lg: 320, xl: 380 },
@@ -754,13 +755,114 @@ export default function ArchiveManagementContent() {
             height: "100%",
           }}
         >
-          <DetailPanel
-            doc={focusedDoc}
-            canWrite={canWrite}
-            isAdmin={isAdmin}
-            onClose={closeDetail}
-            onAction={handleAction}
-          />
+          {detailOpen && focusedDoc ? (
+            <DetailPanel
+              doc={focusedDoc}
+              canWrite={canWrite}
+              isAdmin={isAdmin}
+              onClose={closeDetail}
+              onAction={handleAction}
+            />
+          ) : (
+            /* Résumé + accès rapide quand rien n'est sélectionné */
+            <MuiBox flex={1} overflow="auto" sx={{ ...scrollBarSx }}>
+              {/* En-tête */}
+              <MuiBox px={2} py={1.5} borderBottom={1} borderColor="divider">
+                <Typography variant="subtitle2" fontWeight={700}>Résumé</Typography>
+              </MuiBox>
+
+              {/* Stats rapides */}
+              <MuiBox px={2} py={1.5}>
+                {[
+                  { label: "Total", value: totalCount, color: "primary.main" },
+                  { label: "En attente", value: statusCounts.PENDING, color: "warning.main" },
+                  { label: "Actives", value: statusCounts.ACTIVE, color: "success.main" },
+                  { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, color: "info.main" },
+                  { label: "DUA expirées", value: duaExpiredCount, color: "error.main" },
+                ].map(({ label, value, color }) => (
+                  <MuiBox key={label} display="flex" justifyContent="space-between" alignItems="center" py={0.5}>
+                    <MuiBox display="flex" alignItems="center" gap={1}>
+                      <MuiBox sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color }} />
+                      <Typography variant="caption" color="text.secondary">{label}</Typography>
+                    </MuiBox>
+                    <Typography variant="caption" fontWeight="bold">{value}</Typography>
+                  </MuiBox>
+                ))}
+              </MuiBox>
+
+              <Divider />
+
+              {/* Suppression multiple — admin uniquement */}
+              {isAdmin && (selectedElements as string[]).length > 1 && (
+                <MuiBox px={2} py={1.5}>
+                  <Typography variant="caption" color="text.secondary" display="block" mb={1}>
+                    {(selectedElements as string[]).length} archives sélectionnées
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    color="error"
+                    fullWidth
+                    onClick={handleBulkDelete}
+                    startIcon={<DeleteOutlineOutlinedIcon />}>
+                    Supprimer définitivement ({(selectedElements as string[]).length})
+                  </Button>
+                </MuiBox>
+              )}
+
+              {isAdmin && (selectedElements as string[]).length > 1 && <Divider />}
+
+              {/* Accès rapide */}
+              <MuiBox px={2} py={1.5}>
+                <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold" display="block" mb={1}>
+                  Actions rapides
+                </Typography>
+                <Stack spacing={0.75}>
+                  {canWrite && (
+                    <Button size="small" variant="outlined" fullWidth onClick={openAdd} sx={{ justifyContent: "flex-start" }}>
+                      + Nouvelle archive
+                    </Button>
+                  )}
+                  <Button size="small" variant="outlined" fullWidth color="inherit" onClick={() => {
+                    document.getElementById("root")?.dispatchEvent(new CustomEvent("__global_search_open"));
+                  }} sx={{ justifyContent: "flex-start" }}>
+                    Rechercher (Ctrl+K)
+                  </Button>
+                  <Button size="small" variant="outlined" fullWidth color="inherit" onClick={exportCSV} disabled={rows.length === 0} sx={{ justifyContent: "flex-start" }}>
+                    Exporter CSV ({rows.length})
+                  </Button>
+                </Stack>
+              </MuiBox>
+
+              <Divider />
+
+              {/* 5 dernières archives */}
+              {recentArchives.length > 0 && (
+                <MuiBox px={2} py={1.5}>
+                  <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold" display="block" mb={1}>
+                    Dernières archives
+                  </Typography>
+                  <List dense disablePadding>
+                    {recentArchives.slice(0, 5).map((r) => {
+                      const norm = normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined);
+                      return (
+                        <ListItemButton
+                          key={r.id}
+                          onClick={() => { setFocusedId(r.id as string); setDetailOpen(true); }}
+                          sx={{ borderRadius: 1, py: 0.5, px: 0.5 }}>
+                          <MuiBox sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: `${STATUS_COLOR[norm]}.main`, flexShrink: 0, mr: 0.75 }} />
+                          <ListItemText
+                            primary={(r as Record<string, unknown>).designation as string ?? r.id}
+                            primaryTypographyProps={{ variant: "caption", noWrap: true }}
+                          />
+                        </ListItemButton>
+                      );
+                    })}
+                  </List>
+                </MuiBox>
+              )}
+            </MuiBox>
+          )}
         </MuiBox>
       )}
 
