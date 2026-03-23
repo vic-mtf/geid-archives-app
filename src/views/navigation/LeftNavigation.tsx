@@ -10,14 +10,14 @@ import {
 } from "@mui/material";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import TreeArchiveManagementView from "./tree-data-view/TreeArchiveManagementView";
-import SearchInput from "../../components/SearchInput";
+import SearchInput from "@/components/SearchInput";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../redux/store";
+import type { RootState, AppDispatch } from "@/redux/store";
 import TabsOption from "./tabs-option/TabsOption";
-import useNavigateSetState from "../../hooks/useNavigateSetState";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { useLocation } from "react-router-dom";
 import CustomDrawer from "./CustomDrawer";
-import { updateData } from "../../redux/data";
+import { updateData } from "@/redux/data";
 
 // Onglets qui affichent l'arbre de documents dans le panneau gauche
 const TREE_TABS = new Set<string>(["archiveManager"]);

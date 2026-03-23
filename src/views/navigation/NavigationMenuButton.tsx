@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "../../redux/store";
+import type { RootState, AppDispatch } from "@/redux/store";
 import MenuOpenOutlinedIcon from "@mui/icons-material/MenuOpenOutlined";
 import { IconButton, SxProps, Theme } from "@mui/material";
-import { updateData } from "../../redux/data";
-import capStr from "../../utils/capStr";
+import { updateData } from "@/redux/data";
+import capStr from "@/utils/capStr";
 
 interface NavigationMenuButtonProps {
   hide?: boolean;

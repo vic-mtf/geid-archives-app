@@ -4,7 +4,7 @@ import {
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
-import NavigationMenuButton from "../../../navigation/NavigationMenuButton";
+import NavigationMenuButton from "@/views/navigation/NavigationMenuButton";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const ArchivingServiceHeader = React.memo(() => {

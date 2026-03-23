@@ -2,7 +2,7 @@ import { AppBar, Toolbar, Box, Typography } from "@mui/material";
 import React from "react";
 import DisconnectDialog from "./DisconnectDialog";
 import MainOption from "./main-options/MainOption";
-import appConfig from "../../configs/app-config.json";
+import appConfig from "@/configs/app-config.json";
 
 export default function Header() {
   return (

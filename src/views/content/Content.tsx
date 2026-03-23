@@ -1,5 +1,5 @@
 import { Toolbar, Box as MuiBox, useTheme, useMediaQuery } from "@mui/material";
-import Main from "../../components/Main";
+import Main from "@/components/Main";
 import UnderHeader from "./under-header/UnderHeader";
 import DisplayData from "./display-data/DisplayData";
 

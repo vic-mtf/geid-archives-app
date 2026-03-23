@@ -8,10 +8,10 @@ import {
 } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import tabs from "./tabs-option/tabs";
-import useNavigateSetState from "../../hooks/useNavigateSetState";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../redux/store";
-import { updateData } from "../../redux/data";
+import type { AppDispatch } from "@/redux/store";
+import { updateData } from "@/redux/data";
 
 export default function MobileBottomNav() {
   const theme = useTheme();

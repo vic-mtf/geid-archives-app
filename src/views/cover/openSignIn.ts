@@ -1,6 +1,6 @@
-import store from "../../redux/store";
-import { decrypt } from "../../utils/crypt";
-import openNewWindow from "../../utils/openNewWindow";
+import store from "@/redux/store";
+import { decrypt } from "@/utils/crypt";
+import openNewWindow from "@/utils/openNewWindow";
 
 export default function openSignIn(): void {
   const localUser = store.getState().app.user;

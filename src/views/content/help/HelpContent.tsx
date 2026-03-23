@@ -185,6 +185,16 @@ const SECTIONS: ManualSection[] = [
     body: "L'application distingue trois niveaux d'accès. L'agent peut soumettre des archives et les consulter. L'archiviste peut valider les archives, configurer les DUA et gérer les transitions du cycle de vie. L'administrateur dispose de tous les droits y compris la suppression, la gestion des utilisateurs et la modification de la structure physique.",
   },
   {
+    id: "gestion-utilisateurs", number: "13.1", title: "Gestion des utilisateurs",
+    keywords: ["utilisateur", "user", "gestion", "permission", "activer", "désactiver", "rôle", "unité"],
+    body: "La section Utilisateurs (accessible aux utilisateurs ayant les droits d'écriture) permet de gérer les comptes et permissions du module archives. La liste affiche les utilisateurs filtrés selon votre cadre organique : un administrateur voit tous les utilisateurs, un responsable voit son unité et les unités subordonnées. Pour chaque utilisateur vous pouvez voir ses statistiques (archives soumises, dossiers créés), son journal d'activité récente, activer ou désactiver son compte, changer son unité administrative et modifier ses permissions archives (lecture ou écriture par unité).",
+  },
+  {
+    id: "navigation-profonde", number: "13.2", title: "Navigation directe",
+    keywords: ["navigation", "recherche", "redirection", "flash", "scroll", "deep link"],
+    body: "En cliquant sur un résultat de recherche globale ou sur une information du tableau de bord vous êtes redirigé directement vers l'élément concerné. Le système change automatiquement d'onglet, charge les données nécessaires, scrolle jusqu'à la ligne exacte et la met en surbrillance jaune pendant deux secondes. Cela fonctionne pour les archives numériques (scroll dans le tableau avec changement de page automatique) et les archives physiques (navigation dans l'arborescence avec chemin complet).",
+  },
+  {
     id: "glossaire", number: "14", title: "Glossaire",
     keywords: ["glossaire", "définition", "terme", "vocabulaire", "DUA", "lifecycle", "cycle de vie"],
     body: "Archive numérique : fichier électronique conservé dans le système avec ses métadonnées. Archive physique : document papier ou objet conservé dans un espace de stockage réel. DUA : Durée d'Utilité Administrative, délai légal ou réglementaire de conservation. Cycle de vie : ensemble des états successifs traversés par une archive depuis sa création jusqu'à sa destination finale. Sort final : décision prise à l'expiration de la DUA entre conservation définitive et élimination. Rattachement : lien créé entre une archive numérique et son support physique.",
