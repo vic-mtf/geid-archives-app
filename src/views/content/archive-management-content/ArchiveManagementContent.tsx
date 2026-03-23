@@ -215,6 +215,20 @@ export default function ArchiveManagementContent() {
     return () => root?.removeEventListener("__lifecycle_archive", handler);
   }, [execLifecycle, dispatch, enqueueSnackbar]);
 
+  // Écouter le clic depuis l'arbre de navigation → ouvrir le détail
+  useEffect(() => {
+    const root = document.getElementById("root");
+    const handler = (e: Event) => {
+      const { id } = (e as CustomEvent).detail as { id: string };
+      if (id) {
+        setFocusedId(id);
+        setDetailOpen(true);
+      }
+    };
+    root?.addEventListener("__tree_archive_select", handler);
+    return () => root?.removeEventListener("__tree_archive_select", handler);
+  }, []);
+
   // ── Rows ──────────────────────────────────────────────────────
 
   type RowType = Archive & { id: string; type: string; createdAt: Date | null };
