@@ -112,38 +112,67 @@ export default function PhysicalArchiveContent() {
     { manual: true }
   );
 
+  const [deleting, setDeleting] = useState(false);
+
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deleting) return;
     const levelLabels: Record<string, string> = {
       container: "conteneur",
       shelf:     "étagère",
-      floor:     "travée",
-      binder:    "dossier",
-      record:    "fiche physique",
+      floor:     "niveau",
+      binder:    "classeur",
+      record:    "dossier",
       document:  "document",
     };
     const levelLabel = levelLabels[deleteTarget.level] ?? "élément";
-    const key = enqueueSnackbar(`Suppression du ${levelLabel} en cours, veuillez patienter…`, { autoHideDuration: null });
+
+    setDeleting(true);
     try {
       await executeDelete({ url: `${deleteEndpoints[deleteTarget.level]}/${deleteTarget.id}` });
-      enqueueSnackbar(
-        `Le ${levelLabel} « ${deleteTarget.label} » a été supprimé de l'inventaire physique. Les archives associées ne sont plus rattachées à ce support.`,
-        { variant: "success", title: `${levelLabel.charAt(0).toUpperCase() + levelLabel.slice(1)} supprimé` }
-      );
+
+      // Fermer le dialogue AVANT la notification
+      const deletedLabel = deleteTarget.label;
+      const deletedId = deleteTarget.id;
       setDeleteTarget(null);
       setSelected(null);
-      // Si on est dans un sous-niveau, revenir au niveau parent
-      if (breadcrumb.length > 0 && breadcrumb[breadcrumb.length - 1].id === deleteTarget.id) {
+
+      // Si on était dans l'élément supprimé, remonter d'un niveau
+      if (breadcrumb.length > 0 && breadcrumb[breadcrumb.length - 1].id === deletedId) {
         setBreadcrumb((prev) => prev.slice(0, -1));
       }
+
+      // Rafraîchir les données — invalider le cache + forcer un nouveau fetch
+      dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
       dispatch(incrementVersion());
+
+      // Forcer le refetch immédiat de la vue courante (le cache vient d'être invalidé)
+      setTimeout(() => {
+        const url = currentUrl;
+        if (url) {
+          executeFetch({ url })
+            .then((res) => {
+              const fresh = (res.data as unknown[]) ?? [];
+              setLevelData(fresh);
+              dispatch(setCacheEntry({ url, data: fresh }));
+            })
+            .catch(() => {});
+        }
+      }, 100);
+
+      // Notification de succès
+      enqueueSnackbar(
+        `Le ${levelLabel} « ${deletedLabel} » a bien été supprimé. Les éléments qui y étaient rattachés ne sont plus liés à cet emplacement.`,
+        { variant: "success" }
+      );
     } catch (err: unknown) {
-      const msg =
-        ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        `La suppression du ${levelLabel} a échoué. Il n'a pas été modifié. Vérifiez vos droits et réessayez.`;
-      enqueueSnackbar(msg, { variant: "error", title: "Suppression impossible" });
+      const serverMsg = ((err as { response?: { data?: { message?: string; error?: string } } })?.response?.data?.message)
+        ?? ((err as { response?: { data?: { error?: string } } })?.response?.data?.error);
+      enqueueSnackbar(
+        serverMsg ?? `La suppression n'a pas pu être effectuée. Cet élément contient peut-être des sous-éléments qui doivent être supprimés en premier.`,
+        { variant: "error" }
+      );
     } finally {
-      enqueueSnackbar("", { key, persist: false });
+      setDeleting(false);
     }
   };
 
@@ -683,22 +712,24 @@ export default function PhysicalArchiveContent() {
       />
 
       {/* Dialogue de confirmation de suppression */}
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth>
+      <Dialog open={Boolean(deleteTarget)} onClose={() => !deleting && setDeleteTarget(null)} maxWidth="xs" fullWidth>
         <DialogTitle component="div" fontWeight="bold">
           Confirmer la suppression
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2">
-            Supprimer <strong>"{deleteTarget?.label}"</strong> ? Cette action est irréversible.
+            Êtes-vous sûr de vouloir supprimer <strong>« {deleteTarget?.label} »</strong> ?
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-            La suppression sera refusée si cet élément contient encore des enfants.
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Cette action est définitive et ne peut pas être annulée. Si cet élément contient des sous-éléments, vous devrez les supprimer d&apos;abord.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)} color="inherit">Annuler</Button>
-          <Button onClick={handleDeleteConfirm} variant="contained" color="error">
-            Supprimer
+          <Button onClick={() => setDeleteTarget(null)} color="inherit" disabled={deleting}>
+            Annuler
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" disabled={deleting}>
+            {deleting ? "Suppression en cours…" : "Supprimer définitivement"}
           </Button>
         </DialogActions>
       </Dialog>
