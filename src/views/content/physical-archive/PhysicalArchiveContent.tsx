@@ -163,59 +163,52 @@ export default function PhysicalArchiveContent() {
   const parentId = breadcrumb[breadcrumb.length - 1]?.id;
   const parentLevel = breadcrumb[breadcrumb.length - 1]?.level;
 
-  // URL des documents : dépend si le parent est un record ou un document
-  const documentsUrl = currentLevel === "document" && parentId
-    ? parentLevel === "record"
-      ? `/api/stuff/archives/physical/documents/record/${parentId}`   // premier niveau
-      : `/api/stuff/archives/physical/documents/parent/${parentId}`   // sous-documents
-    : null;
+  // ── Chargement unique par execute() impératif ──────────────
+  // Un seul hook useAxios en mode manual — on déclenche le fetch
+  // quand le breadcrumb change (navigation dans n'importe quel sens).
 
-  // ── Chargement selon le niveau ──────────────────────────
+  const [levelData, setLevelData] = useState<unknown[]>([]);
+  const [levelLoading, setLevelLoading] = useState(false);
+  const [, executeFetch] = useAxios({ headers }, { manual: true });
 
-  const [{ data: containers, loading: cLoading }, refetchContainers] = useAxios<Container[]>(
-    { url: "/api/stuff/archives/physical/containers", headers },
-    { manual: currentLevel !== "container" }
-  );
-
-  const [{ data: shelves, loading: sLoading }, refetchShelves] = useAxios<Shelf[]>(
-    { url: `/api/stuff/archives/physical/shelves/container/${parentId}`, headers },
-    { manual: currentLevel !== "shelf" || !parentId }
-  );
-
-  const [{ data: floors, loading: fLoading }, refetchFloors] = useAxios<Floor[]>(
-    { url: `/api/stuff/archives/physical/floors/shelf/${parentId}`, headers },
-    { manual: currentLevel !== "floor" || !parentId }
-  );
-
-  const [{ data: binders, loading: bLoading }, refetchBinders] = useAxios<Binder[]>(
-    { url: `/api/stuff/archives/physical/binders/floor/${parentId}`, headers },
-    { manual: currentLevel !== "binder" || !parentId }
-  );
-
-  const [{ data: records, loading: rLoading }, refetchRecords] = useAxios<PhysicalRecord[]>(
-    { url: `/api/stuff/archives/physical/records/binder/${parentId}`, headers },
-    { manual: currentLevel !== "record" || !parentId }
-  );
-
-  const [{ data: documents, loading: dLoading }, refetchDocuments] = useAxios<PhysicalDocument[]>(
-    { url: documentsUrl ?? "", headers },
-    { manual: !documentsUrl }
-  );
-
-  // Refetch la liste courante après une mutation
-  useEffect(() => {
-    if (dataVersion > 0) {
-      const refetchMap: Record<Level, () => void> = {
-        container: refetchContainers,
-        shelf: refetchShelves,
-        floor: refetchFloors,
-        binder: refetchBinders,
-        record: refetchRecords,
-        document: () => { refetchDocuments(); if (isInsideDocument) refetchDocArchives(); },
-      };
-      refetchMap[currentLevel]?.();
+  // URL à charger selon le niveau courant et le parent
+  const currentUrl = useMemo(() => {
+    const base = "/api/stuff/archives/physical";
+    switch (currentLevel) {
+      case "container": return `${base}/containers`;
+      case "shelf":     return parentId ? `${base}/shelves/container/${parentId}` : null;
+      case "floor":     return parentId ? `${base}/floors/shelf/${parentId}` : null;
+      case "binder":    return parentId ? `${base}/binders/floor/${parentId}` : null;
+      case "record":    return parentId ? `${base}/records/binder/${parentId}` : null;
+      case "document":  return parentId
+        ? parentLevel === "record"
+          ? `${base}/documents/record/${parentId}`
+          : `${base}/documents/parent/${parentId}`
+        : null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLevel, parentId, parentLevel]);
+
+  // Charger les données quand l'URL change (navigation)
+  useEffect(() => {
+    if (!currentUrl) { setLevelData([]); return; }
+    let cancelled = false;
+    setLevelLoading(true);
+    executeFetch({ url: currentUrl })
+      .then((res) => { if (!cancelled) setLevelData((res.data as unknown[]) ?? []); })
+      .catch(() => { if (!cancelled) setLevelData([]); })
+      .finally(() => { if (!cancelled) setLevelLoading(false); });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUrl]);
+
+  // Refetch après une mutation
+  useEffect(() => {
+    if (dataVersion > 0 && currentUrl) {
+      executeFetch({ url: currentUrl })
+        .then((res) => setLevelData((res.data as unknown[]) ?? []))
+        .catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataVersion]);
 
   // Élément sélectionné pour le panneau de détail
@@ -224,69 +217,50 @@ export default function PhysicalArchiveContent() {
     item: Container | Shelf | Floor | Binder | PhysicalRecord | PhysicalDocument;
   } | null>(null);
 
-  const loading = cLoading || sLoading || fLoading || bLoading || rLoading || dLoading;
+  const loading = levelLoading;
 
   // ── Items courants ──────────────────────────────────────
 
   // Fetch archives liées au document courant (pour affichage mixte)
   const isInsideDocument = currentLevel === "document" && parentLevel === "document";
-  const [{ data: docArchivesData }, refetchDocArchives] = useAxios<{
+  const [docArchivesData, setDocArchivesData] = useState<{
     document: string; count: number;
     archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; createdAt?: string }>;
-  }>(
-    { url: isInsideDocument ? `/api/stuff/archives/physical/documents/${parentId}/archives` : "", headers },
-    { manual: !isInsideDocument }
-  );
+  } | null>(null);
 
+  useEffect(() => {
+    if (!isInsideDocument || !parentId) { setDocArchivesData(null); return; }
+    executeFetch({ url: `/api/stuff/archives/physical/documents/${parentId}/archives` })
+      .then((res) => setDocArchivesData(res.data as typeof docArchivesData))
+      .catch(() => setDocArchivesData(null));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInsideDocument, parentId]);
+
+  // Transformer les données brutes (levelData) en items affichables
   const items = useMemo<{ id: string; label: string; sub?: string; meta?: string; itemType?: "document" | "archive" }[]>(() => {
+    const data = levelData as Record<string, unknown>[];
     switch (currentLevel) {
       case "container":
-        return ((containers as Container[]) ?? []).map((c) => ({
-          id: c._id,
-          label: c.name,
-          sub: c.location,
-          meta: c.description,
-        }));
+        return data.map((c) => ({ id: c._id as string, label: c.name as string, sub: c.location as string, meta: c.description as string }));
       case "shelf":
-        return ((shelves as Shelf[]) ?? []).map((s) => ({
-          id: s._id,
-          label: s.name,
-          sub: s.description,
-        }));
+        return data.map((s) => ({ id: s._id as string, label: s.name as string, sub: s.description as string }));
       case "floor":
-        return ((floors as Floor[]) ?? []).map((f) => ({
-          id: f._id,
-          label: f.label ?? `Étage ${f.number}`,
-          sub: `N° ${f.number}`,
-        }));
+        return data.map((f) => ({ id: f._id as string, label: (f.label as string) ?? `Étage ${f.number}`, sub: `N° ${f.number}` }));
       case "binder":
-        return ((binders as Binder[]) ?? []).map((b) => ({
-          id: b._id,
-          label: b.name,
-          sub: `Nature : ${b.nature}`,
-          meta: `${b.currentCount ?? 0} / ${b.maxCapacity} dossiers`,
-        }));
+        return data.map((b) => ({ id: b._id as string, label: b.name as string, sub: `Nature : ${b.nature}`, meta: `${b.currentCount ?? 0} / ${b.maxCapacity} dossiers` }));
       case "record":
-        return ((records as PhysicalRecord[]) ?? []).map((r) => ({
-          id: r._id,
-          label: r.internalNumber,
-          sub: r.subject,
-          meta: r.nature,
-        }));
+        return data.map((r) => ({ id: r._id as string, label: r.internalNumber as string, sub: r.subject as string, meta: r.nature as string }));
       case "document": {
-        // Sous-documents
-        const docItems = ((documents as PhysicalDocument[]) ?? []).map((d) => ({
-          id: d._id,
-          label: d.title,
-          sub: d.nature ?? d.description,
-          meta: d.documentDate ? new Date(d.documentDate).toLocaleDateString("fr-FR") : undefined,
+        const docItems = data.map((d) => ({
+          id: d._id as string,
+          label: d.title as string,
+          sub: (d.nature as string) ?? (d.description as string),
+          meta: d.documentDate ? new Date(d.documentDate as string).toLocaleDateString("fr-FR") : undefined,
           itemType: "document" as const,
         }));
-        // Archives liées (affichées dans la même liste quand on est dans un document)
         const archiveItems = isInsideDocument
           ? (docArchivesData?.archives ?? []).map((a) => ({
-              id: a._id,
-              label: a.designation ?? a.folder ?? a._id,
+              id: a._id, label: a.designation ?? a.folder ?? a._id,
               sub: a.classNumber ? `N° ${a.classNumber}` : undefined,
               meta: a.createdAt ? new Date(a.createdAt).toLocaleDateString("fr-FR") : undefined,
               itemType: "archive" as const,
@@ -297,21 +271,12 @@ export default function PhysicalArchiveContent() {
       default:
         return [];
     }
-  }, [currentLevel, containers, shelves, floors, binders, records, documents, isInsideDocument, docArchivesData]);
+  }, [currentLevel, levelData, isInsideDocument, docArchivesData]);
 
+  /** Retrouve l'item brut par son ID dans les données du niveau courant */
   const getItemRaw = useCallback(
-    (id: string) => {
-      const lists: Record<Level, unknown[]> = {
-        container: (containers as Container[]) ?? [],
-        shelf: (shelves as Shelf[]) ?? [],
-        floor: (floors as Floor[]) ?? [],
-        binder: (binders as Binder[]) ?? [],
-        record: (records as PhysicalRecord[]) ?? [],
-        document: (documents as PhysicalDocument[]) ?? [],
-      };
-      return (lists[currentLevel] as Array<{ _id: string }>).find((i) => i._id === id);
-    },
-    [currentLevel, containers, shelves, floors, binders, records, documents]
+    (id: string) => (levelData as Array<{ _id: string }>).find((i) => i._id === id),
+    [levelData]
   );
 
   /** Clic sur un item dans l'explorateur → descend d'un niveau */
