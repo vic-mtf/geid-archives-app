@@ -1,8 +1,13 @@
 /**
- * DashboardSettings — Options de configuration du tableau de bord.
+ * DashboardSettings — Options indispensables pour le tableau de bord d'archivage.
  *
- * Sous-navigation interne avec les 10 options :
- * widgets, ordre, chart, récents, alertes, temps réel, palette, unité, sons, avancé.
+ * Options essentielles pour un système d'archivage robuste :
+ * 1. Widgets visibles — choisir quoi afficher
+ * 2. Seuils DUA — personnaliser la sensibilité des alertes de conservation
+ * 3. Capacité classeurs — seuil d'alerte de remplissage
+ * 4. Archives récentes — profondeur de l'historique visible
+ * 5. Temps réel — Socket.IO pour le multi-utilisateur
+ * 6. Unité par défaut — filtrer par structure organique
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,10 +19,6 @@ import {
   FormControl,
   FormControlLabel,
   InputLabel,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   MenuItem,
   Select,
   Skeleton,
@@ -27,18 +28,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import RestoreOutlinedIcon      from "@mui/icons-material/RestoreOutlined";
-import SaveOutlinedIcon         from "@mui/icons-material/SaveOutlined";
-import WidgetsOutlinedIcon      from "@mui/icons-material/WidgetsOutlined";
-import DashboardOutlinedIcon    from "@mui/icons-material/DashboardOutlined";
-import BarChartOutlinedIcon     from "@mui/icons-material/BarChartOutlined";
-import HistoryOutlinedIcon      from "@mui/icons-material/HistoryOutlined";
-import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import PaletteOutlinedIcon      from "@mui/icons-material/PaletteOutlined";
-import WifiOutlinedIcon         from "@mui/icons-material/WifiOutlined";
-import BusinessOutlinedIcon     from "@mui/icons-material/BusinessOutlined";
-import VolumeUpOutlinedIcon     from "@mui/icons-material/VolumeUpOutlined";
-import DashboardCustomizeOutlinedIcon from "@mui/icons-material/DashboardCustomizeOutlined";
+import RestoreOutlinedIcon       from "@mui/icons-material/RestoreOutlined";
+import SaveOutlinedIcon          from "@mui/icons-material/SaveOutlined";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import { useSnackbar } from "notistack";
@@ -48,47 +39,31 @@ import scrollBarSx from "@/utils/scrollBarSx";
 
 interface DashboardPrefs {
   visibleWidgets: string[];
-  widgetOrder: string[];
   chartType: "pie" | "bar" | "donut" | "list";
   recentCount: number;
   alertThresholds: { duaDays: number; binderCapacity: number };
   autoRefreshSeconds: number;
-  colorPalette: string;
   defaultUnit: string;
   soundNotifications: boolean;
-  customLayout: unknown;
+  [key: string]: unknown;
 }
 
-// ── Sous-sections ────────────────────────────────────────────
-
-const SUB_SECTIONS = [
-  { id: "widgets",  label: "Widgets visibles",         icon: <WidgetsOutlinedIcon fontSize="small" /> },
-  { id: "order",    label: "Priorité d'affichage",     icon: <DashboardOutlinedIcon fontSize="small" /> },
-  { id: "chart",    label: "Type de graphique",         icon: <BarChartOutlinedIcon fontSize="small" /> },
-  { id: "recent",   label: "Archives récentes",         icon: <HistoryOutlinedIcon fontSize="small" /> },
-  { id: "alerts",   label: "Seuils d'alertes",          icon: <NotificationsOutlinedIcon fontSize="small" /> },
-  { id: "realtime", label: "Temps réel",                icon: <WifiOutlinedIcon fontSize="small" /> },
-  { id: "palette",  label: "Palette de couleurs",       icon: <PaletteOutlinedIcon fontSize="small" /> },
-  { id: "unit",     label: "Unité administrative",      icon: <BusinessOutlinedIcon fontSize="small" /> },
-  { id: "sound",    label: "Notifications sonores",     icon: <VolumeUpOutlinedIcon fontSize="small" /> },
-  { id: "advanced", label: "Personnalisation avancée",  icon: <DashboardCustomizeOutlinedIcon fontSize="small" /> },
-];
-
 const WIDGETS = [
-  { id: "stats", label: "Cartes statistiques" }, { id: "recent", label: "Activité récente" },
-  { id: "distribution", label: "Répartition statut" }, { id: "dua", label: "Alertes DUA" },
-  { id: "binders", label: "Classeurs" }, { id: "inventory", label: "Inventaire physique" },
-  { id: "users", label: "Utilisateurs" }, { id: "quickAccess", label: "Accès rapide" },
+  { id: "stats",        label: "Statistiques" },
+  { id: "recent",       label: "Activité récente" },
+  { id: "distribution", label: "Répartition par statut" },
+  { id: "dua",          label: "Alertes DUA" },
+  { id: "binders",      label: "Capacité classeurs" },
+  { id: "inventory",    label: "Inventaire physique" },
+  { id: "users",        label: "Utilisateurs" },
+  { id: "quickAccess",  label: "Accès rapide" },
 ];
 
 const CHART_TYPES = [
-  { value: "donut", label: "Donut" }, { value: "pie", label: "Camembert" },
-  { value: "bar", label: "Barres" }, { value: "list", label: "Liste" },
-];
-
-const PALETTES = [
-  { value: "default", label: "Par défaut" }, { value: "accessible", label: "Accessible" },
-  { value: "monochrome", label: "Monochrome" }, { value: "warm", label: "Tons chauds" }, { value: "cool", label: "Tons froids" },
+  { value: "donut", label: "Donut" },
+  { value: "pie",   label: "Camembert" },
+  { value: "bar",   label: "Barres" },
+  { value: "list",  label: "Liste" },
 ];
 
 // ── Composant ────────────────────────────────────────────────
@@ -101,8 +76,6 @@ export default function DashboardSettings() {
   const [prefs, setPrefs] = useState<DashboardPrefs | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [sub, setSub] = useState("widgets");
-
   const [, execute] = useAxios({ headers }, { manual: true });
 
   useEffect(() => {
@@ -142,109 +115,97 @@ export default function DashboardSettings() {
     });
   }, []);
 
-  if (loading) return <Box p={3}><Stack spacing={2}>{[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={60} />)}</Stack></Box>;
+  if (loading) return <Box p={3}><Stack spacing={2}>{[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={50} />)}</Stack></Box>;
   if (!prefs) return null;
 
   return (
-    <Box display="flex" height="100%" overflow="hidden">
-      {/* Sous-nav des 10 options */}
-      <Box sx={{ width: 220, flexShrink: 0, borderRight: "1px solid", borderColor: "divider", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Box flex={1} overflow="auto" sx={{ ...scrollBarSx }}>
-          <List disablePadding dense>
-            {SUB_SECTIONS.map((s) => (
-              <ListItemButton key={s.id} selected={sub === s.id} onClick={() => setSub(s.id)} sx={{ py: 0.75, px: 1.5 }}>
-                <ListItemIcon sx={{ minWidth: 28, color: sub === s.id ? "primary.main" : "text.secondary" }}>{s.icon}</ListItemIcon>
-                <ListItemText primary={s.label} primaryTypographyProps={{ variant: "caption", fontWeight: sub === s.id ? 600 : 400, noWrap: true }} />
-              </ListItemButton>
-            ))}
-          </List>
-        </Box>
-        <Box px={1} py={1} borderTop={1} borderColor="divider" display="flex" gap={0.5}>
-          <Button size="small" variant="outlined" color="inherit" onClick={handleReset} fullWidth sx={{ fontSize: "0.7rem" }}>
-            <RestoreOutlinedIcon sx={{ fontSize: 14, mr: 0.5 }} /> Réinit.
-          </Button>
-          <Button size="small" variant="contained" onClick={handleSave} disabled={saving} fullWidth sx={{ fontSize: "0.7rem" }}>
-            <SaveOutlinedIcon sx={{ fontSize: 14, mr: 0.5 }} /> {saving ? "…" : "Sauver"}
+    <Box height="100%" overflow="auto" sx={{ ...scrollBarSx }}>
+      {/* Header avec boutons */}
+      <Box px={2.5} py={1.5} display="flex" alignItems="center" justifyContent="space-between" borderBottom={1} borderColor="divider" bgcolor="action.hover">
+        <Typography variant="body1" fontWeight="bold">Tableau de bord</Typography>
+        <Box display="flex" gap={1}>
+          <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset}>Réinitialiser</Button>
+          <Button size="small" variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSave} disabled={saving}>
+            {saving ? "…" : "Enregistrer"}
           </Button>
         </Box>
       </Box>
 
-      {/* Contenu de l'option */}
-      <Box flex={1} overflow="auto" p={{ xs: 2, md: 3 }} sx={{ ...scrollBarSx }}>
-        {sub === "widgets" && <Section title="Widgets visibles" desc="Activez ou désactivez les blocs affichés sur votre tableau de bord.">
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {WIDGETS.map((w) => <Chip key={w.id} label={w.label} variant={prefs.visibleWidgets.includes(w.id) ? "filled" : "outlined"} color={prefs.visibleWidgets.includes(w.id) ? "primary" : "default"} onClick={() => toggleWidget(w.id)} sx={{ cursor: "pointer" }} />)}
-          </Box>
-        </Section>}
+      <Box p={2.5}>
+        <Stack spacing={3}>
 
-        {sub === "order" && <Section title="Priorité d'affichage" desc="Les widgets s'affichent dans cet ordre.">
-          <Stack spacing={0.5}>{prefs.visibleWidgets.map((id, i) => (
-            <Box key={id} display="flex" alignItems="center" gap={1} px={1.5} py={0.5} borderRadius={1} bgcolor="action.hover">
-              <Typography variant="caption" color="text.disabled" width={20}>{i + 1}.</Typography>
-              <Typography variant="body2">{WIDGETS.find((w) => w.id === id)?.label ?? id}</Typography>
+          {/* 1. Widgets visibles */}
+          <Option title="Éléments affichés" desc="Choisissez les blocs d'information à afficher sur votre tableau de bord.">
+            <Box display="flex" flexWrap="wrap" gap={1}>
+              {WIDGETS.map((w) => (
+                <Chip key={w.id} label={w.label}
+                  variant={prefs.visibleWidgets.includes(w.id) ? "filled" : "outlined"}
+                  color={prefs.visibleWidgets.includes(w.id) ? "primary" : "default"}
+                  onClick={() => toggleWidget(w.id)} sx={{ cursor: "pointer" }} />
+              ))}
             </Box>
-          ))}</Stack>
-        </Section>}
+          </Option>
 
-        {sub === "chart" && <Section title="Type de graphique" desc="Visualisation de la répartition des archives.">
-          <FormControl size="small" sx={{ minWidth: 250 }}><InputLabel>Type</InputLabel>
-            <Select value={prefs.chartType} label="Type" onChange={(e) => update("chartType", e.target.value as DashboardPrefs["chartType"])}>
-              {CHART_TYPES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
-            </Select>
-          </FormControl>
-        </Section>}
-
-        {sub === "recent" && <Section title="Archives récentes" desc="Nombre d'archives dans l'activité récente.">
-          <Box maxWidth={350} px={1}>
-            <Slider value={prefs.recentCount} onChange={(_, v) => update("recentCount", v as number)} min={3} max={20} step={1}
-              marks={[{ value: 3, label: "3" }, { value: 8, label: "8" }, { value: 15, label: "15" }, { value: 20, label: "20" }]} valueLabelDisplay="auto" />
-          </Box>
-        </Section>}
-
-        {sub === "alerts" && <Section title="Seuils d'alertes" desc="Sensibilité des alertes DUA et capacité classeurs.">
-          <Stack spacing={2}>
-            <TextField size="small" type="number" label="Jours avant expiration DUA" value={prefs.alertThresholds.duaDays}
+          {/* 2. Seuil DUA */}
+          <Option title="Alerte de conservation (DUA)" desc="Nombre de jours avant l'expiration d'une DUA pour déclencher une alerte. Permet d'anticiper les décisions de sort final.">
+            <TextField size="small" type="number" label="Jours avant expiration" value={prefs.alertThresholds.duaDays}
               onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, duaDays: parseInt(e.target.value) || 30 })}
-              helperText="Alerte quand une DUA est à moins de X jours." sx={{ maxWidth: 300 }} />
-            <TextField size="small" type="number" label="Seuil classeur (%)" value={prefs.alertThresholds.binderCapacity}
+              sx={{ maxWidth: 250 }} />
+          </Option>
+
+          {/* 3. Seuil classeurs */}
+          <Option title="Alerte de capacité physique" desc="Pourcentage de remplissage des classeurs au-delà duquel une alerte apparaît. Permet de planifier l'acquisition de nouveaux supports.">
+            <TextField size="small" type="number" label="Seuil (%)" value={prefs.alertThresholds.binderCapacity}
               onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, binderCapacity: parseInt(e.target.value) || 90 })}
-              helperText="Alerte quand un classeur dépasse ce pourcentage." sx={{ maxWidth: 300 }} />
-          </Stack>
-        </Section>}
+              sx={{ maxWidth: 250 }} />
+          </Option>
 
-        {sub === "realtime" && <Section title="Temps réel (Socket.IO)" desc="Mise à jour instantanée quand d'autres utilisateurs modifient les données.">
-          <FormControlLabel control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
-            label={prefs.autoRefreshSeconds > 0 ? "Activé — temps réel" : "Désactivé"} />
-        </Section>}
+          {/* 4. Profondeur historique */}
+          <Option title="Profondeur de l'historique" desc="Nombre d'archives récentes affichées dans la section activité du tableau de bord.">
+            <Box maxWidth={300}>
+              <Slider value={prefs.recentCount} onChange={(_, v) => update("recentCount", v as number)}
+                min={3} max={20} step={1} valueLabelDisplay="auto"
+                marks={[{ value: 3, label: "3" }, { value: 10, label: "10" }, { value: 20, label: "20" }]} />
+            </Box>
+          </Option>
 
-        {sub === "palette" && <Section title="Palette de couleurs" desc="Couleurs des statuts et graphiques. La palette accessible est pour les daltoniens.">
-          <FormControl size="small" sx={{ minWidth: 250 }}><InputLabel>Palette</InputLabel>
-            <Select value={prefs.colorPalette} label="Palette" onChange={(e) => update("colorPalette", e.target.value)}>
-              {PALETTES.map((p) => <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>)}
-            </Select>
-          </FormControl>
-        </Section>}
+          {/* 5. Type de visualisation */}
+          <Option title="Visualisation de la répartition" desc="Type de graphique pour la répartition des archives par statut.">
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Type</InputLabel>
+              <Select value={prefs.chartType} label="Type" onChange={(e) => update("chartType", e.target.value as DashboardPrefs["chartType"])}>
+                {CHART_TYPES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </Option>
 
-        {sub === "unit" && <Section title="Unité administrative" desc="Filtrer le dashboard par défaut sur une unité. Vide = toutes.">
-          <TextField size="small" label="Unité" value={prefs.defaultUnit} onChange={(e) => update("defaultUnit", e.target.value)}
-            placeholder="DRH, FINANCE…" sx={{ maxWidth: 300 }} />
-        </Section>}
+          {/* 6. Temps réel */}
+          <Option title="Mise à jour en temps réel" desc="Quand activé, le tableau de bord se met à jour instantanément via Socket.IO lorsqu'un autre utilisateur modifie les données.">
+            <FormControlLabel
+              control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
+              label={prefs.autoRefreshSeconds > 0 ? "Activé" : "Désactivé"} />
+          </Option>
 
-        {sub === "sound" && <Section title="Notifications sonores" desc="Signal audio pour les alertes DUA et classeurs pleins.">
-          <FormControlLabel control={<Switch checked={prefs.soundNotifications} onChange={(e) => update("soundNotifications", e.target.checked)} />}
-            label={prefs.soundNotifications ? "Sons activés" : "Sons désactivés"} />
-        </Section>}
+          {/* 7. Unité administrative */}
+          <Option title="Unité administrative par défaut" desc="Restreindre les données du tableau de bord à une unité du cadre organique. Laissez vide pour voir toutes les unités.">
+            <TextField size="small" label="Unité" value={prefs.defaultUnit}
+              onChange={(e) => update("defaultUnit", e.target.value)}
+              placeholder="DRH, FINANCE…" sx={{ maxWidth: 250 }} />
+          </Option>
 
-        {sub === "advanced" && <Section title="Personnalisation avancée" desc="Glisser-déposer, redimensionner, choisir la visualisation par zone.">
-          <Chip label="Bientôt disponible" color="info" variant="outlined" />
-        </Section>}
+        </Stack>
       </Box>
     </Box>
   );
 }
 
-function Section({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
-  return <Box><Typography variant="h6" fontWeight="bold" mb={0.5}>{title}</Typography>
-    <Typography variant="body2" color="text.secondary" mb={2}>{desc}</Typography>
-    <Divider sx={{ mb: 2 }} />{children}</Box>;
+function Option({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
+  return (
+    <Box>
+      <Typography variant="body2" fontWeight="bold" mb={0.25}>{title}</Typography>
+      <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>{desc}</Typography>
+      {children}
+      <Divider sx={{ mt: 2 }} />
+    </Box>
+  );
 }
