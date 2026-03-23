@@ -42,12 +42,13 @@ import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
 
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
-import useAxios  from "@/hooks/useAxios";
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
-import { useSelector }   from "react-redux";
-import type { RootState } from "@/redux/store";
+import useApiCache from "@/hooks/useApiCache";
+import { invalidateCache as invalidateCacheAction } from "@/redux/data";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState, AppDispatch } from "@/redux/store";
 import formatDate from "@/utils/formatTime";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
@@ -66,7 +67,8 @@ function computeExpiresAt(start: Date, value: number, unit: string): Date {
 
 export default function DashboardContent() {
   const Authorization = useToken();
-  const headers       = useMemo(() => ({ Authorization }), [Authorization]);
+  const headers       = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
+  const dispatch      = useDispatch<AppDispatch>();
   const dataVersion   = useSelector((store: RootState) => store.data.dataVersion);
   const navigateTo    = useNavigateSetState();
   const theme         = useTheme();
@@ -78,28 +80,31 @@ export default function DashboardContent() {
     [navigateTo]
   );
 
-  // ── API ──────────────────────────────────────────────────────
+  // ── API avec cache (stale-while-revalidate) ─────────────────
+  // Premier chargement visible, les suivants instantanés depuis le cache
 
-  // Stats globales (utilisateurs + répartition)
-  const [{ data: globalStats, loading: statsLoading }] = useAxios<{
+  const { data: globalStats, loading: statsLoading } = useApiCache<{
     users: { total: number; active: number; inactive: number; withArchiveAccess: number; admins: number; writers: number; readers: number };
     archives: { total: number; pending: number };
     physical: { records: number; documents: number };
-  }>({ url: "/api/stuff/archives/stats/global", headers });
-  const [{ data: archives, loading: archivesLoading }, refetchArchives] =
-    useAxios<Archive[]>({ url: "/api/stuff/archives/archived", headers });
+  }>("/api/stuff/archives/stats/global", headers);
 
-  const [{ data: containers, loading: containersLoading }, refetchContainers] =
-    useAxios<Container[]>({ url: "/api/stuff/archives/physical/containers", headers });
+  const { data: archives, loading: archivesLoading, refetch: refetchArchives } =
+    useApiCache<Archive[]>("/api/stuff/archives/archived", headers);
 
-  const [{ data: binders, loading: bindersLoading }, refetchBinders] =
-    useAxios<Binder[]>({ url: "/api/stuff/archives/physical/binders", headers });
+  const { data: containers, loading: containersLoading, refetch: refetchContainers } =
+    useApiCache<Container[]>("/api/stuff/archives/physical/containers", headers);
 
-  const [{ data: records, loading: recordsLoading }, refetchRecords] =
-    useAxios<PhysicalRecord[]>({ url: "/api/stuff/archives/physical/records", headers });
+  const { data: binders, loading: bindersLoading, refetch: refetchBinders } =
+    useApiCache<Binder[]>("/api/stuff/archives/physical/binders", headers);
 
+  const { data: records, loading: recordsLoading, refetch: refetchRecords } =
+    useApiCache<PhysicalRecord[]>("/api/stuff/archives/physical/records", headers);
+
+  // Quand dataVersion change, invalider le cache et refetch en arrière-plan
   useEffect(() => {
     if (dataVersion > 0) {
+      dispatch(invalidateCacheAction("/api/stuff/archives"));
       refetchArchives();
       refetchContainers();
       refetchBinders();

@@ -46,7 +46,8 @@ import DetailPanel   from "./DetailPanel";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
-import { incrementVersion } from "@/redux/data";
+import { incrementVersion, setCacheEntry, invalidateCache as invalidateCacheAction } from "@/redux/data";
+import type { ApiCacheEntry } from "@/redux/data";
 import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
 import scrollBarSx   from "@/utils/scrollBarSx";
 import PhysicalEntityForm from "@/views/forms/physical/PhysicalEntityForm";
@@ -188,25 +189,66 @@ export default function PhysicalArchiveContent() {
     }
   }, [currentLevel, parentId, parentLevel]);
 
-  // Charger les données quand l'URL change (navigation)
+  // Cache Redux pour les données physiques
+  const apiCache = useSelector((store: RootState) =>
+    (store.data as unknown as Record<string, unknown>).apiCache as Record<string, ApiCacheEntry> | undefined
+  );
+
+  // Charger les données quand l'URL change — cache instantané puis revalidation
   useEffect(() => {
-    if (!currentUrl) { setLevelData([]); return; }
+    if (!currentUrl) { setLevelData([]); setLevelLoading(false); return; }
     let cancelled = false;
-    setLevelLoading(true);
-    executeFetch({ url: currentUrl })
-      .then((res) => { if (!cancelled) setLevelData((res.data as unknown[]) ?? []); })
-      .catch(() => { if (!cancelled) setLevelData([]); })
-      .finally(() => { if (!cancelled) setLevelLoading(false); });
+
+    // Vérifier le cache Redux
+    const cached = apiCache?.[currentUrl];
+    if (cached) {
+      // Cache disponible → afficher instantanément, pas de loading visible
+      setLevelData((cached.data as unknown[]) ?? []);
+      setLevelLoading(false);
+      // Revalider en arrière-plan si stale (> 30s)
+      if (Date.now() - cached.timestamp > 30_000) {
+        executeFetch({ url: currentUrl })
+          .then((res) => {
+            if (!cancelled) {
+              const fresh = (res.data as unknown[]) ?? [];
+              setLevelData(fresh);
+              dispatch(setCacheEntry({ url: currentUrl, data: fresh }));
+            }
+          })
+          .catch(() => {});
+      }
+    } else {
+      // Pas de cache → premier chargement visible
+      setLevelLoading(true);
+      executeFetch({ url: currentUrl })
+        .then((res) => {
+          if (!cancelled) {
+            const fresh = (res.data as unknown[]) ?? [];
+            setLevelData(fresh);
+            dispatch(setCacheEntry({ url: currentUrl, data: fresh }));
+          }
+        })
+        .catch(() => { if (!cancelled) setLevelData([]); })
+        .finally(() => { if (!cancelled) setLevelLoading(false); });
+    }
+
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUrl]);
 
-  // Refetch après une mutation
+  // Refetch après une mutation — invalide le cache et recharge
   useEffect(() => {
-    if (dataVersion > 0 && currentUrl) {
-      executeFetch({ url: currentUrl })
-        .then((res) => setLevelData((res.data as unknown[]) ?? []))
-        .catch(() => {});
+    if (dataVersion > 0) {
+      dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
+      if (currentUrl) {
+        executeFetch({ url: currentUrl })
+          .then((res) => {
+            const fresh = (res.data as unknown[]) ?? [];
+            setLevelData(fresh);
+            dispatch(setCacheEntry({ url: currentUrl, data: fresh }));
+          })
+          .catch(() => {});
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataVersion]);
