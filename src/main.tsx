@@ -7,9 +7,9 @@ import "dayjs/locale/fr";
 import store from "./redux/store";
 import "./styles/index.css";
 import App from "./App";
-import ConfigAppProvider from "./components/ConfigAppProvider";
-import NoticeStackProvider from "./components/NoticeStackProvider";
-import SocketIOProvider from "./components/SocketIOProvider";
+import ConfigAppProvider from "./providers/ConfigAppProvider";
+import NoticeStackProvider from "./providers/NoticeStackProvider";
+import SocketIOProvider from "./providers/SocketIOProvider";
 
 const rootElement = document.getElementById("root");
 

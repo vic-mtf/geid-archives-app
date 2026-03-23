@@ -1,21 +1,23 @@
 /**
  * SettingsContent — Paramètres de l'application.
  *
- * Première section : configuration du tableau de bord (10 options).
- * Les préférences sont sauvegardées côté serveur par utilisateur.
+ * Sous-navigation à gauche avec sections, contenu à droite.
+ * Chaque section a un titre et une mini description.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   Divider,
   FormControl,
   FormControlLabel,
   InputLabel,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   MenuItem,
   Select,
   Skeleton,
@@ -24,10 +26,22 @@ import {
   Switch,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import DashboardOutlinedIcon    from "@mui/icons-material/DashboardOutlined";
 import RestoreOutlinedIcon      from "@mui/icons-material/RestoreOutlined";
 import SaveOutlinedIcon         from "@mui/icons-material/SaveOutlined";
+import WidgetsOutlinedIcon      from "@mui/icons-material/WidgetsOutlined";
+import BarChartOutlinedIcon     from "@mui/icons-material/BarChartOutlined";
+import HistoryOutlinedIcon      from "@mui/icons-material/HistoryOutlined";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
+import PaletteOutlinedIcon      from "@mui/icons-material/PaletteOutlined";
+import TuneOutlinedIcon         from "@mui/icons-material/TuneOutlined";
+import WifiOutlinedIcon         from "@mui/icons-material/WifiOutlined";
+import BusinessOutlinedIcon     from "@mui/icons-material/BusinessOutlined";
+import VolumeUpOutlinedIcon     from "@mui/icons-material/VolumeUpOutlined";
+import DashboardCustomizeOutlinedIcon from "@mui/icons-material/DashboardCustomizeOutlined";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import { useSnackbar } from "notistack";
@@ -48,48 +62,72 @@ interface DashboardPrefs {
   customLayout: unknown;
 }
 
+// ── Sections de navigation ───────────────────────────────────
+
+interface SettingSection {
+  id: string;
+  label: string;
+  desc: string;
+  icon: React.ReactNode;
+}
+
+const SECTIONS: SettingSection[] = [
+  { id: "widgets",       label: "Widgets visibles",          desc: "Choisir les éléments affichés",            icon: <WidgetsOutlinedIcon fontSize="small" /> },
+  { id: "order",         label: "Priorité d'affichage",      desc: "Ordre des widgets sur le dashboard",       icon: <DashboardOutlinedIcon fontSize="small" /> },
+  { id: "chart",         label: "Type de graphique",         desc: "Donut, camembert, barres ou liste",        icon: <BarChartOutlinedIcon fontSize="small" /> },
+  { id: "recent",        label: "Archives récentes",         desc: "Nombre d'éléments dans l'activité",        icon: <HistoryOutlinedIcon fontSize="small" /> },
+  { id: "alerts",        label: "Seuils d'alertes",          desc: "Sensibilité DUA et classeurs",             icon: <NotificationsOutlinedIcon fontSize="small" /> },
+  { id: "realtime",      label: "Temps réel",                desc: "Socket.IO — mise à jour instantanée",      icon: <WifiOutlinedIcon fontSize="small" /> },
+  { id: "palette",       label: "Palette de couleurs",       desc: "Couleurs des statuts et graphiques",       icon: <PaletteOutlinedIcon fontSize="small" /> },
+  { id: "unit",          label: "Unité administrative",      desc: "Filtrer le dashboard par défaut",          icon: <BusinessOutlinedIcon fontSize="small" /> },
+  { id: "sound",         label: "Notifications sonores",     desc: "Alertes audio pour les DUA",               icon: <VolumeUpOutlinedIcon fontSize="small" /> },
+  { id: "advanced",      label: "Personnalisation avancée",  desc: "Layout, taille et visu par zone",          icon: <DashboardCustomizeOutlinedIcon fontSize="small" /> },
+];
+
 // ── Widgets disponibles ──────────────────────────────────────
 
 const WIDGETS = [
-  { id: "stats",        label: "Cartes statistiques",     desc: "Total, en attente, actives, intermédiaires, physique" },
-  { id: "recent",       label: "Activité récente",        desc: "Dernières archives soumises ou modifiées" },
-  { id: "distribution", label: "Répartition par statut",  desc: "Graphique de répartition des archives" },
-  { id: "dua",          label: "Alertes DUA",             desc: "DUA expirées et bientôt expirées" },
-  { id: "binders",      label: "Capacité des classeurs",  desc: "Taux de remplissage des classeurs physiques" },
-  { id: "inventory",    label: "Inventaire physique",     desc: "Compteurs conteneurs, classeurs, dossiers" },
-  { id: "users",        label: "Utilisateurs",            desc: "Stats des comptes et permissions" },
-  { id: "quickAccess",  label: "Accès rapide",            desc: "Liens directs vers les sections" },
+  { id: "stats",        label: "Cartes statistiques" },
+  { id: "recent",       label: "Activité récente" },
+  { id: "distribution", label: "Répartition par statut" },
+  { id: "dua",          label: "Alertes DUA" },
+  { id: "binders",      label: "Capacité des classeurs" },
+  { id: "inventory",    label: "Inventaire physique" },
+  { id: "users",        label: "Utilisateurs" },
+  { id: "quickAccess",  label: "Accès rapide" },
 ];
 
 const CHART_TYPES = [
-  { value: "donut",  label: "Donut (anneau)" },
-  { value: "pie",    label: "Camembert plein" },
-  { value: "bar",    label: "Barres horizontales" },
-  { value: "list",   label: "Liste simple" },
+  { value: "donut", label: "Donut (anneau)" },
+  { value: "pie",   label: "Camembert plein" },
+  { value: "bar",   label: "Barres horizontales" },
+  { value: "list",  label: "Liste simple" },
 ];
 
 const PALETTES = [
-  { value: "default",      label: "Par défaut" },
-  { value: "accessible",   label: "Accessible (daltonien)" },
-  { value: "monochrome",   label: "Monochrome" },
-  { value: "warm",         label: "Tons chauds" },
-  { value: "cool",         label: "Tons froids" },
+  { value: "default",    label: "Par défaut" },
+  { value: "accessible", label: "Accessible (daltonien)" },
+  { value: "monochrome", label: "Monochrome" },
+  { value: "warm",       label: "Tons chauds" },
+  { value: "cool",       label: "Tons froids" },
 ];
 
-// ── Composant ────────────────────────────────────────────────
+// ── Composant principal ──────────────────────────────────────
 
 export default function SettingsContent() {
   const Authorization = useToken();
   const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [prefs, setPrefs] = useState<DashboardPrefs | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeSection, setActiveSection] = useState("widgets");
 
   const [, execute] = useAxios({ headers }, { manual: true });
 
-  // ── Charger les préférences ────────────────────────────────
   useEffect(() => {
     execute({ url: "/api/stuff/archives/prefs/dashboard" })
       .then((res) => setPrefs(res.data as DashboardPrefs))
@@ -98,7 +136,6 @@ export default function SettingsContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Sauvegarder ────────────────────────────────────────────
   const handleSave = useCallback(async () => {
     if (!prefs) return;
     setSaving(true);
@@ -112,7 +149,6 @@ export default function SettingsContent() {
     }
   }, [prefs, execute, enqueueSnackbar]);
 
-  // ── Réinitialiser ──────────────────────────────────────────
   const handleReset = useCallback(async () => {
     try {
       const res = await execute({ url: "/api/stuff/archives/prefs/dashboard", method: "DELETE" });
@@ -123,7 +159,6 @@ export default function SettingsContent() {
     }
   }, [execute, enqueueSnackbar]);
 
-  // ── Helpers de mise à jour ─────────────────────────────────
   const update = useCallback(<K extends keyof DashboardPrefs>(key: K, value: DashboardPrefs[K]) => {
     setPrefs((prev) => prev ? { ...prev, [key]: value } : prev);
   }, []);
@@ -140,8 +175,8 @@ export default function SettingsContent() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 3, width: "100%", height: "100%", overflow: "auto" }}>
-        <Stack spacing={2}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={120} />)}</Stack>
+      <Box sx={{ p: 3, width: "100%", height: "100%" }}>
+        <Stack spacing={2}>{[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={100} />)}</Stack>
       </Box>
     );
   }
@@ -149,159 +184,211 @@ export default function SettingsContent() {
   if (!prefs) return null;
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 }, overflowY: "auto", height: "100%", width: "100%", ...scrollBarSx }}>
-      {/* En-tête */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} flexWrap="wrap" gap={1}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <DashboardOutlinedIcon color="primary" />
-          <Typography variant="h6" fontWeight="bold">Paramètres du tableau de bord</Typography>
+    <Box display="flex" height="100%" width="100%" overflow="hidden">
+
+      {/* ── Sous-navigation gauche ──────────────────────────── */}
+      <Box
+        sx={{
+          width: { xs: "100%", md: 280 },
+          flexShrink: 0,
+          display: isMobile && activeSection ? "none" : "flex",
+          flexDirection: "column",
+          borderRight: { md: "1px solid" },
+          borderColor: "divider",
+          overflow: "hidden",
+        }}>
+        {/* En-tête */}
+        <Box px={2} display="flex" alignItems="center" gap={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" minHeight={42}>
+          <TuneOutlinedIcon fontSize="small" color="action" />
+          <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+            Paramètres
+          </Typography>
         </Box>
-        <Box display="flex" gap={1}>
-          <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset}>
+
+        {/* Liste des sections */}
+        <Box flex={1} overflow="auto" sx={{ ...scrollBarSx }}>
+          <List disablePadding>
+            {SECTIONS.map((s) => (
+              <ListItemButton
+                key={s.id}
+                selected={activeSection === s.id}
+                onClick={() => setActiveSection(s.id)}
+                sx={{ py: 1.25, px: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+                <ListItemIcon sx={{ minWidth: 32, color: activeSection === s.id ? "primary.main" : "text.secondary" }}>
+                  {s.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={s.label}
+                  secondary={s.desc}
+                  primaryTypographyProps={{ variant: "body2", fontWeight: activeSection === s.id ? 600 : 400, noWrap: true }}
+                  secondaryTypographyProps={{ variant: "caption", noWrap: true, color: "text.disabled" }}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+
+        {/* Boutons bas */}
+        <Box px={2} py={1.5} borderTop={1} borderColor="divider" display="flex" gap={1}>
+          <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset} fullWidth>
             Réinitialiser
           </Button>
-          <Button size="small" variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSave} disabled={saving}>
-            {saving ? "Enregistrement…" : "Enregistrer"}
+          <Button size="small" variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSave} disabled={saving} fullWidth>
+            {saving ? "…" : "Enregistrer"}
           </Button>
         </Box>
       </Box>
 
-      <Stack spacing={2.5}>
-        {/* 1. Widgets visibles */}
-        <SettingCard title="1. Widgets visibles" desc="Choisissez les éléments à afficher sur le tableau de bord.">
-          <Box display="flex" flexWrap="wrap" gap={1}>
-            {WIDGETS.map((w) => (
-              <Chip
-                key={w.id}
-                label={w.label}
-                variant={prefs.visibleWidgets.includes(w.id) ? "filled" : "outlined"}
-                color={prefs.visibleWidgets.includes(w.id) ? "primary" : "default"}
-                onClick={() => toggleWidget(w.id)}
-                sx={{ cursor: "pointer" }}
+      {/* ── Contenu de la section active ────────────────────── */}
+      <Box flex={1} overflow="auto" sx={{ p: { xs: 2, md: 3 }, ...scrollBarSx }}>
+        {isMobile && (
+          <Button size="small" onClick={() => setActiveSection("")} sx={{ mb: 1 }}>← Retour</Button>
+        )}
+
+        {activeSection === "widgets" && (
+          <SectionWrapper title="Widgets visibles" desc="Activez ou désactivez les éléments affichés sur votre tableau de bord. Chaque widget peut être masqué sans perdre les données.">
+            <Box display="flex" flexWrap="wrap" gap={1}>
+              {WIDGETS.map((w) => (
+                <Chip
+                  key={w.id}
+                  label={w.label}
+                  variant={prefs.visibleWidgets.includes(w.id) ? "filled" : "outlined"}
+                  color={prefs.visibleWidgets.includes(w.id) ? "primary" : "default"}
+                  onClick={() => toggleWidget(w.id)}
+                  sx={{ cursor: "pointer" }}
+                />
+              ))}
+            </Box>
+          </SectionWrapper>
+        )}
+
+        {activeSection === "order" && (
+          <SectionWrapper title="Priorité d'affichage" desc="Les widgets activés apparaissent dans cet ordre sur le tableau de bord. Désactivez ceux que vous ne souhaitez pas voir.">
+            <Stack spacing={0.5}>
+              {prefs.visibleWidgets.map((id, i) => (
+                <Box key={id} display="flex" alignItems="center" gap={1} px={1.5} py={0.75} borderRadius={1} bgcolor="action.hover">
+                  <Typography variant="caption" color="text.disabled" sx={{ width: 20 }}>{i + 1}.</Typography>
+                  <Typography variant="body2">{WIDGETS.find((w) => w.id === id)?.label ?? id}</Typography>
+                </Box>
+              ))}
+            </Stack>
+          </SectionWrapper>
+        )}
+
+        {activeSection === "chart" && (
+          <SectionWrapper title="Type de graphique" desc="Choisissez le type de visualisation pour la répartition des archives par statut sur le tableau de bord.">
+            <FormControl size="small" sx={{ minWidth: 250 }}>
+              <InputLabel>Type</InputLabel>
+              <Select value={prefs.chartType} label="Type" onChange={(e) => update("chartType", e.target.value as DashboardPrefs["chartType"])}>
+                {CHART_TYPES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </SectionWrapper>
+        )}
+
+        {activeSection === "recent" && (
+          <SectionWrapper title="Archives récentes" desc="Définissez le nombre d'archives affichées dans la section activité récente du tableau de bord.">
+            <Box maxWidth={350} px={1}>
+              <Slider
+                value={prefs.recentCount}
+                onChange={(_, v) => update("recentCount", v as number)}
+                min={3} max={20} step={1}
+                marks={[{ value: 3, label: "3" }, { value: 8, label: "8" }, { value: 15, label: "15" }, { value: 20, label: "20" }]}
+                valueLabelDisplay="auto"
               />
-            ))}
-          </Box>
-        </SettingCard>
+            </Box>
+          </SectionWrapper>
+        )}
 
-        {/* 2. Ordre des widgets (simplifié — liste réordonnée plus tard en drag&drop) */}
-        <SettingCard title="2. Priorité d'affichage" desc="Les widgets activés apparaissent dans l'ordre ci-dessus. Désactivez ceux que vous ne voulez pas voir.">
-          <Typography variant="caption" color="text.secondary">
-            Ordre actuel : {prefs.visibleWidgets.map((id) => WIDGETS.find((w) => w.id === id)?.label ?? id).join(" → ")}
-          </Typography>
-        </SettingCard>
+        {activeSection === "alerts" && (
+          <SectionWrapper title="Seuils d'alertes" desc="Personnalisez la sensibilité des alertes affichées en haut du tableau de bord. Les alertes vous avertissent des situations nécessitant une attention.">
+            <Stack spacing={2}>
+              <TextField
+                size="small" type="number"
+                label="Jours avant expiration DUA"
+                value={prefs.alertThresholds.duaDays}
+                onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, duaDays: parseInt(e.target.value) || 30 })}
+                helperText="Une alerte apparaîtra quand une DUA est à moins de ce nombre de jours de l'expiration."
+                sx={{ maxWidth: 300 }}
+              />
+              <TextField
+                size="small" type="number"
+                label="Seuil de capacité des classeurs (%)"
+                value={prefs.alertThresholds.binderCapacity}
+                onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, binderCapacity: parseInt(e.target.value) || 90 })}
+                helperText="Les classeurs remplis au-delà de ce pourcentage déclenchent une alerte."
+                sx={{ maxWidth: 300 }}
+              />
+            </Stack>
+          </SectionWrapper>
+        )}
 
-        {/* 3. Type de chart */}
-        <SettingCard title="3. Type de graphique" desc="Choisissez comment afficher la répartition des archives par statut.">
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Type de graphique</InputLabel>
-            <Select value={prefs.chartType} label="Type de graphique" onChange={(e) => update("chartType", e.target.value as DashboardPrefs["chartType"])}>
-              {CHART_TYPES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
-            </Select>
-          </FormControl>
-        </SettingCard>
-
-        {/* 4. Nombre d'éléments récents */}
-        <SettingCard title="4. Archives récentes" desc="Nombre d'archives à afficher dans la section activité récente.">
-          <Box px={1} maxWidth={300}>
-            <Slider
-              value={prefs.recentCount}
-              onChange={(_, v) => update("recentCount", v as number)}
-              min={3} max={20} step={1}
-              marks={[{ value: 3, label: "3" }, { value: 8, label: "8" }, { value: 15, label: "15" }, { value: 20, label: "20" }]}
-              valueLabelDisplay="auto"
+        {activeSection === "realtime" && (
+          <SectionWrapper title="Rafraîchissement en temps réel" desc="Le tableau de bord se met à jour automatiquement via Socket.IO quand un autre utilisateur modifie les données du système.">
+            <FormControlLabel
+              control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
+              label={prefs.autoRefreshSeconds > 0 ? "Activé — mise à jour instantanée" : "Désactivé — mise à jour manuelle"}
             />
-          </Box>
-        </SettingCard>
+          </SectionWrapper>
+        )}
 
-        {/* 5. Seuils d'alertes */}
-        <SettingCard title="5. Seuils d'alertes" desc="Personnalisez la sensibilité des alertes du tableau de bord.">
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        {activeSection === "palette" && (
+          <SectionWrapper title="Palette de couleurs" desc="Changez les couleurs utilisées pour les statuts et les graphiques du tableau de bord. La palette accessible est conçue pour les personnes daltoniennes.">
+            <FormControl size="small" sx={{ minWidth: 250 }}>
+              <InputLabel>Palette</InputLabel>
+              <Select value={prefs.colorPalette} label="Palette" onChange={(e) => update("colorPalette", e.target.value)}>
+                {PALETTES.map((p) => <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          </SectionWrapper>
+        )}
+
+        {activeSection === "unit" && (
+          <SectionWrapper title="Unité administrative par défaut" desc="Filtrez le tableau de bord pour n'afficher que les données d'une unité administrative spécifique. Laissez vide pour voir toutes les unités.">
             <TextField
               size="small"
-              type="number"
-              label="Alerte DUA (jours avant expiration)"
-              value={prefs.alertThresholds.duaDays}
-              onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, duaDays: parseInt(e.target.value) || 30 })}
-              sx={{ width: 250 }}
+              label="Unité administrative"
+              value={prefs.defaultUnit}
+              onChange={(e) => update("defaultUnit", e.target.value)}
+              placeholder="Ex : DRH, FINANCE, JURIDIQUE…"
+              helperText="Seules les archives de cette unité seront affichées sur le dashboard."
+              sx={{ maxWidth: 300 }}
             />
-            <TextField
-              size="small"
-              type="number"
-              label="Alerte classeur (% capacité)"
-              value={prefs.alertThresholds.binderCapacity}
-              onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, binderCapacity: parseInt(e.target.value) || 90 })}
-              sx={{ width: 250 }}
+          </SectionWrapper>
+        )}
+
+        {activeSection === "sound" && (
+          <SectionWrapper title="Notifications sonores" desc="Activez un signal sonore quand une alerte DUA apparaît ou qu'un classeur atteint sa capacité maximale. Utile pour les postes de veille.">
+            <FormControlLabel
+              control={<Switch checked={prefs.soundNotifications} onChange={(e) => update("soundNotifications", e.target.checked)} />}
+              label={prefs.soundNotifications ? "Sons activés" : "Sons désactivés"}
             />
-          </Stack>
-        </SettingCard>
+          </SectionWrapper>
+        )}
 
-        {/* 6. Rafraîchissement temps réel (Socket.IO) */}
-        <SettingCard title="6. Rafraîchissement en temps réel" desc="Le tableau de bord se met à jour automatiquement via Socket.IO quand un autre utilisateur modifie les données.">
-          <FormControlLabel
-            control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
-            label={prefs.autoRefreshSeconds > 0 ? "Activé (via Socket.IO)" : "Désactivé"}
-          />
-          <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
-            Quand activé, les archives, l&apos;inventaire physique et les statistiques se mettent à jour instantanément sans recharger la page.
-          </Typography>
-        </SettingCard>
-
-        {/* 7. Palette de couleurs */}
-        <SettingCard title="7. Palette de couleurs" desc="Changez les couleurs des statuts sur le tableau de bord.">
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Palette</InputLabel>
-            <Select value={prefs.colorPalette} label="Palette" onChange={(e) => update("colorPalette", e.target.value)}>
-              {PALETTES.map((p) => <MenuItem key={p.value} value={p.value}>{p.label}</MenuItem>)}
-            </Select>
-          </FormControl>
-        </SettingCard>
-
-        {/* 8. Unité administrative par défaut */}
-        <SettingCard title="8. Unité administrative" desc="Filtrer le tableau de bord sur une unité administrative spécifique.">
-          <TextField
-            size="small"
-            label="Unité (vide = toutes)"
-            value={prefs.defaultUnit}
-            onChange={(e) => update("defaultUnit", e.target.value)}
-            placeholder="Ex: DRH, FINANCE..."
-            sx={{ width: 250 }}
-          />
-        </SettingCard>
-
-        {/* 9. Notifications sonores */}
-        <SettingCard title="9. Notifications sonores" desc="Émettre un son quand une alerte DUA apparaît ou qu'un classeur est plein.">
-          <FormControlLabel
-            control={<Switch checked={prefs.soundNotifications} onChange={(e) => update("soundNotifications", e.target.checked)} />}
-            label={prefs.soundNotifications ? "Activées" : "Désactivées"}
-          />
-        </SettingCard>
-
-        {/* 10. Personnalisation complète */}
-        <SettingCard title="10. Personnalisation avancée" desc="Choisissez le contenu, la position et le type de visualisation de chaque zone du tableau de bord.">
-          <Typography variant="body2" color="text.secondary">
-            La personnalisation avancée permet de réorganiser librement les widgets, choisir leur taille
-            et le type de visualisation (graphique, liste, nombre) pour chaque zone.
-          </Typography>
-          <Box mt={1}>
-            <Chip label="Bientôt disponible" color="info" variant="outlined" size="small" />
-          </Box>
-        </SettingCard>
-      </Stack>
+        {activeSection === "advanced" && (
+          <SectionWrapper title="Personnalisation avancée" desc="Réorganisez librement les widgets, choisissez leur taille et le type de visualisation pour chaque zone du tableau de bord.">
+            <Chip label="Bientôt disponible" color="info" variant="outlined" />
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              Cette fonctionnalité permettra de glisser-déposer les widgets, de redimensionner les zones
+              et de choisir le type de données et de graphique pour chaque emplacement.
+            </Typography>
+          </SectionWrapper>
+        )}
+      </Box>
     </Box>
   );
 }
 
-// ── Sous-composant : carte de paramètre ──────────────────────
+// ── Sous-composant : wrapper de section ──────────────────────
 
-function SettingCard({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
+function SectionWrapper({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Typography variant="body1" fontWeight="bold" mb={0.25}>{title}</Typography>
-        <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>{desc}</Typography>
-        <Divider sx={{ mb: 1.5 }} />
-        {children}
-      </CardContent>
-    </Card>
+    <Box>
+      <Typography variant="h6" fontWeight="bold" mb={0.5}>{title}</Typography>
+      <Typography variant="body2" color="text.secondary" mb={2.5}>{desc}</Typography>
+      <Divider sx={{ mb: 2.5 }} />
+      {children}
+    </Box>
   );
 }
