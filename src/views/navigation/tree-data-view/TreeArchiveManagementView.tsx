@@ -230,7 +230,7 @@ function ArchiveContextMenu({ contextMenu, onClose, canWrite, isAdmin, dispatchA
       {canWrite && norm === "SEMI_ACTIVE" && (
         <MenuItem onClick={() => { dispatchAction("__configure_dua", { doc }); onClose(); }}>
           <ListItemIcon><AccessTimeOutlinedIcon fontSize="small" color="info" /></ListItemIcon>
-          <ListItemText>Configurer DUA</ListItemText>
+          <ListItemText>Définir la durée de conservation</ListItemText>
         </MenuItem>
       )}
 

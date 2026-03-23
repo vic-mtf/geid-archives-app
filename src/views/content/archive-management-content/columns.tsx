@@ -42,7 +42,7 @@ const archiveColumns: GridColDef[] = [
   },
   {
     field: "dua",
-    headerName: "DUA",
+    headerName: "Conservation",
     width: 100,
     sortable: false,
     renderCell: (p) => <DuaCell row={p.row} />,

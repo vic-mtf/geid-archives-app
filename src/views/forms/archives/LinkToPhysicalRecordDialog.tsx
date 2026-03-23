@@ -392,7 +392,7 @@ export default function LinkToPhysicalRecordDialog() {
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Le rattachement a échoué. L'archive n'a pas été modifiée. Vérifiez vos droits et réessayez.", {
+      enqueueSnackbar("Le rattachement n'a pas pu être effectué. L'archive n'a pas été modifiée. Vérifiez vos droits et réessayez.", {
         variant: "error", title: "Rattachement impossible",
       });
     } finally {

@@ -95,7 +95,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
     ...(canWrite && norm !== "DESTROYED" ? [{ title: "Modifier", icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
     ...(canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") ? [{ title: "Dossier physique", icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
-      ? [{ title: "Configurer DUA", icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
+      ? [{ title: "Définir la durée de conservation", icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
       : []),
     ...(isAdmin && norm !== "DESTROYED" ? [{ title: "Supprimer", icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
   ];
@@ -218,7 +218,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
             <Divider />
             <Box px={2} py={1.5}>
               <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                DUA &mdash; Durée d&apos;Utilité Administrative
+                Durée de conservation (DUA)
               </Typography>
               {!dua?.value ? (
                 <Chip icon={<AccessTimeOutlinedIcon />} label="Non configurée" size="small" color="warning" variant="outlined" />

@@ -24,13 +24,13 @@ export default function DuaCell({ row }: DuaCellProps) {
   // La DUA ne s'affiche que pour les archives intermédiaires
   if (norm !== "SEMI_ACTIVE") return null;
 
-  // DUA non configurée — afficher un avertissement
+  // Durée de conservation non définie — afficher un avertissement
   if (!dua?.value || !dua?.unit || !dua?.startDate) {
     return (
-      <Tooltip title="DUA non configurée">
+      <Tooltip title="Durée de conservation non définie">
         <Chip
           icon={<AccessTimeOutlinedIcon />}
-          label="Non config."
+          label="Non définie"
           size="small"
           color="warning"
           variant="outlined"
