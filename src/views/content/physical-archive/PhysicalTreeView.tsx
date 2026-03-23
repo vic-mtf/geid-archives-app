@@ -83,11 +83,17 @@ function getLabel(item: Record<string, unknown>, level: Level): string {
 
 // ── Props ────────────────────────────────────────────────────
 
+/** Élément du chemin de navigation */
+export interface PathItem {
+  id: string;
+  label: string;
+  level: Level;
+}
+
 export interface PhysicalTreeViewProps {
-  /** Headers HTTP (Authorization) */
   headers: Record<string, string>;
-  /** Callback quand un noeud est sélectionné */
-  onSelect?: (nodeId: string, level: Level, label: string) => void;
+  /** Callback quand un noeud est sélectionné — reçoit le CHEMIN COMPLET depuis la racine */
+  onSelect?: (path: PathItem[]) => void;
   /** ID du noeud actuellement sélectionné dans l'explorateur (surbrillance) */
   selectedId?: string | null;
   /** IDs des noeuds à développer (synchronisés avec le breadcrumb de l'explorateur) */
@@ -170,36 +176,39 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     return [...ids];
   }, [nodes, externalExpanded, userToggled]);
 
-  // Rendu récursif des noeuds
-  const renderTree = (nodeList: TreeNode[]): React.ReactNode =>
-    nodeList.map((node) => (
-      <TreeItem
-        key={node.id}
-        nodeId={node.id}
-        label={
-          <Box display="flex" alignItems="center" gap={0.75} py={0.25}>
-            {LEVEL_ICON[node.level]}
-            <Typography variant="body2" noWrap sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}>
-              {node.label}
-            </Typography>
-            {loadingId === node.id && <CircularProgress size={12} sx={{ ml: 0.5 }} />}
-          </Box>
-        }
-        onClick={() => {
-          loadChildren(node);
-          onSelect?.(node.id, node.level, node.label);
-        }}
-        sx={{
-          "& > .MuiTreeItem-content": selectedId === node.id
-            ? { bgcolor: "primary.main", color: "primary.contrastText", borderRadius: 1, "& *": { color: "inherit" } }
-            : {},
-        }}
-      >
-        {/* Placeholder pour que la flèche d'expansion s'affiche */}
-        {!node.loaded ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
-        {node.children && renderTree(node.children)}
-      </TreeItem>
-    ));
+  // Rendu récursif — chaque noeud connaît son chemin complet depuis la racine
+  const renderTree = (nodeList: TreeNode[], parentPath: PathItem[] = []): React.ReactNode =>
+    nodeList.map((node) => {
+      const nodePath: PathItem[] = [...parentPath, { id: node.id, label: node.label, level: node.level }];
+      return (
+        <TreeItem
+          key={node.id}
+          nodeId={node.id}
+          label={
+            <Box display="flex" alignItems="center" gap={0.75} py={0.25}>
+              {LEVEL_ICON[node.level]}
+              <Typography variant="body2" noWrap sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}>
+                {node.label}
+              </Typography>
+              {loadingId === node.id && <CircularProgress size={12} sx={{ ml: 0.5 }} />}
+            </Box>
+          }
+          onClick={() => {
+            loadChildren(node);
+            // Passer le chemin complet au parent — le breadcrumb sera reconstruit
+            onSelect?.(nodePath);
+          }}
+          sx={{
+            "& > .MuiTreeItem-content": selectedId === node.id
+              ? { bgcolor: "primary.main", color: "primary.contrastText", borderRadius: 1, "& *": { color: "inherit" } }
+              : {},
+          }}
+        >
+          {!node.loaded ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
+          {node.children && renderTree(node.children, nodePath)}
+        </TreeItem>
+      );
+    });
 
   // Charger les racines au montage
   React.useEffect(() => { loadRoots(); }, [loadRoots]);
