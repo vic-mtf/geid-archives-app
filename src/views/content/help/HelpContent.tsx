@@ -165,6 +165,11 @@ const SECTIONS: ManualSection[] = [
     body: "Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA (français). Vous pouvez cliquer sur l'icône calendrier pour ouvrir le sélecteur, naviguer entre les mois et les années, ou saisir directement la date au clavier. Les dates sont enregistrées au format international ISO pour garantir la cohérence des données.",
   },
   {
+    id: "arborescence", number: "10.6", title: "L'arborescence interactive",
+    keywords: ["arborescence", "arbre", "tree view", "hiérarchie", "sidebar", "navigation"],
+    body: "Sur les grands écrans, un panneau latéral gauche affiche l'arborescence complète de l'archivage physique sous forme d'arbre interactif. Chaque niveau est identifié par son icône distinctive : entrepôt pour les conteneurs, serveur pour les étagères, couches pour les niveaux, onglets pour les classeurs, dossier pour les dossiers physiques et document pour les documents. Cliquez sur un noeud pour charger ses enfants et sélectionner l'élément dans l'explorateur principal. L'arbre se charge progressivement pour rester performant même avec un grand volume de données.",
+  },
+  {
     id: "recherche", number: "11", title: "Rechercher dans le système",
     keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte"],
     body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents physiques. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents physiques le sujet, la catégorie et la nature.",
