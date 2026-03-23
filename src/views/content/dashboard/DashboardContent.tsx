@@ -46,6 +46,7 @@ import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
 import deepNavigate from "@/utils/deepNavigate";
+import useRealtimeRefresh from "@/hooks/useRealtimeRefresh";
 import useApiCache from "@/hooks/useApiCache";
 import { invalidateCache as invalidateCacheAction } from "@/redux/data";
 import { useSelector, useDispatch } from "react-redux";
@@ -75,6 +76,7 @@ export default function DashboardContent() {
   const theme         = useTheme();
 
   const { canWrite } = useArchivePermissions();
+  useRealtimeRefresh(); // rafraîchissement en temps réel via Socket.IO
 
   const goTo = useCallback(
     (tab: string) => navigateTo({ state: { navigation: { tabs: { option: tab } } } }),

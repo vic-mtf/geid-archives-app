@@ -235,18 +235,15 @@ export default function SettingsContent() {
           </Stack>
         </SettingCard>
 
-        {/* 6. Rafraîchissement auto */}
-        <SettingCard title="6. Rafraîchissement automatique" desc="Mise à jour automatique des données du tableau de bord.">
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Intervalle</InputLabel>
-            <Select value={prefs.autoRefreshSeconds} label="Intervalle" onChange={(e) => update("autoRefreshSeconds", e.target.value as number)}>
-              <MenuItem value={0}>Désactivé</MenuItem>
-              <MenuItem value={30}>30 secondes</MenuItem>
-              <MenuItem value={60}>1 minute</MenuItem>
-              <MenuItem value={120}>2 minutes</MenuItem>
-              <MenuItem value={300}>5 minutes</MenuItem>
-            </Select>
-          </FormControl>
+        {/* 6. Rafraîchissement temps réel (Socket.IO) */}
+        <SettingCard title="6. Rafraîchissement en temps réel" desc="Le tableau de bord se met à jour automatiquement via Socket.IO quand un autre utilisateur modifie les données.">
+          <FormControlLabel
+            control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
+            label={prefs.autoRefreshSeconds > 0 ? "Activé (via Socket.IO)" : "Désactivé"}
+          />
+          <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+            Quand activé, les archives, l&apos;inventaire physique et les statistiques se mettent à jour instantanément sans recharger la page.
+          </Typography>
         </SettingCard>
 
         {/* 7. Palette de couleurs */}
