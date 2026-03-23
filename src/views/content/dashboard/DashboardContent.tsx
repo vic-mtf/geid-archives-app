@@ -163,7 +163,7 @@ export default function DashboardContent() {
 
   // ── Rendu ─────────────────────────────────────────────────────
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2 }, overflowY: "auto", height: "100%" }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2 }, overflowY: "auto", height: "100%", width: "100%" }}>
 
       {/* ── Alertes prioritaires ──────────────────────────── */}
       {(statusCounts.PENDING > 0 || duaExpired.length > 0 || criticalBinders.length > 0) && (
