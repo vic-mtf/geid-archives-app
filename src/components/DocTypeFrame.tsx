@@ -95,9 +95,9 @@ export default function DocTypeFrame({
           onChange={onChangeType}
           value={type}
           noOptionsText="Aucun élement"
-          renderOption={(params, _option) => (
+          renderOption={(params, option) => (
             <MenuItem {...params} sx={{ fontSize: 14 }}>
-              {params.key}
+              {(option as OptionItem).label ?? String(option)}
             </MenuItem>
           )}
           PaperComponent={(params) => (
@@ -145,17 +145,16 @@ export default function DocTypeFrame({
           noOptionsText="Aucun élement"
           onChange={onChangeSubType}
           options={subTypes}
-          renderOption={(params, _option, { index }) => (
+          renderOption={(params, option) => (
             <MenuItem {...params}>
               <Typography
                 variant="caption"
-                key={index}
                 sx={{
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}>
-                {params.key}
+                {(option as OptionItem).label ?? String(option)}
               </Typography>
             </MenuItem>
           )}

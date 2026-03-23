@@ -143,17 +143,10 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
         label: "Libellé",
         helperText: "Description libre de ce compartiment (ex : Dossiers actifs 2023-2024)",
       },
-      {
-        name: "administrativeUnit",
-        label: "Unité administrative (ID) *",
-        required: true,
-        helperText: "Identifiant (_id) du service ou rôle responsable des documents stockés ici",
-      },
     ],
     schema: yup.object({
       number: yup.number().typeError("Doit être un nombre").required("Le numéro est requis").min(1),
       label: yup.string(),
-      administrativeUnit: yup.string().trim().required("L'unité administrative est requise"),
     }),
     buildBody: (data, parentId) => ({ ...data, shelf: parentId }),
   },
