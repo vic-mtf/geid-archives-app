@@ -88,15 +88,15 @@ export interface PhysicalTreeViewProps {
   headers: Record<string, string>;
   /** Callback quand un noeud est sélectionné */
   onSelect?: (nodeId: string, level: Level, label: string) => void;
-  /** ID du noeud actuellement sélectionné dans l'explorateur (pour la surbrillance) */
+  /** ID du noeud actuellement sélectionné dans l'explorateur (surbrillance) */
   selectedId?: string | null;
-  /** Nombre de conteneurs racines (si 0, l'arbre ne s'affiche pas) */
-  hasData?: boolean;
+  /** IDs des noeuds à développer (synchronisés avec le breadcrumb de l'explorateur) */
+  expandedIds?: string[];
 }
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect, selectedId }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -147,20 +147,23 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId }: Phys
     }
   }, [fetchData]);
 
-  // Mise à jour récursive d'un noeud dans l'arbre
-  const expandedIds = useMemo(() => {
-    const ids: string[] = [];
+  // Fusionner les noeuds internes (chargés) avec les IDs externes (breadcrumb)
+  const mergedExpanded = useMemo(() => {
+    const ids = new Set<string>();
+    // IDs internes : noeuds qui ont des enfants chargés
     const collect = (list: TreeNode[]) => {
       list.forEach((n) => {
         if (n.children && n.children.length > 0) {
-          ids.push(n.id);
+          ids.add(n.id);
           collect(n.children);
         }
       });
     };
     collect(nodes);
-    return ids;
-  }, [nodes]);
+    // IDs externes : synchronisés avec le breadcrumb de l'explorateur
+    (externalExpanded ?? []).forEach((id) => ids.add(id));
+    return [...ids];
+  }, [nodes, externalExpanded]);
 
   // Rendu récursif des noeuds
   const renderTree = (nodeList: TreeNode[]): React.ReactNode =>
@@ -196,6 +199,28 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId }: Phys
   // Charger les racines au montage
   React.useEffect(() => { loadRoots(); }, [loadRoots]);
 
+  // Quand le breadcrumb externe change, charger les enfants des noeuds non chargés
+  React.useEffect(() => {
+    if (!externalExpanded?.length) return;
+    const findNode = (list: TreeNode[], id: string): TreeNode | null => {
+      for (const n of list) {
+        if (n.id === id) return n;
+        if (n.children) {
+          const found = findNode(n.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    for (const id of externalExpanded) {
+      const node = findNode(nodes, id);
+      if (node && !node.loaded) {
+        loadChildren(node);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalExpanded]);
+
   return (
     <Box
       sx={{
@@ -210,7 +235,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId }: Phys
         </Box>
       ) : (
         <TreeView
-          defaultExpanded={expandedIds}
+          expanded={mergedExpanded}
           sx={{
             "& .MuiTreeItem-content": { borderRadius: 1, py: 0.25 },
             "& .MuiTreeItem-content:hover": { bgcolor: "action.hover" },
