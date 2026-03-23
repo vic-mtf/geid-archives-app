@@ -33,7 +33,13 @@ import SaveOutlinedIcon          from "@mui/icons-material/SaveOutlined";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import { useSnackbar } from "notistack";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { setCacheEntry } from "@/redux/data";
+import type { ApiCacheEntry } from "@/redux/data";
 import scrollBarSx from "@/utils/scrollBarSx";
+
+const PREFS_CACHE_KEY = "/api/stuff/archives/prefs/dashboard";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -73,35 +79,60 @@ export default function DashboardSettings() {
   const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const { enqueueSnackbar } = useSnackbar();
 
-  const [prefs, setPrefs] = useState<DashboardPrefs | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Lire les prefs depuis le cache Redux (partagé avec le dashboard)
+  const cachedPrefs = useSelector((store: RootState) =>
+    ((store.data as unknown as Record<string, unknown>).apiCache as Record<string, ApiCacheEntry> | undefined)?.[PREFS_CACHE_KEY]
+  );
+
+  const [prefs, setPrefs] = useState<DashboardPrefs | null>((cachedPrefs?.data as DashboardPrefs) ?? null);
+  const [loading, setLoading] = useState(!cachedPrefs);
   const [saving, setSaving] = useState(false);
   const [, execute] = useAxios({ headers }, { manual: true });
 
+  // Charger depuis l'API si pas en cache
   useEffect(() => {
-    execute({ url: "/api/stuff/archives/prefs/dashboard" })
-      .then((res) => setPrefs(res.data as DashboardPrefs))
+    if (cachedPrefs) {
+      setPrefs(cachedPrefs.data as DashboardPrefs);
+      setLoading(false);
+      return;
+    }
+    execute({ url: PREFS_CACHE_KEY })
+      .then((res) => {
+        const data = res.data as DashboardPrefs;
+        setPrefs(data);
+        dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data }));
+      })
       .catch(() => {}).finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Synchroniser le state local avec Redux à chaque modification
+  useEffect(() => {
+    if (prefs) dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
+  }, [prefs, dispatch]);
 
   const handleSave = useCallback(async () => {
     if (!prefs) return;
     setSaving(true);
     try {
-      await execute({ url: "/api/stuff/archives/prefs/dashboard", method: "PUT", data: prefs });
+      await execute({ url: PREFS_CACHE_KEY, method: "PUT", data: prefs });
+      dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
       enqueueSnackbar("Vos choix ont été enregistrés.", { variant: "success" });
     } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
     finally { setSaving(false); }
-  }, [prefs, execute, enqueueSnackbar]);
+  }, [prefs, execute, dispatch, enqueueSnackbar]);
 
   const handleReset = useCallback(async () => {
     try {
-      const res = await execute({ url: "/api/stuff/archives/prefs/dashboard", method: "DELETE" });
-      setPrefs((res.data as { prefs: DashboardPrefs }).prefs);
+      const res = await execute({ url: PREFS_CACHE_KEY, method: "DELETE" });
+      const fresh = (res.data as { prefs: DashboardPrefs }).prefs;
+      setPrefs(fresh);
+      dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: fresh }));
       enqueueSnackbar("Les réglages par défaut ont été rétablis.", { variant: "info" });
     } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
-  }, [execute, enqueueSnackbar]);
+  }, [execute, dispatch, enqueueSnackbar]);
 
   const update = useCallback(<K extends keyof DashboardPrefs>(key: K, val: DashboardPrefs[K]) => {
     setPrefs((p) => p ? { ...p, [key]: val } : p);
