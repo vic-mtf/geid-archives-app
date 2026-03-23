@@ -28,8 +28,8 @@ import {
   useTheme,
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
-import StorageRoundedIcon        from "@mui/icons-material/StorageRounded";
-import QrCodeRoundedIcon         from "@mui/icons-material/QrCodeRounded";
+import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
+import HistoryRoundedIcon        from "@mui/icons-material/HistoryRounded";
 import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import CheckCircleOutlineIcon    from "@mui/icons-material/CheckCircleOutline";
@@ -234,8 +234,8 @@ export default function DashboardContent() {
           { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", highlight: statusCounts.PENDING > 0 },
           { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager" },
           { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveOutlinedIcon />, color: "info.main", tab: "archiveManager" },
-          { label: "Locaux physiques", value: containerList.length, icon: <StorageRoundedIcon />, color: "secondary.main", tab: "physicalArchive" },
-          { label: "Dossiers", value: recordList.length, icon: <QrCodeRoundedIcon />, color: "text.primary", tab: "physicalArchive" },
+          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <HistoryRoundedIcon />, color: "#9c27b0", tab: "archiveManager" },
+          { label: "Conteneurs", value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
         ].map((s) => (
           <Grid item xs={6} sm={4} md={2} key={s.label}>
             <StatCard

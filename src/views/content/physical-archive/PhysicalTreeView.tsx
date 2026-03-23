@@ -8,7 +8,7 @@
  * Hiérarchie : Conteneur → Étagère → Niveau → Classeur → Dossier → Document
  */
 
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { TreeView } from "@mui/x-tree-view/TreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
@@ -18,8 +18,11 @@ import ViewStreamOutlinedIcon     from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon          from "@mui/icons-material/StyleOutlined";
 import FolderOutlinedIcon         from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon          from "@mui/icons-material/TopicOutlined";
+import ExpandMoreRoundedIcon      from "@mui/icons-material/ExpandMoreRounded";
+import ChevronRightRoundedIcon    from "@mui/icons-material/ChevronRightRounded";
 import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
+import InlineEditableLabel from "./InlineEditableLabel";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -92,22 +95,28 @@ export interface PathItem {
 
 export interface PhysicalTreeViewProps {
   headers: Record<string, string>;
-  /** Callback quand un noeud est sélectionné — reçoit le CHEMIN COMPLET depuis la racine */
   onSelect?: (path: PathItem[]) => void;
-  /** ID du noeud actuellement sélectionné dans l'explorateur (surbrillance) */
   selectedId?: string | null;
-  /** IDs des noeuds à développer (synchronisés avec le breadcrumb de l'explorateur) */
   expandedIds?: string[];
+  /** Compteur de version — quand il change, l'arbre recharge ses racines */
+  dataVersion?: number;
+  /** Menu contextuel (clic droit) sur un noeud */
+  onContextMenu?: (e: React.MouseEvent, id: string, label: string, level: Level) => void;
+  /** L'utilisateur peut modifier (renommer, etc.) */
+  canWrite?: boolean;
+  /** Renommer un noeud — appelé avec (id, level, newValue) */
+  onRename?: (id: string, level: Level, newValue: string) => Promise<void>;
 }
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, canWrite, onRename }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
-  // IDs togglés manuellement par l'utilisateur (expand/collapse)
-  const [userToggled, setUserToggled] = useState<Set<string>>(new Set());
+
+  // État d'expansion unique — géré directement par onNodeToggle
+  const [expanded, setExpanded] = useState<string[]>([]);
 
   const [, fetchData] = useAxios({ headers }, { manual: true });
 
@@ -129,7 +138,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     }
   }, [initialized, fetchData]);
 
-  // Charger les enfants d'un noeud au clic
+  // Charger les enfants d'un noeud
   const loadChildren = useCallback(async (node: TreeNode) => {
     if (node.loaded) return;
     const nextLevel = CHILD_LEVEL[node.level];
@@ -148,6 +157,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
       }));
 
       setNodes((prev) => updateNode(prev, node.id, { children, loaded: true }));
+      // Auto-ouvrir le noeud quand les enfants sont chargés
+      setExpanded((prev) => prev.includes(node.id) ? prev : [...prev, node.id]);
     } catch {
       setNodes((prev) => updateNode(prev, node.id, { children: [], loaded: true }));
     } finally {
@@ -155,26 +166,19 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     }
   }, [fetchData]);
 
-  // Fusionner : noeuds chargés + breadcrumb externe - noeuds fermés par l'utilisateur
-  const mergedExpanded = useMemo(() => {
-    const ids = new Set<string>();
-    const collect = (list: TreeNode[]) => {
-      list.forEach((n) => {
-        if (n.children && n.children.length > 0) {
-          ids.add(n.id);
-          collect(n.children);
-        }
-      });
+  // Map id→node pour accès rapide dans onNodeToggle
+  const nodeMapRef = React.useRef<Map<string, TreeNode>>(new Map());
+  React.useEffect(() => {
+    const map = new Map<string, TreeNode>();
+    const walk = (list: TreeNode[]) => {
+      for (const n of list) {
+        map.set(n.id, n);
+        if (n.children) walk(n.children);
+      }
     };
-    collect(nodes);
-    (externalExpanded ?? []).forEach((id) => ids.add(id));
-    // Retirer les noeuds fermés manuellement par l'utilisateur
-    userToggled.forEach((id) => {
-      if (ids.has(id)) ids.delete(id);
-      else ids.add(id);
-    });
-    return [...ids];
-  }, [nodes, externalExpanded, userToggled]);
+    walk(nodes);
+    nodeMapRef.current = map;
+  }, [nodes]);
 
   // Rendu récursif — chaque noeud connaît son chemin complet depuis la racine
   const renderTree = (nodeList: TreeNode[], parentPath: PathItem[] = []): React.ReactNode =>
@@ -185,22 +189,40 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
           key={node.id}
           nodeId={node.id}
           label={
-            <Box display="flex" alignItems="center" gap={0.75} py={0.25}>
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={0.75}
+              py={0.25}
+              onClick={() => {
+                loadChildren(node);
+                setExpanded((prev) => prev.includes(node.id) ? prev : [...prev, node.id]);
+                onSelect?.(nodePath);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onContextMenu?.(e, node.id, node.label, node.level);
+              }}
+            >
               {LEVEL_ICON[node.level]}
-              <Typography variant="body2" noWrap sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}>
-                {node.label}
-              </Typography>
+              <InlineEditableLabel
+                value={node.label}
+                editable={canWrite ?? false}
+                onSave={async (newValue) => {
+                  await onRename?.(node.id, node.level, newValue);
+                  setNodes((prev) => updateNode(prev, node.id, { label: newValue }));
+                }}
+                variant="body2"
+                noWrap
+                sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}
+              />
               {loadingId === node.id && <CircularProgress size={12} sx={{ ml: 0.5 }} />}
             </Box>
           }
-          onClick={() => {
-            loadChildren(node);
-            // Passer le chemin complet au parent — le breadcrumb sera reconstruit
-            onSelect?.(nodePath);
-          }}
           sx={{
             "& > .MuiTreeItem-content": selectedId === node.id
-              ? { bgcolor: "primary.main", color: "primary.contrastText", borderRadius: 1, "& *": { color: "inherit" } }
+              ? { bgcolor: "action.selected", fontWeight: 500 }
               : {},
           }}
         >
@@ -213,24 +235,75 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   // Charger les racines au montage
   React.useEffect(() => { loadRoots(); }, [loadRoots]);
 
-  // Quand le breadcrumb externe change, réinitialiser les toggles manuels
-  // et charger les enfants des noeuds non chargés
+  // Recharger l'arbre quand les données changent (suppression, création, etc.)
   React.useEffect(() => {
-    // Réinitialiser les toggles pour suivre exactement le breadcrumb
-    setUserToggled(new Set());
-    if (!externalExpanded?.length) return;
-    const findNode = (list: TreeNode[], id: string): TreeNode | null => {
-      for (const n of list) {
-        if (n.id === id) return n;
-        if (n.children) {
-          const found = findNode(n.children, id);
-          if (found) return found;
+    if (!dataVersion || dataVersion <= 0) return;
+
+    const reloadTree = async () => {
+      try {
+        const res = await fetchData({ url: `${BASE}/containers` });
+        const items = (res.data as Record<string, unknown>[]) ?? [];
+        let tree: TreeNode[] = items.map((item) => ({
+          id: item._id as string,
+          label: getLabel(item, "container"),
+          level: "container" as Level,
+          loaded: false,
+        }));
+
+        // Ré-ouvrir le chemin le long du breadcrumb externe
+        const newExpanded: string[] = [];
+        if (externalExpanded?.length) {
+          for (const expandedId of externalExpanded) {
+            const node = findInTree(tree, expandedId);
+            if (node && !node.loaded) {
+              const nextLevel = CHILD_LEVEL[node.level];
+              if (nextLevel) {
+                try {
+                  const url = childUrl(nextLevel, node.id, node.level);
+                  const childRes = await fetchData({ url });
+                  const childItems = (childRes.data as Record<string, unknown>[]) ?? [];
+                  const children: TreeNode[] = childItems.map((item) => ({
+                    id: item._id as string,
+                    label: getLabel(item, nextLevel),
+                    level: nextLevel,
+                    loaded: false,
+                  }));
+                  tree = updateNode(tree, node.id, { children, loaded: true });
+                  newExpanded.push(node.id);
+                } catch { /* ignore */ }
+              }
+            }
+          }
         }
+
+        setNodes(tree);
+        setExpanded(newExpanded);
+        setInitialized(true);
+      } catch {
+        setNodes([]);
+        setInitialized(true);
       }
-      return null;
     };
+
+    reloadTree();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataVersion]);
+
+  // Quand le breadcrumb change depuis l'explorateur, ouvrir les noeuds du chemin
+  // et charger les enfants non chargés
+  React.useEffect(() => {
+    if (!externalExpanded?.length) return;
+
+    // Ajouter les IDs du chemin à expanded
+    setExpanded((prev) => {
+      const set = new Set(prev);
+      externalExpanded.forEach((id) => set.add(id));
+      return [...set];
+    });
+
+    // Charger les enfants non chargés
     for (const id of externalExpanded) {
-      const node = findNode(nodes, id);
+      const node = findInTree(nodes, id);
       if (node && !node.loaded) {
         loadChildren(node);
       }
@@ -252,27 +325,32 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         </Box>
       ) : (
         <TreeView
-          expanded={mergedExpanded}
+          defaultCollapseIcon={<ExpandMoreRoundedIcon sx={{ fontSize: 20, color: "text.secondary" }} />}
+          defaultExpandIcon={<ChevronRightRoundedIcon sx={{ fontSize: 20, color: "text.secondary" }} />}
+          expanded={expanded}
           onNodeToggle={(_e: React.SyntheticEvent, nodeIds: string[]) => {
-            // Calculer la différence pour savoir quel noeud a été togglé
-            const expanded = new Set(mergedExpanded);
-            const newExpanded = new Set(nodeIds);
-            setUserToggled((prev) => {
-              const next = new Set(prev);
-              // Noeuds qui ont été ouverts
-              newExpanded.forEach((id) => {
-                if (!expanded.has(id)) next.delete(id); // retirer du toggle = réouvrir
-              });
-              // Noeuds qui ont été fermés
-              expanded.forEach((id) => {
-                if (!newExpanded.has(id)) next.add(id); // ajouter au toggle = fermer
-              });
-              return next;
-            });
+            // Chevron cliqué → toggle direct
+            setExpanded(nodeIds);
+            // Charger les enfants des noeuds nouvellement ouverts
+            const prev = new Set(expanded);
+            for (const id of nodeIds) {
+              if (!prev.has(id)) {
+                const node = nodeMapRef.current.get(id);
+                if (node && !node.loaded) loadChildren(node);
+              }
+            }
           }}
           sx={{
-            "& .MuiTreeItem-content": { borderRadius: 1, py: 0.25 },
+            "& .MuiTreeItem-content": { borderRadius: 1, py: 0.25, cursor: "pointer" },
             "& .MuiTreeItem-content:hover": { bgcolor: "action.hover" },
+            "& .MuiTreeItem-iconContainer": { color: "text.secondary" },
+            // Lignes de connexion verticales et horizontales entre les niveaux
+            "& .MuiTreeItem-group": {
+              ml: 2,
+              pl: 1.5,
+              borderLeft: "1px solid",
+              borderColor: "divider",
+            },
           }}
         >
           {renderTree(nodes)}
@@ -282,7 +360,19 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   );
 }
 
-// ── Utilitaire : mise à jour récursive d'un noeud ────────────
+// ── Utilitaires ───────────────────────────────────────────────
+
+/** Recherche récursive d'un noeud par ID */
+function findInTree(nodes: TreeNode[], id: string): TreeNode | null {
+  for (const n of nodes) {
+    if (n.id === id) return n;
+    if (n.children) {
+      const found = findInTree(n.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
 function updateNode(
   nodes: TreeNode[],

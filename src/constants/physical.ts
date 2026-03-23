@@ -57,6 +57,26 @@ export const DELETE_ENDPOINTS: Record<PhysicalLevel, string> = {
   document:  `${PHYSICAL_API_BASE}/documents`,
 };
 
+/** Endpoints de mise à jour par niveau */
+export const UPDATE_ENDPOINTS: Record<PhysicalLevel, string> = {
+  container: `${PHYSICAL_API_BASE}/containers`,
+  shelf:     `${PHYSICAL_API_BASE}/shelves`,
+  floor:     `${PHYSICAL_API_BASE}/floors`,
+  binder:    `${PHYSICAL_API_BASE}/binders`,
+  record:    `${PHYSICAL_API_BASE}/records`,
+  document:  `${PHYSICAL_API_BASE}/documents`,
+};
+
+/** Champ principal à modifier lors d'un renommage inline */
+export const RENAME_FIELD: Record<PhysicalLevel, string> = {
+  container: "name",
+  shelf:     "name",
+  floor:     "label",
+  binder:    "name",
+  record:    "internalNumber",
+  document:  "title",
+};
+
 // ── Navigation — niveau suivant ──────────────────────────────
 
 /** Quand on clique sur un élément de ce niveau, on descend au niveau suivant */

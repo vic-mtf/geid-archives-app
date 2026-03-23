@@ -41,8 +41,8 @@ import NavigateNextRoundedIcon      from "@mui/icons-material/NavigateNextRounde
 
 import useAxios      from "@/hooks/useAxios";
 import useToken      from "@/hooks/useToken";
-import type { PhysicalLevel } from "@/constants/physical";
-import DetailPanel   from "./DetailPanel";
+import { type PhysicalLevel, UPDATE_ENDPOINTS, RENAME_FIELD } from "@/constants/physical";
+import InlineEditableLabel from "./InlineEditableLabel";
 import { useSnackbar } from "notistack";
 import { useLocation } from "react-router-dom";
 import type { DeepTarget } from "@/utils/deepNavigate";
@@ -57,6 +57,7 @@ import PhysicalEntityForm from "@/views/forms/physical/PhysicalEntityForm";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
 import PhysicalTreeView  from "./PhysicalTreeView";
 import PhysicalSearch    from "./PhysicalSearch";
+import DetailPanel       from "./DetailPanel";
 import PhysicalContextMenu, { type ContextMenuState } from "./PhysicalContextMenu";
 
 // ── Types locaux ───────────────────────────────────────────
@@ -136,28 +137,40 @@ export default function PhysicalArchiveContent() {
       setDeleteTarget(null);
       setSelected(null);
 
-      // Si on était dans l'élément supprimé, remonter d'un niveau
-      if (breadcrumb.length > 0 && breadcrumb[breadcrumb.length - 1].id === deletedId) {
-        setBreadcrumb((prev) => prev.slice(0, -1));
+      // Calculer le nouveau breadcrumb après suppression
+      let newBreadcrumb = [...breadcrumb];
+      if (newBreadcrumb.length > 0 && newBreadcrumb[newBreadcrumb.length - 1].id === deletedId) {
+        newBreadcrumb = newBreadcrumb.slice(0, -1);
       }
+      setBreadcrumb(newBreadcrumb);
 
-      // Rafraîchir les données — invalider le cache + forcer un nouveau fetch
+      // Invalider tout le cache physique dans Redux
       dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
       dispatch(incrementVersion());
 
-      // Forcer le refetch immédiat de la vue courante (le cache vient d'être invalidé)
-      setTimeout(() => {
-        const url = currentUrl;
-        if (url) {
-          executeFetch({ url })
-            .then((res) => {
-              const fresh = (res.data as unknown[]) ?? [];
-              setLevelData(fresh);
-              dispatch(setCacheEntry({ url, data: fresh }));
-            })
-            .catch(() => {});
-        }
-      }, 100);
+      // Calculer l'URL du niveau APRÈS suppression et forcer le refetch
+      const base = "/api/stuff/archives/physical";
+      const newParentId = newBreadcrumb.length > 0 ? newBreadcrumb[newBreadcrumb.length - 1].id : undefined;
+      const newParentLevel = newBreadcrumb.length > 0 ? newBreadcrumb[newBreadcrumb.length - 1].level : undefined;
+      const nextLevels: Record<string, string> = { container: "shelf", shelf: "floor", floor: "binder", binder: "record", record: "document", document: "document" };
+      const newLevel = newBreadcrumb.length > 0 ? nextLevels[newBreadcrumb[newBreadcrumb.length - 1].level] : "container";
+
+      let refetchUrl: string;
+      if (newLevel === "container") refetchUrl = `${base}/containers`;
+      else if (newLevel === "shelf") refetchUrl = `${base}/shelves/container/${newParentId}`;
+      else if (newLevel === "floor") refetchUrl = `${base}/floors/shelf/${newParentId}`;
+      else if (newLevel === "binder") refetchUrl = `${base}/binders/floor/${newParentId}`;
+      else if (newLevel === "record") refetchUrl = `${base}/records/binder/${newParentId}`;
+      else refetchUrl = newParentLevel === "record" ? `${base}/documents/record/${newParentId}` : `${base}/documents/parent/${newParentId}`;
+
+      // Refetch immédiat avec la bonne URL
+      executeFetch({ url: refetchUrl })
+        .then((res) => {
+          const fresh = (res.data as unknown[]) ?? [];
+          setLevelData(fresh);
+          dispatch(setCacheEntry({ url: refetchUrl, data: fresh }));
+        })
+        .catch(() => setLevelData([]));
 
       // Notification de succès
       enqueueSnackbar(
@@ -364,8 +377,7 @@ export default function PhysicalArchiveContent() {
     setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
   }, [currentLevel, getItemRaw]);
 
-  /** Navigation depuis l'arbre → synchronise l'explorateur avec le chemin complet.
-   *  Le breadcrumb est reconstruit exactement comme le chemin dans l'arbre. */
+  /** Navigation depuis l'arbre → synchronise l'explorateur avec le chemin complet */
   const handleNavigateFromTree = useCallback((path: Array<{ id: string; label: string; level: Level }>) => {
     setBreadcrumb(path);
     setSelected(null);
@@ -418,6 +430,7 @@ export default function PhysicalArchiveContent() {
   useHighlightElement(deepPhysicalLastId);
 
   const showDetail = selected !== null;
+  const insideContainer = breadcrumb.length > 0;
 
   return (
     <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
@@ -451,69 +464,86 @@ export default function PhysicalArchiveContent() {
           </React.Fragment>
         ))}
         <Box flex={1} />
+        <Box sx={{ width: { xs: 150, sm: 220, md: 280 } }}>
+          <PhysicalSearch headers={headers} onNavigate={handleNavigateFromSearch} />
+        </Box>
       </Box>
 
       {/* ── Contenu principal : arbre + explorateur + détail ────── */}
       <Box display="flex" flex={1} overflow="hidden">
 
-        {/* ── Sidebar arborescence (lg+ uniquement, si des conteneurs existent) ── */}
-        {items.length > 0 || breadcrumb.length > 0 ? (
-          <Box
-            sx={{
-              width: { lg: 300, xl: 340 },
-              flexShrink: 0,
-              display: { xs: "none", md: "flex" },
-              flexDirection: "column",
-              borderRight: "1px solid",
-              borderColor: "divider",
-              overflow: "hidden",
-            }}>
-            {/* En-tête : titre + bouton ajouter — même hauteur que le header du milieu */}
-            <Box px={1.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" minHeight={42}>
-              <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
-                Arborescence
+        {/* ── Sidebar arborescence (visible uniquement dans un conteneur) ── */}
+        {insideContainer && (
+        <Box sx={{
+          width: { lg: 300, xl: 340 },
+          flexShrink: 0,
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          borderRight: "1px solid",
+          borderColor: "divider",
+          overflow: "hidden",
+        }}>
+          <Box px={1.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" minHeight={42}>
+            <Box display="flex" alignItems="center" gap={0.5} flex={1}>
+              <WarehouseOutlinedIcon sx={{ fontSize: 16, color: levelConfig.container.color }} />
+              <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
+                Conteneurs
               </Typography>
-              <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
-                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
+            </Box>
+            {canWrite && (
+              <Tooltip title="Nouveau conteneur">
+                <IconButton size="small" onClick={() => { setFormLevel("container"); setFormParentId(undefined); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
-            </Box>
-            {/* Recherche — entre le header et l'arbre */}
-            <Box px={1} py={0.75} borderBottom={1} borderColor="divider">
-              <PhysicalSearch headers={headers} onNavigate={handleNavigateFromSearch} />
-            </Box>
-            <PhysicalTreeView
-              headers={headers}
-              selectedId={parentId ?? null}
-              expandedIds={breadcrumb.map((b) => b.id)}
-              onSelect={handleNavigateFromTree}
-            />
+            )}
           </Box>
-        ) : null}
+          <PhysicalTreeView
+            headers={headers}
+            selectedId={parentId ?? null}
+            expandedIds={breadcrumb.map((b) => b.id)}
+            onSelect={handleNavigateFromTree}
+            dataVersion={dataVersion}
+            canWrite={canWrite}
+            onContextMenu={(e, id, label, level) => {
+              e.preventDefault();
+              setContextMenu({ mouseX: e.clientX, mouseY: e.clientY, itemId: id, itemLabel: label, level });
+            }}
+            onRename={async (id, level, newValue) => {
+              const field = RENAME_FIELD[level];
+              await executeFetch({ url: `${UPDATE_ENDPOINTS[level]}/${id}`, method: "PUT", data: { [field]: newValue } });
+              setBreadcrumb((prev) => prev.map((b) => b.id === id ? { ...b, label: newValue } : b));
+              dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
+              dispatch(incrementVersion());
+            }}
+          />
+        </Box>
+        )}
 
-        {/* ── Panneau central : explorateur de fichiers ──────── */}
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            display: isMobile && showDetail ? "none" : "flex",
-            flexDirection: "column",
-            borderRight: showDetail ? { xs: "none", md: "1px solid" } : "none",
-            borderColor: "divider",
-            overflow: "hidden",
-          }}>
-
-          {/* Titre contextuel — même hauteur que le header arborescence */}
-          <Box
-            px={2}
-            display="flex"
-            alignItems="center"
-            gap={1}
-            borderBottom={1}
-            borderColor="divider"
-            bgcolor="action.hover"
-            minHeight={42}>
+        {/* ── Panneau central (toujours visible) ──────── */}
+        <Box sx={{
+          flex: 1, minWidth: 0,
+          display: isMobile && showDetail ? "none" : "flex",
+          flexDirection: "column",
+          borderRight: showDetail ? { xs: "none", md: "1px solid" } : "none",
+          borderColor: "divider", overflow: "hidden",
+        }}>
+          <Box px={2} display="flex" alignItems="center" gap={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" minHeight={42}>
+            {insideContainer && (() => {
+              const parent = breadcrumb[breadcrumb.length - 1];
+              const parentConfig = levelConfig[parent.level];
+              return (
+                <>
+                  <Box sx={{ color: parentConfig.color, display: "flex" }}>
+                    {React.cloneElement(parentConfig.icon as React.ReactElement, { fontSize: "small" })}
+                  </Box>
+                  <Typography variant="body2" fontWeight="bold" color={parentConfig.color} noWrap sx={{ maxWidth: { xs: 80, sm: 150 } }}>
+                    {parent.label}
+                  </Typography>
+                  <NavigateNextRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} />
+                </>
+              );
+            })()}
             <Box sx={{ color: levelConfig[currentLevel].color, display: "flex" }}>
               {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
             </Box>
@@ -525,12 +555,13 @@ export default function PhysicalArchiveContent() {
               : <Chip label={items.length} size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
             }
             <Box flex={1} />
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: { xs: 70, sm: 100, md: 120 }, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", sm: "block" } }}>
-              Type
-            </Typography>
-            <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: { sm: 80, md: 100 }, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", md: "block" } }}>
-              Info
-            </Typography>
+            {canWrite && (
+              <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
+                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
+                  <AddRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
 
           {/* Ligne parent (..) pour remonter */}
@@ -606,27 +637,28 @@ export default function PhysicalArchiveContent() {
                         : React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })
                       }
                     </Box>
-                    {/* Nom + sous-titre */}
+                    {/* Nom (renommable au double-clic) + sous-titre */}
                     <Box flex={1} minWidth={0}>
-                      <Typography variant="body2" noWrap fontWeight={500}>
-                        {item.label}
-                      </Typography>
+                      <InlineEditableLabel
+                        value={item.label}
+                        editable={canWrite && item.itemType !== "archive"}
+                        onSave={async (newValue) => {
+                          const field = RENAME_FIELD[currentLevel];
+                          await executeFetch({ url: `${UPDATE_ENDPOINTS[currentLevel]}/${item.id}`, method: "PUT", data: { [field]: newValue } });
+                          setBreadcrumb((prev) => prev.map((b) => b.id === item.id ? { ...b, label: newValue } : b));
+                          dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
+                          dispatch(incrementVersion());
+                        }}
+                        variant="body2"
+                        fontWeight={500}
+                        noWrap
+                      />
                       {item.sub && (
                         <Typography variant="caption" color="text.secondary" noWrap>
                           {item.sub}
                         </Typography>
                       )}
                     </Box>
-                    {/* Type — masqué sur mobile */}
-                    <Typography variant="caption" color="text.secondary" noWrap sx={{ width: { xs: 70, sm: 100, md: 120 }, textAlign: "right", flexShrink: 0, display: { xs: "none", sm: "block" } }}>
-                      {item.itemType === "archive" ? "Archive" : levelConfig[currentLevel].label}
-                    </Typography>
-                    {/* Info / méta — masqué sur mobile et tablette */}
-                    {item.meta && (
-                      <Typography variant="caption" color="text.secondary" noWrap sx={{ width: { sm: 80, md: 100 }, textAlign: "right", flexShrink: 0, display: { xs: "none", md: "block" } }}>
-                        {item.meta}
-                      </Typography>
-                    )}
                     {/* Flèche navigation (pas pour les archives) */}
                     {item.itemType !== "archive" && (
                       <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
@@ -638,22 +670,15 @@ export default function PhysicalArchiveContent() {
           </Box>
         </Box>
 
-        {/* ── Panneau droit : détail ─────────────────────────── */}
-        <Box
-          flex={1}
-          overflow="auto"
-          p={2}
-          sx={{
-            ...scrollBarSx,
-            display: isMobile && !showDetail ? "none" : "flex",
-            flexDirection: "column",
-          }}>
+        {/* ── Panneau droit : détail (masqué si pas dans un conteneur) ── */}
+        {insideContainer && (
+        <Box flex={1} overflow="auto" p={2} sx={{
+          ...scrollBarSx,
+          display: isMobile && !showDetail ? "none" : "flex",
+          flexDirection: "column",
+        }}>
           {isMobile && showDetail && (
-            <Button
-              startIcon={<ArrowBackRoundedIcon />}
-              onClick={() => setSelected(null)}
-              sx={{ mb: 1, alignSelf: "flex-start" }}
-              size="small">
+            <Button startIcon={<ArrowBackRoundedIcon />} onClick={() => setSelected(null)} sx={{ mb: 1, alignSelf: "flex-start" }} size="small">
               Retour
             </Button>
           )}
@@ -675,6 +700,8 @@ export default function PhysicalArchiveContent() {
             />
           )}
         </Box>
+        )}
+
       </Box>
 
       {/* Formulaire de création */}
