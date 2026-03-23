@@ -119,8 +119,8 @@ export default function DashboardSettings() {
     try {
       await execute({ url: PREFS_CACHE_KEY, method: "PUT", data: prefs });
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
-      enqueueSnackbar("Vos choix ont été enregistrés.", { variant: "success" });
-    } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
+      enqueueSnackbar("Vos préférences de tableau de bord ont été enregistrées. Les modifications sont visibles immédiatement.", { variant: "success" });
+    } catch { enqueueSnackbar("L'enregistrement de vos préférences n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error" }); }
     finally { setSaving(false); }
   }, [prefs, execute, dispatch, enqueueSnackbar]);
 
@@ -130,8 +130,8 @@ export default function DashboardSettings() {
       const fresh = (res.data as { prefs: DashboardPrefs }).prefs;
       setPrefs(fresh);
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: fresh }));
-      enqueueSnackbar("Les réglages par défaut ont été rétablis.", { variant: "info" });
-    } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
+      enqueueSnackbar("Votre tableau de bord a été réinitialisé aux réglages par défaut. Vous pouvez le personnaliser à nouveau.", { variant: "info" });
+    } catch { enqueueSnackbar("La réinitialisation n'a pas pu être effectuée. Vérifiez votre connexion et réessayez.", { variant: "error" }); }
   }, [execute, dispatch, enqueueSnackbar]);
 
   const update = useCallback(<K extends keyof DashboardPrefs>(key: K, val: DashboardPrefs[K]) => {

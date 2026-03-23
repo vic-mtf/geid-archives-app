@@ -155,7 +155,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       );
       onRefresh();
     } catch {
-      enqueueSnackbar("Erreur lors du changement de statut.", { variant: "error" });
+      enqueueSnackbar("Le changement de statut du compte n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error" });
     }
   }, [user._id, execToggle, enqueueSnackbar, onRefresh]);
 
@@ -167,11 +167,11 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
   const handleAssignRole = useCallback(async () => {
     try {
       await execRole({ url: `/api/stuff/archives/users/${user._id}/role`, data: { role: newRole } });
-      enqueueSnackbar(`Rôle assigné : ${newRole}`, { variant: "success" });
+      enqueueSnackbar(`L'utilisateur a été rattaché à l'unité "${newRole}". Ce changement est effectif immédiatement.`, { variant: "success" });
       setRoleDialog(false);
       onRefresh();
     } catch {
-      enqueueSnackbar("Erreur lors de l'assignation du rôle.", { variant: "error" });
+      enqueueSnackbar("Le changement d'unité administrative n'a pas pu être effectué. Vérifiez que l'unité existe et réessayez.", { variant: "error" });
     }
   }, [user._id, newRole, execRole, enqueueSnackbar, onRefresh]);
 

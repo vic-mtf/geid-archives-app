@@ -151,11 +151,11 @@ export default function UserManagementContent() {
         url: `/api/stuff/archives/users/${selectedUser._id}/permissions`,
         data: { permissions: editPerms },
       });
-      enqueueSnackbar(`Permissions de ${selectedUser.fname} ${selectedUser.lname} mises à jour.`, { variant: "success" });
+      enqueueSnackbar(`Les droits d'accès de ${selectedUser.fname} ${selectedUser.lname} ont été modifiés avec succès. Les changements sont effectifs immédiatement.`, { variant: "success" });
       refetchUsers();
       setPermDialog(false);
     } catch {
-      enqueueSnackbar("Erreur lors de la mise à jour des permissions.", { variant: "error" });
+      enqueueSnackbar("La modification des droits d'accès n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.", { variant: "error" });
     }
   }, [selectedUser, editPerms, executePut, enqueueSnackbar, refetchUsers]);
 
