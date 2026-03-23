@@ -76,7 +76,23 @@ export default function DashboardContent() {
   const theme         = useTheme();
 
   const { canWrite } = useArchivePermissions();
-  useRealtimeRefresh(); // rafraîchissement en temps réel via Socket.IO
+  useRealtimeRefresh();
+
+  // ── Préférences utilisateur du dashboard ────────────────────
+  const { data: prefs } = useApiCache<{
+    visibleWidgets: string[];
+    chartType: string;
+    recentCount: number;
+    alertThresholds: { duaDays: number; binderCapacity: number };
+    autoRefreshSeconds: number;
+    defaultUnit: string;
+  }>("/api/stuff/archives/prefs/dashboard", headers);
+
+  // Raccourcis pour les préférences (avec valeurs par défaut)
+  const visible  = useMemo(() => new Set(prefs?.visibleWidgets ?? ["stats", "recent", "distribution", "dua", "binders", "inventory", "users", "quickAccess"]), [prefs]);
+  const recentMax    = prefs?.recentCount ?? 8;
+  const duaThreshold = prefs?.alertThresholds?.duaDays ?? 30;
+  const binderThreshold = prefs?.alertThresholds?.binderCapacity ?? 90;
 
   const goTo = useCallback(
     (tab: string) => navigateTo({ state: { navigation: { tabs: { option: tab } } } }),
@@ -146,7 +162,7 @@ export default function DashboardContent() {
   );
 
   const duaSoon = useMemo(() => {
-    const in30 = Date.now() + 30 * 24 * 60 * 60 * 1000;
+    const in30 = Date.now() + duaThreshold * 24 * 60 * 60 * 1000;
     return archiveList.filter((doc) => {
       if (normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined) !== "SEMI_ACTIVE") return false;
       const dua = doc.dua as { value?: number; unit?: string; startDate?: string } | undefined;
@@ -157,15 +173,15 @@ export default function DashboardContent() {
   }, [archiveList]);
 
   const criticalBinders = useMemo(
-    () => binderList.filter((b) => b.maxCapacity && ((b.currentCount ?? 0) / b.maxCapacity) >= 0.9),
+    () => binderList.filter((b) => b.maxCapacity && ((b.currentCount ?? 0) / b.maxCapacity) >= binderThreshold / 100),
     [binderList]
   );
 
   const recentArchives = useMemo(() =>
     [...fullList]
       .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
-      .slice(0, 8),
-    [fullList]
+      .slice(0, recentMax),
+    [fullList, recentMax]
   );
 
   const totalCount  = fullList.length;
@@ -210,7 +226,7 @@ export default function DashboardContent() {
       )}
 
       {/* ── Rangée 1 : Cartes stats principales ──────────── */}
-      <Grid container spacing={2} mb={2.5}>
+      {visible.has("stats") && <Grid container spacing={2} mb={2.5}>
         {[
           { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager" },
           { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", highlight: statusCounts.PENDING > 0 },
@@ -233,11 +249,13 @@ export default function DashboardContent() {
         ))}
       </Grid>
 
+      }
+
       {/* ── Rangée 2 : Activité + Répartition PieChart ──── */}
       <Grid container spacing={2} mb={2.5}>
 
         {/* Activité récente */}
-        <Grid item xs={12} md={7}>
+        {visible.has("recent") && <Grid item xs={12} md={visible.has("distribution") ? 7 : 12}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent sx={{ pb: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
@@ -280,8 +298,10 @@ export default function DashboardContent() {
           </Card>
         </Grid>
 
+        }
+
         {/* Répartition par statut — PieChart */}
-        <Grid item xs={12} md={5}>
+        {visible.has("distribution") && <Grid item xs={12} md={visible.has("recent") ? 5 : 12}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
               <Typography variant="body1" fontWeight="bold" mb={1}>Répartition par statut</Typography>
@@ -328,6 +348,7 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
         </Grid>
+        }
       </Grid>
 
       {/* ── Rangée 3 : DUA + Classeurs + Inventaire + Users ─ */}
