@@ -39,9 +39,11 @@ import ArchiveOutlinedIcon       from "@mui/icons-material/ArchiveOutlined";
 import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
 
+import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import useAxios  from "@/hooks/useAxios";
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
+import useArchivePermissions from "@/hooks/useArchivePermissions";
 import { useSelector }   from "react-redux";
 import type { RootState } from "@/redux/store";
 import formatDate from "@/utils/formatTime";
@@ -67,12 +69,21 @@ export default function DashboardContent() {
   const navigateTo    = useNavigateSetState();
   const theme         = useTheme();
 
+  const { canWrite } = useArchivePermissions();
+
   const goTo = useCallback(
     (tab: string) => navigateTo({ state: { navigation: { tabs: { option: tab } } } }),
     [navigateTo]
   );
 
   // ── API ──────────────────────────────────────────────────────
+
+  // Stats globales (utilisateurs + répartition)
+  const [{ data: globalStats, loading: statsLoading }] = useAxios<{
+    users: { total: number; active: number; inactive: number; withArchiveAccess: number; admins: number; writers: number; readers: number };
+    archives: { total: number; pending: number };
+    physical: { records: number; documents: number };
+  }>({ url: "/api/stuff/archives/stats/global", headers });
   const [{ data: archives, loading: archivesLoading }, refetchArchives] =
     useAxios<Archive[]>({ url: "/api/stuff/archives/archived", headers });
 
@@ -544,6 +555,55 @@ export default function DashboardContent() {
             </CardActionArea>
           </Card>
         </Grid>
+
+        {/* Carte utilisateurs — visible si canWrite */}
+        {canWrite && (
+          <Grid item xs={12} md={4}>
+            <Card variant="outlined" sx={{ height: "100%" }}>
+              <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("userManagement")}>
+                <CardContent>
+                  <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                    <PeopleOutlineRoundedIcon fontSize="small" color="action" />
+                    <Typography variant="body1" fontWeight="bold">
+                      Utilisateurs
+                    </Typography>
+                  </Stack>
+                  <Divider sx={{ mb: 1.5 }} />
+                  {statsLoading ? (
+                    <Box display="flex" justifyContent="center" p={2}>
+                      <CircularProgress size={20} />
+                    </Box>
+                  ) : globalStats ? (
+                    <Stack spacing={0.75}>
+                      {[
+                        { label: "Total utilisateurs",    value: globalStats.users.total,             color: theme.palette.primary.main },
+                        { label: "Comptes actifs",         value: globalStats.users.active,            color: theme.palette.success.main },
+                        { label: "Comptes inactifs",       value: globalStats.users.inactive,          color: theme.palette.error.main },
+                        { label: "Accès archives",         value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
+                        { label: "Administrateurs",        value: globalStats.users.admins,            color: theme.palette.warning.main },
+                        { label: "Écriture",               value: globalStats.users.writers,           color: theme.palette.success.main },
+                        { label: "Lecture seule",          value: globalStats.users.readers,           color: theme.palette.info.main },
+                      ].map(({ label, value, color }) => (
+                        <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
+                            <Typography variant="body2" color="text.secondary">{label}</Typography>
+                          </Stack>
+                          <Typography variant="body2" fontWeight="bold">{value}</Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  ) : null}
+                  <Box mt={1.5} display="flex" justifyContent="flex-end">
+                    <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+                      Gérer <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          </Grid>
+        )}
 
       </Grid>
     </Box>

@@ -16,7 +16,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   FormControl,
   IconButton,
   InputAdornment,
@@ -26,7 +25,6 @@ import {
   Skeleton,
   Stack,
   TextField,
-  Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
@@ -34,16 +32,7 @@ import {
 import SearchRoundedIcon       from "@mui/icons-material/SearchRounded";
 import CloseRoundedIcon        from "@mui/icons-material/CloseRounded";
 import SecurityOutlinedIcon    from "@mui/icons-material/SecurityOutlined";
-import AdminPanelSettingsIcon  from "@mui/icons-material/AdminPanelSettings";
-import EditOutlinedIcon        from "@mui/icons-material/EditOutlined";
-import VisibilityOutlinedIcon  from "@mui/icons-material/VisibilityOutlined";
-import CreateOutlinedIcon      from "@mui/icons-material/CreateOutlined";
 import PersonOutlinedIcon      from "@mui/icons-material/PersonOutlined";
-import EmailOutlinedIcon       from "@mui/icons-material/EmailOutlined";
-import BadgeOutlinedIcon       from "@mui/icons-material/BadgeOutlined";
-import WorkOutlineRoundedIcon  from "@mui/icons-material/WorkOutlineRounded";
-import VerifiedOutlinedIcon    from "@mui/icons-material/VerifiedOutlined";
-import ArrowBackRoundedIcon    from "@mui/icons-material/ArrowBackRounded";
 // Liste avec scroll natif — performant jusqu'à ~1000 utilisateurs
 
 import useAxios from "@/hooks/useAxios";
@@ -51,6 +40,7 @@ import useToken from "@/hooks/useToken";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { useSnackbar } from "notistack";
+import UserDetailPanel from "./UserDetailPanel";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -310,12 +300,11 @@ export default function UserManagementContent() {
         </Box>
       </Box>
 
-      {/* ── Panneau détail utilisateur ──────────────────────── */}
+      {/* ── Panneau détail utilisateur (composant séparé) ───── */}
       <Box
         flex={1}
-        overflow="auto"
+        overflow="hidden"
         sx={{
-          ...scrollBarSx,
           display: !selectedUser && !isMobile ? "flex" : selectedUser ? "flex" : "none",
           flexDirection: "column",
         }}>
@@ -323,128 +312,20 @@ export default function UserManagementContent() {
           <Box display="flex" flex={1} justifyContent="center" alignItems="center">
             <Stack alignItems="center" gap={1}>
               <PersonOutlinedIcon sx={{ fontSize: 48, color: "text.disabled" }} />
-              <Typography color="text.secondary" variant="body2">
-                Sélectionnez un utilisateur pour voir ses détails
-              </Typography>
+              <Typography color="text.secondary" variant="body2">Sélectionnez un utilisateur</Typography>
             </Stack>
           </Box>
         ) : (
-          <Box>
-            {/* Header avec photo large */}
-            <Box px={3} py={3} display="flex" alignItems="center" gap={2.5} borderBottom={1} borderColor="divider" bgcolor="background.paper">
-              {isMobile && (
-                <IconButton onClick={() => setSelectedUser(null)} size="small" sx={{ mr: -1 }}>
-                  <ArrowBackRoundedIcon />
-                </IconButton>
-              )}
-              <Avatar
-                src={avatarUrl(selectedUser)}
-                sx={{
-                  width: { xs: 56, sm: 72 },
-                  height: { xs: 56, sm: 72 },
-                  fontSize: { xs: "1.2rem", sm: "1.5rem" },
-                  fontWeight: 700,
-                  bgcolor: "primary.main",
-                  border: "3px solid",
-                  borderColor: "primary.light",
-                }}>
-                {selectedUser.fname?.[0]?.toUpperCase()}{selectedUser.lname?.[0]?.toUpperCase()}
-              </Avatar>
-              <Box flex={1} minWidth={0}>
-                <Typography variant="h6" fontWeight="bold" noWrap sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
-                  {selectedUser.fname} {selectedUser.mname ?? ""} {selectedUser.lname}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>{selectedUser.email}</Typography>
-                <Box display="flex" gap={0.5} mt={0.5} flexWrap="wrap">
-                  <Chip
-                    label={PERM_CONFIG[getPermLevel(selectedUser)].label}
-                    color={PERM_CONFIG[getPermLevel(selectedUser)].color}
-                    size="small"
-                    sx={{ height: 22, fontSize: "0.7rem" }}
-                  />
-                  <Chip
-                    label={selectedUser.isValid ? "Compte actif" : "Compte inactif"}
-                    color={selectedUser.isValid ? "success" : "error"}
-                    variant="outlined"
-                    size="small"
-                    sx={{ height: 22, fontSize: "0.7rem" }}
-                  />
-                </Box>
-              </Box>
-              {isAdmin && (
-                <Tooltip title="Modifier les permissions archives">
-                  <IconButton onClick={() => openPermDialog(selectedUser)} color="primary" sx={{ border: 1, borderColor: "divider" }}>
-                    <EditOutlinedIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-
-            {/* Informations détaillées */}
-            <Box px={3} py={2}>
-              <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold" display="block" mb={1.5}>
-                Informations
-              </Typography>
-              <Stack spacing={1.5}>
-                <DetailField icon={<BadgeOutlinedIcon fontSize="small" />} label="Rôle" value={selectedUser.grade?.role ?? "—"} />
-                <DetailField icon={<WorkOutlineRoundedIcon fontSize="small" />} label="Grade" value={selectedUser.grade?.grade ?? "—"} />
-                <DetailField icon={<EmailOutlinedIcon fontSize="small" />} label="Email" value={selectedUser.email} />
-                {selectedUser.phoneCell && (
-                  <DetailField icon={<PersonOutlinedIcon fontSize="small" />} label="Téléphone" value={selectedUser.phoneCell} />
-                )}
-                <DetailField icon={<VerifiedOutlinedIcon fontSize="small" />} label="Profil d'autorisation" value={selectedUser.auth?.name ?? "—"} />
-                {selectedUser.joinedAt && (
-                  <DetailField icon={<PersonOutlinedIcon fontSize="small" />} label="Inscrit le" value={new Date(selectedUser.joinedAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })} />
-                )}
-              </Stack>
-            </Box>
-
-            <Divider />
-
-            {/* Permissions archives */}
-            <Box px={3} py={2}>
-              <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                <AdminPanelSettingsIcon fontSize="small" color="action" />
-                <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold">
-                  Permissions Archives
-                </Typography>
-              </Box>
-              {(() => {
-                const perms = getArchivePerms(selectedUser);
-                if (perms.length === 0) {
-                  return (
-                    <Box px={1.5} py={1.5} borderRadius={1} bgcolor="action.hover">
-                      <Typography variant="body2" color="text.disabled" fontStyle="italic">
-                        Aucune permission sur le module archives
-                      </Typography>
-                    </Box>
-                  );
-                }
-                return (
-                  <Stack spacing={0.75}>
-                    {perms.map((p, i) => (
-                      <Box key={i} display="flex" alignItems="center" gap={1.5} px={1.5} py={1} borderRadius={1} bgcolor="action.hover">
-                        {p.access === "write"
-                          ? <CreateOutlinedIcon fontSize="small" color="success" />
-                          : <VisibilityOutlinedIcon fontSize="small" color="info" />
-                        }
-                        <Typography variant="body2" flex={1}>
-                          {p.struct === "all" ? "Toutes les unités administratives" : p.struct}
-                        </Typography>
-                        <Chip
-                          label={p.access === "write" ? "Écriture" : "Lecture"}
-                          size="small"
-                          color={p.access === "write" ? "success" : "info"}
-                          variant="outlined"
-                          sx={{ height: 22, fontSize: "0.65rem", minWidth: 70 }}
-                        />
-                      </Box>
-                    ))}
-                  </Stack>
-                );
-              })()}
-            </Box>
-          </Box>
+          <UserDetailPanel
+            user={selectedUser}
+            headers={headers}
+            isAdmin={isAdmin}
+            isMobile={isMobile}
+            roles={roles ?? null}
+            onBack={() => setSelectedUser(null)}
+            onRefresh={() => { refetchUsers(); }}
+            onEditPerms={openPermDialog}
+          />
         )}
       </Box>
 
@@ -454,32 +335,21 @@ export default function UserManagementContent() {
           <Typography fontWeight="bold">
             Permissions archives — {selectedUser?.fname} {selectedUser?.lname}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Définissez les unités administratives et le niveau d&apos;accès pour le module archives.
-          </Typography>
         </DialogTitle>
         <DialogContent>
           <Stack spacing={1.5} mt={1}>
             {editPerms.map((perm, i) => (
               <Box key={i} display="flex" gap={1} alignItems="center">
                 <FormControl size="small" sx={{ flex: 1 }}>
-                  <InputLabel>Unité administrative</InputLabel>
-                  <Select
-                    value={perm.struct}
-                    label="Unité administrative"
-                    onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, struct: e.target.value } : p))}>
-                    <MenuItem value="all"><em>Toutes (administrateur)</em></MenuItem>
-                    {roles?.map((r) => (
-                      <MenuItem key={r._id} value={r.name}>{r.name}</MenuItem>
-                    ))}
+                  <InputLabel>Unité</InputLabel>
+                  <Select value={perm.struct} label="Unité" onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, struct: e.target.value } : p))}>
+                    <MenuItem value="all"><em>Toutes (admin)</em></MenuItem>
+                    {roles?.map((r) => <MenuItem key={r._id} value={r.name}>{r.name}</MenuItem>)}
                   </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ width: 140 }}>
+                <FormControl size="small" sx={{ width: 130 }}>
                   <InputLabel>Accès</InputLabel>
-                  <Select
-                    value={perm.access}
-                    label="Accès"
-                    onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, access: e.target.value } : p))}>
+                  <Select value={perm.access} label="Accès" onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, access: e.target.value } : p))}>
                     <MenuItem value="read">Lecture</MenuItem>
                     <MenuItem value="write">Écriture</MenuItem>
                   </Select>
@@ -499,18 +369,6 @@ export default function UserManagementContent() {
           <Button onClick={savePermissions} variant="contained">Enregistrer</Button>
         </DialogActions>
       </Dialog>
-    </Box>
-  );
-}
-
-// ── Sous-composant : ligne de détail ─────────────────────────
-
-function DetailField({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
-  return (
-    <Box display="flex" alignItems="center" gap={1.5}>
-      <Box sx={{ color: "text.secondary", display: "flex", flexShrink: 0 }}>{icon}</Box>
-      <Typography variant="body2" color="text.secondary" sx={{ width: { xs: 80, sm: 120 }, flexShrink: 0 }}>{label}</Typography>
-      <Typography variant="body2" fontWeight={500} noWrap flex={1}>{value}</Typography>
     </Box>
   );
 }
