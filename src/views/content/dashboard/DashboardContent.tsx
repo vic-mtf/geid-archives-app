@@ -52,6 +52,7 @@ import { invalidateCache as invalidateCacheAction } from "@/redux/data";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import formatDate from "@/utils/formatTime";
+import scrollBarSx from "@/utils/scrollBarSx";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 
@@ -252,12 +253,12 @@ export default function DashboardContent() {
 
       }
 
-      {/* ── Rangée 2 : Activité + Répartition PieChart ──── */}
-      <Grid container spacing={2} mb={2.5}>
+      {/* ── Rangée 2 : Activité + Répartition — même hauteur ── */}
+      <Grid container spacing={2} mb={2.5} sx={{ minHeight: { md: 420 } }}>
 
-        {/* Activité récente */}
+        {/* Activité récente — scroll si le contenu dépasse */}
         {visible.has("recent") && <Grid item xs={12} md={visible.has("distribution") ? 7 : 12}>
-          <Card variant="outlined" sx={{ height: "100%" }}>
+          <Card variant="outlined" sx={{ height: { xs: "auto", md: 420 } }}>
             <CardContent sx={{ pb: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="body1" fontWeight="bold">Activité récente</Typography>
@@ -269,7 +270,7 @@ export default function DashboardContent() {
               ) : recentArchives.length === 0 ? (
                 <EmptyPlaceholder label="Aucune archive récente" />
               ) : (
-                <List dense disablePadding sx={{ flex: 1, overflow: "auto" }}>
+                <List dense disablePadding sx={{ flex: 1, overflow: "auto", ...scrollBarSx }}>
                   {recentArchives.map((doc) => {
                     const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
                     return (
@@ -303,7 +304,7 @@ export default function DashboardContent() {
 
         {/* Répartition par statut — PieChart */}
         {visible.has("distribution") && <Grid item xs={12} md={visible.has("recent") ? 5 : 12}>
-          <Card variant="outlined" sx={{ height: "100%" }}>
+          <Card variant="outlined" sx={{ height: { xs: "auto", md: 420 } }}>
             <CardContent sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
               <Typography variant="body1" fontWeight="bold" mb={1}>Répartition par statut</Typography>
               <Divider sx={{ mb: 1.5 }} />
