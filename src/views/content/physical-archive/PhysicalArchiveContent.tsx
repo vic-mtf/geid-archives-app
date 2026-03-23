@@ -393,10 +393,6 @@ export default function PhysicalArchiveContent() {
           </React.Fragment>
         ))}
         <Box flex={1} />
-        {/* Recherche indexée */}
-        <Box sx={{ width: { xs: 150, sm: 220, md: 260 }, flexShrink: 0 }}>
-          <PhysicalSearch headers={headers} onNavigate={handleNavigateTo} />
-        </Box>
         <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
           <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
             <AddRoundedIcon fontSize="small" />
@@ -419,10 +415,19 @@ export default function PhysicalArchiveContent() {
               borderColor: "divider",
               overflow: "hidden",
             }}>
-            <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
-              <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-                Arborescence
-              </Typography>
+            {/* En-tête : titre + recherche + bouton ajouter */}
+            <Box px={1} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover">
+              <Box display="flex" alignItems="center" gap={0.5} mb={0.75}>
+                <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
+                  Arborescence
+                </Typography>
+                <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
+                  <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
+                    <AddRoundedIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <PhysicalSearch headers={headers} onNavigate={handleNavigateTo} />
             </Box>
             <PhysicalTreeView
               headers={headers}
