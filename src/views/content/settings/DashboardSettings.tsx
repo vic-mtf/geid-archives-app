@@ -52,7 +52,7 @@ const WIDGETS = [
   { id: "stats",        label: "Statistiques" },
   { id: "recent",       label: "Activité récente" },
   { id: "distribution", label: "Répartition par statut" },
-  { id: "dua",          label: "Alertes DUA" },
+  { id: "dua",          label: "Alertes de conservation" },
   { id: "binders",      label: "Capacité classeurs" },
   { id: "inventory",    label: "Inventaire physique" },
   { id: "users",        label: "Utilisateurs" },
@@ -90,8 +90,8 @@ export default function DashboardSettings() {
     setSaving(true);
     try {
       await execute({ url: "/api/stuff/archives/prefs/dashboard", method: "PUT", data: prefs });
-      enqueueSnackbar("Préférences sauvegardées.", { variant: "success" });
-    } catch { enqueueSnackbar("Erreur.", { variant: "error" }); }
+      enqueueSnackbar("Vos choix ont été enregistrés.", { variant: "success" });
+    } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
     finally { setSaving(false); }
   }, [prefs, execute, enqueueSnackbar]);
 
@@ -99,8 +99,8 @@ export default function DashboardSettings() {
     try {
       const res = await execute({ url: "/api/stuff/archives/prefs/dashboard", method: "DELETE" });
       setPrefs((res.data as { prefs: DashboardPrefs }).prefs);
-      enqueueSnackbar("Réinitialisé.", { variant: "info" });
-    } catch { enqueueSnackbar("Erreur.", { variant: "error" }); }
+      enqueueSnackbar("Les réglages par défaut ont été rétablis.", { variant: "info" });
+    } catch { enqueueSnackbar("Une erreur est survenue.", { variant: "error" }); }
   }, [execute, enqueueSnackbar]);
 
   const update = useCallback(<K extends keyof DashboardPrefs>(key: K, val: DashboardPrefs[K]) => {
@@ -147,15 +147,15 @@ export default function DashboardSettings() {
           </Option>
 
           {/* 2. Seuil DUA */}
-          <Option title="Alerte de conservation (DUA)" desc="Nombre de jours avant l'expiration d'une DUA pour déclencher une alerte. Permet d'anticiper les décisions de sort final.">
-            <TextField size="small" type="number" label="Jours avant expiration" value={prefs.alertThresholds.duaDays}
+          <Option title="Alerte de conservation (durée légale)" desc="Nombre de jours avant l'expiration d'une DUA pour déclencher une alerte. Permet d'anticiper les décisions de sort final.">
+            <TextField size="small" type="number" label="Jours avant la fin de la durée de conservation" value={prefs.alertThresholds.duaDays}
               onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, duaDays: parseInt(e.target.value) || 30 })}
               sx={{ maxWidth: 250 }} />
           </Option>
 
           {/* 3. Seuil classeurs */}
           <Option title="Alerte de capacité physique" desc="Pourcentage de remplissage des classeurs au-delà duquel une alerte apparaît. Permet de planifier l'acquisition de nouveaux supports.">
-            <TextField size="small" type="number" label="Seuil (%)" value={prefs.alertThresholds.binderCapacity}
+            <TextField size="small" type="number" label="Seuil d'alerte (%)" value={prefs.alertThresholds.binderCapacity}
               onChange={(e) => update("alertThresholds", { ...prefs.alertThresholds, binderCapacity: parseInt(e.target.value) || 90 })}
               sx={{ maxWidth: 250 }} />
           </Option>
@@ -180,7 +180,7 @@ export default function DashboardSettings() {
           </Option>
 
           {/* 6. Temps réel */}
-          <Option title="Mise à jour en temps réel" desc="Quand activé, le tableau de bord se met à jour instantanément via Socket.IO lorsqu'un autre utilisateur modifie les données.">
+          <Option title="Mise à jour en temps réel" desc="Quand activé, le tableau de bord se met à jour automatiquement lorsqu'un autre utilisateur modifie les données.">
             <FormControlLabel
               control={<Switch checked={prefs.autoRefreshSeconds > 0} onChange={(e) => update("autoRefreshSeconds", e.target.checked ? 1 : 0)} />}
               label={prefs.autoRefreshSeconds > 0 ? "Activé" : "Désactivé"} />

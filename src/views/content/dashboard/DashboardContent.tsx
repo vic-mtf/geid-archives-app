@@ -76,7 +76,6 @@ export default function DashboardContent() {
   const theme         = useTheme();
 
   const { canWrite } = useArchivePermissions();
-  useRealtimeRefresh();
 
   // ── Préférences utilisateur du dashboard ────────────────────
   const { data: prefs } = useApiCache<{
@@ -90,9 +89,11 @@ export default function DashboardContent() {
 
   // Raccourcis pour les préférences (avec valeurs par défaut)
   const visible  = useMemo(() => new Set(prefs?.visibleWidgets ?? ["stats", "recent", "distribution", "dua", "binders", "inventory", "users", "quickAccess"]), [prefs]);
-  const recentMax    = prefs?.recentCount ?? 8;
-  const duaThreshold = prefs?.alertThresholds?.duaDays ?? 30;
+  const recentMax       = prefs?.recentCount ?? 8;
+  const duaThreshold    = prefs?.alertThresholds?.duaDays ?? 30;
   const binderThreshold = prefs?.alertThresholds?.binderCapacity ?? 90;
+  // Option 6 — mises à jour automatiques
+  useRealtimeRefresh();
 
   const goTo = useCallback(
     (tab: string) => navigateTo({ state: { navigation: { tabs: { option: tab } } } }),
@@ -213,7 +214,7 @@ export default function DashboardContent() {
           {duaExpired.length > 0 && (
             <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
               action={<Chip label="Voir" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{duaExpired.length}</strong> DUA expirée{duaExpired.length > 1 ? "s" : ""} nécessitent une action.
+              <strong>{duaExpired.length}</strong> Durée de conservation dépassée{duaExpired.length > 1 ? "s" : ""} nécessitent une action.
             </Alert>
           )}
           {criticalBinders.length > 0 && (
@@ -361,7 +362,7 @@ export default function DashboardContent() {
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                   <AlarmRoundedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
-                  <Typography variant="body2" fontWeight="bold">Alertes DUA</Typography>
+                  <Typography variant="body2" fontWeight="bold">Alertes de conservation</Typography>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
                 {duaExpired.length > 0 && (

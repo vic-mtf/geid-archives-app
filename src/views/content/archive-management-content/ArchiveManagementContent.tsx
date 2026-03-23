@@ -202,18 +202,18 @@ export default function ArchiveManagementContent() {
         dispatch(incrementVersion());
         const lifecycleMsgs: Record<string, { title: string; msg: string }> = {
           ACTIVE:      { title: "Archive réactivée",          msg: "L'archive est de nouveau active. Elle reprend son cycle de vie normal." },
-          SEMI_ACTIVE: { title: "Passage en intermédiaire",   msg: "L'archive est maintenant en phase intermédiaire. Pensez à configurer sa DUA pour planifier son sort final." },
+          SEMI_ACTIVE: { title: "Passage en intermédiaire",   msg: "L'archive est maintenant en phase intermédiaire. Pensez à définir sa durée de conservation pour planifier son sort final." },
           PERMANENT:   { title: "Classée en historique",      msg: "L'archive a été classée définitivement en historique. Elle sera conservée à titre permanent." },
           DESTROYED:   { title: "Archive éliminée",           msg: "L'archive a été éliminée. Cette action est irréversible — assurez-vous d'avoir conservé les documents nécessaires." },
         };
         const lm = lifecycleMsgs[targetStatus];
         enqueueSnackbar(lm?.msg ?? `Statut mis à jour : ${STATUS_LABEL[targetStatus] ?? targetStatus}`, {
           variant: "success",
-          title: lm?.title ?? "Cycle de vie mis à jour",
+          title: lm?.title ?? "Statut modifié",
         });
         setDetailOpen(false);
       } catch {
-        enqueueSnackbar("Le changement de statut a échoué. Vérifiez votre connexion et réessayez. Si le problème persiste, contactez l'administrateur.", { variant: "error", title: "Changement de statut impossible" });
+        enqueueSnackbar("Le changement n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error", title: "Action impossible" });
       }
     };
     root?.addEventListener("__lifecycle_archive", handler);
@@ -633,7 +633,7 @@ export default function ArchiveManagementContent() {
               <ListItemIcon sx={{ minWidth: 28, color: quickFilter === "dua_expired" ? undefined : "error.main" }}>
                 <AlarmRoundedIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="DUA expirées" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
+              <ListItemText primary="Durée de conservation dépassées" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
               {duaExpiredCount > 0 && (
                 <Chip
                   label={duaExpiredCount}
@@ -723,7 +723,7 @@ export default function ArchiveManagementContent() {
           )}
           {duaExpiredCount > 0 && (
             <Typography variant="caption" color="error.main" display="block">
-              {duaExpiredCount} DUA expirée{duaExpiredCount !== 1 ? "s" : ""}
+              {duaExpiredCount} Durée de conservation dépassée{duaExpiredCount !== 1 ? "s" : ""}
             </Typography>
           )}
         </MuiBox>
@@ -763,7 +763,7 @@ export default function ArchiveManagementContent() {
           })}
           {duaExpiredCount > 0 && (
             <Chip
-              label={`DUA exp. (${duaExpiredCount})`}
+              label={`Conservation exp. (${duaExpiredCount})`}
               size="small"
               variant={quickFilter === "dua_expired" ? "filled" : "outlined"}
               color="error"
@@ -855,7 +855,7 @@ export default function ArchiveManagementContent() {
                   { label: "En attente", value: statusCounts.PENDING, color: "warning.main" },
                   { label: "Actives", value: statusCounts.ACTIVE, color: "success.main" },
                   { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, color: "info.main" },
-                  { label: "DUA expirées", value: duaExpiredCount, color: "error.main" },
+                  { label: "Durée de conservation dépassées", value: duaExpiredCount, color: "error.main" },
                 ].map(({ label, value, color }) => (
                   <MuiBox key={label} display="flex" justifyContent="space-between" alignItems="center" py={0.5}>
                     <MuiBox display="flex" alignItems="center" gap={1}>
