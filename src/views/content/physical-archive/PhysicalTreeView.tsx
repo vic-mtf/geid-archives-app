@@ -100,6 +100,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
+  // IDs togglés manuellement par l'utilisateur (expand/collapse)
+  const [userToggled, setUserToggled] = useState<Set<string>>(new Set());
 
   const [, fetchData] = useAxios({ headers }, { manual: true });
 
@@ -147,10 +149,9 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     }
   }, [fetchData]);
 
-  // Fusionner les noeuds internes (chargés) avec les IDs externes (breadcrumb)
+  // Fusionner : noeuds chargés + breadcrumb externe - noeuds fermés par l'utilisateur
   const mergedExpanded = useMemo(() => {
     const ids = new Set<string>();
-    // IDs internes : noeuds qui ont des enfants chargés
     const collect = (list: TreeNode[]) => {
       list.forEach((n) => {
         if (n.children && n.children.length > 0) {
@@ -160,10 +161,14 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
       });
     };
     collect(nodes);
-    // IDs externes : synchronisés avec le breadcrumb de l'explorateur
     (externalExpanded ?? []).forEach((id) => ids.add(id));
+    // Retirer les noeuds fermés manuellement par l'utilisateur
+    userToggled.forEach((id) => {
+      if (ids.has(id)) ids.delete(id);
+      else ids.add(id);
+    });
     return [...ids];
-  }, [nodes, externalExpanded]);
+  }, [nodes, externalExpanded, userToggled]);
 
   // Rendu récursif des noeuds
   const renderTree = (nodeList: TreeNode[]): React.ReactNode =>
@@ -236,6 +241,23 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
       ) : (
         <TreeView
           expanded={mergedExpanded}
+          onNodeToggle={(_e: React.SyntheticEvent, nodeIds: string[]) => {
+            // Calculer la différence pour savoir quel noeud a été togglé
+            const expanded = new Set(mergedExpanded);
+            const newExpanded = new Set(nodeIds);
+            setUserToggled((prev) => {
+              const next = new Set(prev);
+              // Noeuds qui ont été ouverts
+              newExpanded.forEach((id) => {
+                if (!expanded.has(id)) next.delete(id); // retirer du toggle = réouvrir
+              });
+              // Noeuds qui ont été fermés
+              expanded.forEach((id) => {
+                if (!newExpanded.has(id)) next.add(id); // ajouter au toggle = fermer
+              });
+              return next;
+            });
+          }}
           sx={{
             "& .MuiTreeItem-content": { borderRadius: 1, py: 0.25 },
             "& .MuiTreeItem-content:hover": { bgcolor: "action.hover" },

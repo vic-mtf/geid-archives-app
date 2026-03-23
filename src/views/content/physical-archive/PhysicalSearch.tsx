@@ -193,7 +193,8 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
       <TextField
         size="small"
         fullWidth
-        placeholder={indexReady ? "Rechercher dans l'inventaire…" : "Chargement de l'index…"}
+        autoFocus={false}
+        placeholder={indexReady ? "Trouver un élément…" : "Chargement…"}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         disabled={!indexReady}
