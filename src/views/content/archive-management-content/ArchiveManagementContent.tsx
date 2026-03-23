@@ -723,6 +723,7 @@ export default function ArchiveManagementContent() {
               loading={loading}
               columns={archiveColumns}
               checkboxSelection
+              disableRowSelectionOnClick
               rowSelectionModel={selectedElements as string[]}
               onRowSelectionModelChange={handleSelectionChange}
               onRowClick={handleRowClick}
