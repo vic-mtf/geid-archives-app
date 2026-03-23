@@ -2,9 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { Button, DialogTitle, Dialog } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import useAxios from "../../../hooks/useAxios";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import useAxios from "@/hooks/useAxios";
 import FormContent from "./FormContent";
 import { FieldValues } from "react-hook-form";
 

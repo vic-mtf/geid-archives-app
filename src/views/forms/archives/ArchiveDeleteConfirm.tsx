@@ -10,9 +10,9 @@ import {
 // Typography est utilisé dans le corps du Dialog
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import useAxios from "../../../hooks/useAxios";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import useAxios from "@/hooks/useAxios";
 
 const EVENT_NAME = "__delete_archive_docs";
 

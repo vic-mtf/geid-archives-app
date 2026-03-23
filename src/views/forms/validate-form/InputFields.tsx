@@ -1,4 +1,4 @@
-import InputControl from "../../../components/InputControl";
+import InputControl from "@/components/InputControl";
 import { UseFormRegister, FormState, FieldValues, Path } from "react-hook-form";
 
 interface InputField {

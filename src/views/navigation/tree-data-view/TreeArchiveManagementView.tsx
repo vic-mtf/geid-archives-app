@@ -1,12 +1,12 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { TreeView } from "@mui/x-tree-view/TreeView";
-import StyledTreeItem from "../../../components/StyledTreeItem";
+import StyledTreeItem from "@/components/StyledTreeItem";
 import { Box as MuiBox, Typography } from "@mui/material";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { updateData } from "../../../redux/data";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { updateData } from "@/redux/data";
 
 interface TreeArchiveManagementViewProps {
   filter?: string;

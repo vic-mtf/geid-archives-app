@@ -16,7 +16,7 @@ import {
   Image,
   Link,
 } from "@react-pdf/renderer";
-import logoWhite from "../../../assets/geid_logo_white.png";
+import logoWhite from "@/assets/geid_logo_white.png";
 
 // ── Palette ─────────────────────────────────────────────────
 

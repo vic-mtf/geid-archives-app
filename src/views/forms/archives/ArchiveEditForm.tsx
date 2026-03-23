@@ -18,11 +18,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import useAxios from "../../../hooks/useAxios";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import useAxios from "@/hooks/useAxios";
 import type { FieldValues } from "react-hook-form";
-import type { ArchiveDocument } from "../../../types";
+import type { ArchiveDocument } from "@/types";
 
 const EVENT_NAME = "__edit_archive_doc";
 

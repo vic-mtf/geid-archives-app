@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText, alpha, useTheme } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import tabs from "./tabs";
-import useNavigateSetState from "../../../hooks/useNavigateSetState";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 
 export default function TabsOption() {
   const location = useLocation();

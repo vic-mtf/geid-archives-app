@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@mui/material";
-import useAxios from "../../../hooks/useAxios";
+import useAxios from "@/hooks/useAxios";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
 import FormContent from "./FormContent";
 import React from "react";
 

@@ -1,65 +1,60 @@
+/**
+ * PhysicalArchiveContent — Explorateur de fichiers de l'archivage physique.
+ *
+ * Navigation hiérarchique 6 niveaux :
+ *   Conteneur → Étagère → Niveau → Classeur → Dossier → Document
+ *
+ * Sous-composants :
+ *   - DetailPanel.tsx : détail par niveau avec archives liées
+ *   - PhysicalEntityForm : formulaire de création (dans forms/physical/)
+ */
+
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  Grid,
   IconButton,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   Stack,
   Tooltip,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
-import DnsOutlinedIcon from "@mui/icons-material/DnsOutlined";
-import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
-import StyleOutlinedIcon from "@mui/icons-material/StyleOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import KeyboardReturnOutlinedIcon from "@mui/icons-material/KeyboardReturnOutlined";
-import TopicOutlinedIcon from "@mui/icons-material/TopicOutlined";
-import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
-import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
-import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import ArrowBackRoundedIcon         from "@mui/icons-material/ArrowBackRounded";
+import AddRoundedIcon               from "@mui/icons-material/AddRounded";
+import WarehouseOutlinedIcon        from "@mui/icons-material/WarehouseOutlined";
+import DnsOutlinedIcon              from "@mui/icons-material/DnsOutlined";
+import ViewStreamOutlinedIcon       from "@mui/icons-material/ViewStreamOutlined";
+import StyleOutlinedIcon            from "@mui/icons-material/StyleOutlined";
+import FolderOutlinedIcon           from "@mui/icons-material/FolderOutlined";
+import KeyboardReturnOutlinedIcon   from "@mui/icons-material/KeyboardReturnOutlined";
+import TopicOutlinedIcon            from "@mui/icons-material/TopicOutlined";
+import ArticleOutlinedIcon          from "@mui/icons-material/ArticleOutlined";
+import InfoOutlinedIcon             from "@mui/icons-material/InfoOutlined";
+import NavigateNextRoundedIcon      from "@mui/icons-material/NavigateNextRounded";
 
-import useAxios from "../../../hooks/useAxios";
-import useToken from "../../../hooks/useToken";
-import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "../archive-management-content/ArchiveManagementContent";
+import useAxios      from "@/hooks/useAxios";
+import useToken      from "@/hooks/useToken";
+import type { PhysicalLevel } from "@/constants/physical";
+import DetailPanel   from "./DetailPanel";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "../../../redux/store";
-import { incrementVersion } from "../../../redux/data";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "../../../types";
-import formatDate from "../../../utils/formatTime";
-import scrollBarSx from "../../../utils/scrollBarSx";
-import PhysicalEntityForm from "../../forms/physical/PhysicalEntityForm";
-import type { PhysicalLevel } from "../../forms/physical/PhysicalEntityForm";
+import type { RootState, AppDispatch } from "@/redux/store";
+import { incrementVersion } from "@/redux/data";
+import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
+import scrollBarSx   from "@/utils/scrollBarSx";
+import PhysicalEntityForm from "@/views/forms/physical/PhysicalEntityForm";
 
 // ── Types locaux ───────────────────────────────────────────
 
-type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
+// Level = PhysicalLevel importé depuis @/constants/physical
+type Level = PhysicalLevel;
 
 interface BreadcrumbItem {
   id: string;
@@ -587,368 +582,3 @@ export default function PhysicalArchiveContent() {
   );
 }
 
-// ── Panneau de détail ──────────────────────────────────────
-
-interface DetailPanelProps {
-  level: Level;
-  item: Container | Shelf | Floor | Binder | PhysicalRecord | PhysicalDocument;
-  onDelete: (id: string, label: string) => void;
-  headers: Record<string, string>;
-}
-
-function DetailPanel({ level, item, onDelete, headers }: DetailPanelProps) {
-  const levelLabels: Record<Level, string> = {
-    container: "Conteneur",
-    shelf: "Étagère",
-    floor: "Étage",
-    binder: "Classeur",
-    record: "Dossier physique",
-    document: "Document",
-  };
-
-  // Nom lisible de l'élément pour le dialogue de confirmation
-  const itemLabel = useMemo(() => {
-    const it = item as unknown as Record<string, unknown>;
-    return (it.name ?? it.title ?? it.internalNumber ?? it.subject ?? (it.number !== undefined ? `Étage ${it.number}` : null) ?? it._id) as string;
-  }, [item]);
-
-  return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack direction="row" alignItems="center" gap={1} mb={2}>
-          <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
-            {levelLabels[level]}
-          </Typography>
-          <Chip label={levelLabels[level]} size="small" variant="outlined" />
-          <Tooltip title="Supprimer cet élément" placement="top">
-            <IconButton
-              size="small"
-              color="error"
-              onClick={() => onDelete(item._id, itemLabel)}>
-              <DeleteOutlineRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-        <Divider sx={{ mb: 2 }} />
-
-        {level === "container" && <ContainerDetail item={item as Container} />}
-        {level === "shelf" && <ShelfDetail item={item as Shelf} />}
-        {level === "floor" && <FloorDetail item={item as Floor} />}
-        {level === "binder" && <BinderDetail item={item as Binder} />}
-        {level === "record" && <RecordDetail item={item as PhysicalRecord} headers={headers} />}
-        {level === "document" && <DocumentDetail item={item as PhysicalDocument} headers={headers} />}
-
-        <Divider sx={{ mt: 2, mb: 1 }} />
-        <Grid container spacing={1}>
-          <Grid item xs={6}>
-            <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={(item as { createdAt?: string }).createdAt ? formatDate((item as { createdAt: string }).createdAt) : undefined} />
-          </Grid>
-          <Grid item xs={6}>
-            <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Modifié le" value={(item as { updatedAt?: string }).updatedAt ? formatDate((item as { updatedAt: string }).updatedAt) : undefined} />
-          </Grid>
-        </Grid>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ContainerDetail({ item }: { item: Container }) {
-  return (
-    <Stack spacing={1}>
-      <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      {item.location && (
-        <DetailRow icon={<LocationOnOutlinedIcon fontSize="small" />} label="Localisation" value={item.location} />
-      )}
-      {item.description && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />
-      )}
-    </Stack>
-  );
-}
-
-function ShelfDetail({ item }: { item: Shelf }) {
-  return (
-    <Stack spacing={1}>
-      <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      {item.description && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />
-      )}
-    </Stack>
-  );
-}
-
-function FloorDetail({ item }: { item: Floor }) {
-  return (
-    <Stack spacing={1}>
-      <DetailRow icon={<ViewStreamOutlinedIcon fontSize="small" />} label="Numéro" value={`${item.number}`} />
-      {item.label && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Libellé" value={item.label} />
-      )}
-      {item.administrativeUnit && typeof item.administrativeUnit === "object" && (
-        <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Unité administrative" value={(item.administrativeUnit as { name?: string }).name ?? "—"} />
-      )}
-    </Stack>
-  );
-}
-
-function BinderDetail({ item }: { item: Binder }) {
-  const pct = item.maxCapacity
-    ? Math.min(100, Math.round(((item.currentCount ?? 0) / item.maxCapacity) * 100))
-    : 0;
-  return (
-    <Stack spacing={1.5}>
-      <DetailRow icon={<FolderOpenOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
-      <Box>
-        <Box display="flex" justifyContent="space-between" mb={0.5}>
-          <Typography color="text.secondary">Capacité utilisée</Typography>
-          <Typography>{item.currentCount ?? 0} / {item.maxCapacity} dossiers ({pct}%)</Typography>
-        </Box>
-        <LinearProgress
-          variant="determinate"
-          value={pct}
-          color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "success"}
-          sx={{ borderRadius: 1, height: 8 }}
-        />
-      </Box>
-    </Stack>
-  );
-}
-
-function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record<string, string> }) {
-  const [{ data: archivesData, loading: archivesLoading }] = useAxios<{
-    count: number;
-    archives: Array<{
-      _id: string;
-      designation?: string;
-      description?: string;
-      folder?: string;
-      classNumber?: string;
-      status?: string;
-      validated?: boolean;
-      createdAt?: string;
-    }>;
-  }>(
-    { url: `/api/stuff/archives/physical/records/${item._id}/archives`, headers },
-    { manual: false }
-  );
-
-  const linkedArchives = archivesData?.archives ?? [];
-
-  return (
-    <Stack spacing={1}>
-      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label="N° interne" value={item.internalNumber} />
-      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label="N° référence" value={item.refNumber} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Objet" value={item.subject} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Catégorie" value={item.category} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
-      <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'édition" value={formatDate(item.editionDate)} />
-      <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'archivage" value={formatDate(item.archivingDate)} />
-      {item.qrCode && (
-        <Box display="flex" alignItems="center" gap={1}>
-          <QrCode2RoundedIcon fontSize="small" color="action" />
-          <Box>
-            <Typography color="text.secondary" variant="caption">QR Code</Typography>
-            <Typography
-              sx={{
-                fontFamily: "monospace",
-                fontSize: 11,
-                bgcolor: "action.hover",
-                px: 0.5,
-                borderRadius: 0.5,
-                wordBreak: "break-all",
-              }}>
-              {item.qrCode}
-            </Typography>
-          </Box>
-        </Box>
-      )}
-      {item.agent && (
-        <DetailRow
-          icon={<InfoOutlinedIcon fontSize="small" />}
-          label="Agent"
-          value={`${item.agent.firstName ?? ""} ${item.agent.lastName ?? ""}`.trim() || "—"}
-        />
-      )}
-      {item.metadata && Object.keys(item.metadata).length > 0 && (
-        <Box>
-          <Typography color="text.secondary" variant="caption">Métadonnées</Typography>
-          <Stack direction="row" flexWrap="wrap" gap={0.5} mt={0.5}>
-            {Object.entries(item.metadata).map(([k, v]) => (
-              <Tooltip key={k} title={k}>
-                <Chip label={`${k}: ${v}`} size="small" variant="outlined" />
-              </Tooltip>
-            ))}
-          </Stack>
-        </Box>
-      )}
-
-      {/* ── Archives numériques liées ── */}
-      <Box mt={1}>
-        <Divider sx={{ mb: 1.5 }} />
-        <Stack direction="row" alignItems="center" gap={1} mb={1}>
-          <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
-          <Typography variant="subtitle2" fontWeight="bold">
-            Archives numériques liées
-          </Typography>
-          {!archivesLoading && (
-            <Chip label={linkedArchives.length} size="small" color={linkedArchives.length > 0 ? "primary" : "default"} />
-          )}
-        </Stack>
-        {archivesLoading ? (
-          <Box display="flex" justifyContent="center" py={1.5}>
-            <CircularProgress size={20} />
-          </Box>
-        ) : linkedArchives.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
-            Aucune archive numérique n&apos;est rattachée à ce document physique.
-            Pour en ajouter une, ouvrez la fiche de l&apos;archive depuis la gestion des archives
-            et utilisez l&apos;action &laquo;&nbsp;Dossier physique&nbsp;&raquo;.
-          </Typography>
-        ) : (
-          <Stack spacing={0.75}>
-            {linkedArchives.map((arc) => {
-              const norm = normalizeStatus(arc.status, arc.validated);
-              return (
-                <Box
-                  key={arc._id}
-                  sx={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 1,
-                    p: 0.75,
-                    borderRadius: 1,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                  }}>
-                  <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
-                  <Box flex={1} minWidth={0}>
-                    <Typography variant="body2" noWrap fontWeight={500}>
-                      {arc.designation ?? arc.folder ?? arc._id}
-                    </Typography>
-                    {arc.classNumber && (
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        N° {arc.classNumber}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Chip
-                    label={STATUS_LABEL[norm] ?? norm}
-                    color={STATUS_COLOR[norm] ?? "default"}
-                    size="small"
-                    variant="outlined"
-                    sx={{ flexShrink: 0 }}
-                  />
-                </Box>
-              );
-            })}
-          </Stack>
-        )}
-      </Box>
-    </Stack>
-  );
-}
-
-// ── Détail d'un document ────────────────────────────────────
-
-function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Record<string, string> }) {
-  const [{ data: archivesData, loading: archLoading }] = useAxios<{
-    document: string;
-    count: number;
-    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean }>;
-  }>(
-    { url: `/api/stuff/archives/physical/documents/${item._id}/archives`, headers },
-  );
-
-  const linkedArchives = archivesData?.archives ?? [];
-
-  return (
-    <Stack spacing={1}>
-      <DetailRow icon={<DescriptionOutlinedIcon fontSize="small" />} label="Titre" value={item.title} />
-      {item.description && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />
-      )}
-      {item.nature && (
-        <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
-      )}
-      {item.documentDate && (
-        <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date du document" value={new Date(item.documentDate).toLocaleDateString("fr-FR")} />
-      )}
-
-      <Divider sx={{ my: 1 }} />
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
-        <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
-        <Typography variant="subtitle2" fontWeight="bold">
-          Archives numériques liées
-        </Typography>
-        {archivesData && (
-          <Chip label={archivesData.count} size="small" color="default" />
-        )}
-      </Stack>
-
-      {archLoading ? (
-        <CircularProgress size={20} />
-      ) : linkedArchives.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
-          Aucune archive numérique rattachée à ce document.
-        </Typography>
-      ) : (
-        <Stack spacing={0.5}>
-          {linkedArchives.map((arc) => {
-            const norm = normalizeStatus(arc.status, arc.validated);
-            return (
-              <Box
-                key={arc._id}
-                sx={{
-                  display: "flex", alignItems: "flex-start", gap: 1, p: 0.75,
-                  borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper",
-                }}>
-                <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
-                <Box flex={1} minWidth={0}>
-                  <Typography variant="body2" noWrap fontWeight={500}>
-                    {arc.designation ?? arc.folder ?? arc._id}
-                  </Typography>
-                  {arc.classNumber && (
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      N° {arc.classNumber}
-                    </Typography>
-                  )}
-                </Box>
-                <Chip
-                  label={STATUS_LABEL[norm] ?? norm}
-                  color={STATUS_COLOR[norm] ?? "default"}
-                  size="small" variant="outlined" sx={{ flexShrink: 0 }}
-                />
-              </Box>
-            );
-          })}
-        </Stack>
-      )}
-    </Stack>
-  );
-}
-
-// ── Ligne de détail ─────────────────────────────────────────
-
-interface DetailRowProps {
-  icon: React.ReactNode;
-  label: string;
-  value?: string | null;
-}
-
-function DetailRow({ icon, label, value }: DetailRowProps) {
-  return (
-    <List disablePadding dense>
-      <ListItem disablePadding>
-        <ListItemIcon sx={{ minWidth: 28, color: "text.secondary" }}>{icon}</ListItemIcon>
-        <ListItemText
-          primary={value ?? "—"}
-          secondary={label}
-          primaryTypographyProps={{ variant: "body2" }}
-          secondaryTypographyProps={{ variant: "caption" }}
-        />
-      </ListItem>
-    </List>
-  );
-}
