@@ -45,6 +45,7 @@ import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
+import deepNavigate from "@/utils/deepNavigate";
 import useApiCache from "@/hooks/useApiCache";
 import { invalidateCache as invalidateCacheAction } from "@/redux/data";
 import { useSelector, useDispatch } from "react-redux";
@@ -187,7 +188,7 @@ export default function DashboardContent() {
         <Stack spacing={1} mb={2}>
           {statusCounts.PENDING > 0 && (
             <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
-              action={<Chip label="Consulter" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              action={<Chip label="Consulter" size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
               <strong>{statusCounts.PENDING}</strong> archive{statusCounts.PENDING > 1 ? "s" : ""} en attente de validation.
             </Alert>
           )}
@@ -251,7 +252,7 @@ export default function DashboardContent() {
                   {recentArchives.map((doc) => {
                     const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
                     return (
-                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.5 }} onClick={() => goTo("archiveManager")}>
+                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.5 }} onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", archiveId: doc._id })}>
                         <ListItemIcon sx={{ minWidth: 28 }}>
                           <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: STATUS_COLOR[norm] ? `${STATUS_COLOR[norm]}.main` : "text.disabled" }} />
                         </ListItemIcon>

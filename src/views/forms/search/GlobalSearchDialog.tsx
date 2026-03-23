@@ -37,8 +37,10 @@ import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
 import useToken from "@/hooks/useToken";
 import useAxios from "@/hooks/useAxios";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 import formatDate from "@/utils/formatTime";
+import deepNavigate from "@/utils/deepNavigate";
 
 // ── Événement déclencheur ──────────────────────────────────
 const OPEN_EVENT = "__global_search_open";
@@ -86,8 +88,32 @@ export default function GlobalSearchDialog() {
   const [searchError, setSearchError] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cancelRef = useRef(false);
+  const navigateTo = useNavigateSetState();
 
   const token = useToken(); // "Bearer <token>" ou null
+  const headers = { Authorization: token ?? "" };
+
+  // ── Deep navigate handlers ────────────────────────────────
+  const [, executePath] = useAxios({ headers }, { manual: true });
+
+  /** Clic sur une archive → naviguer vers Archives + ouvrir le détail */
+  const handleArchiveClick = useCallback((archiveId: string) => {
+    handleClose();
+    deepNavigate(navigateTo, { tab: "archiveManager", archiveId });
+  }, [navigateTo]);
+
+  /** Clic sur un record → charger le chemin complet puis naviguer vers Physique */
+  const handleRecordClick = useCallback(async (recordId: string) => {
+    handleClose();
+    try {
+      const res = await executePath({ url: `/api/stuff/archives/physical/path/record/${recordId}` });
+      const path = ((res.data as unknown) as { path: Array<{ id: string; label: string; level: string }> }).path ?? [];
+      deepNavigate(navigateTo, { tab: "physicalArchive", physicalPath: path });
+    } catch {
+      // Fallback — juste aller vers l'onglet
+      deepNavigate(navigateTo, { tab: "physicalArchive" });
+    }
+  }, [navigateTo, executePath]);
 
   const [, execute] = useAxios<SearchResponse>(
     { headers: { Authorization: token ?? "" } },
@@ -285,7 +311,7 @@ export default function GlobalSearchDialog() {
                   {archives.map((arc) => {
                     const norm = normalizeStatus(arc.status, arc.validated);
                     return (
-                      <ListItemButton key={arc._id} sx={{ px: 2, py: 0.75 }}>
+                      <ListItemButton key={arc._id} sx={{ px: 2, py: 0.75 }} onClick={() => handleArchiveClick(arc._id)}>
                         <ListItemIcon sx={{ minWidth: 32 }}>
                           <ArticleOutlinedIcon fontSize="small" color="action" />
                         </ListItemIcon>
@@ -330,7 +356,7 @@ export default function GlobalSearchDialog() {
                 </Box>
                 <List disablePadding dense>
                   {records.map((rec) => (
-                    <ListItemButton key={rec._id} sx={{ px: 2, py: 0.75 }}>
+                    <ListItemButton key={rec._id} sx={{ px: 2, py: 0.75 }} onClick={() => handleRecordClick(rec._id)}>
                       <ListItemIcon sx={{ minWidth: 32 }}>
                         {rec.qrCode
                           ? <QrCode2RoundedIcon fontSize="small" color="action" />

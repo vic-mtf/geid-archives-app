@@ -44,6 +44,8 @@ import useToken      from "@/hooks/useToken";
 import type { PhysicalLevel } from "@/constants/physical";
 import DetailPanel   from "./DetailPanel";
 import { useSnackbar } from "notistack";
+import { useLocation } from "react-router-dom";
+import type { DeepTarget } from "@/utils/deepNavigate";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { incrementVersion, setCacheEntry, invalidateCache as invalidateCacheAction } from "@/redux/data";
@@ -75,6 +77,7 @@ export default function PhysicalArchiveContent() {
   const dispatch = useDispatch<AppDispatch>();
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const theme = useTheme();
+  const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { enqueueSnackbar } = useSnackbar();
   const { canWrite } = useArchivePermissions();
@@ -370,6 +373,14 @@ export default function PhysicalArchiveContent() {
     record:    { icon: <FolderOutlinedIcon />,             label: "Dossier",   color: "#AB47BC" },
     document:  { icon: <TopicOutlinedIcon />,               label: "Document",  color: "#78909C" },
   };
+
+  // Écouter le deep navigate — naviguer vers un chemin physique
+  useEffect(() => {
+    const target = location.state?.deepTarget as DeepTarget | undefined;
+    if (!target?.physicalPath?.length) return;
+    setBreadcrumb(target.physicalPath.map((p) => ({ id: p.id, label: p.label, level: p.level as Level })));
+    setSelected(null);
+  }, [location.state?.deepTarget]);
 
   const showDetail = selected !== null;
 
