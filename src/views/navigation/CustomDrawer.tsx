@@ -32,8 +32,10 @@ export default function CustomDrawer({
       onClose={onClose}
       ModalProps={{ keepMounted: true }}
       sx={{
-        width: !isMobile && alwaysOpenOnDesktop ? drawerWidth : 0,
+        // Réserve l'espace via CSS media query pour éviter le décalage au premier rendu
+        width: alwaysOpenOnDesktop ? { xs: 0, md: drawerWidth } : 0,
         flexShrink: 0,
+        transition: "none",
         "& .MuiDrawer-paper": {
           width: isMobile ? "100vw" : drawerWidth,
           boxSizing: "border-box",
