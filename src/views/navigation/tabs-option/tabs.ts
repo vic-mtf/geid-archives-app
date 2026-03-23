@@ -2,13 +2,16 @@ import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
+import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
 
-interface Tab {
+export interface Tab {
   label: string;
   icon: ComponentType<SvgIconProps>;
   id: string;
+  /** Si true, le tab ne s'affiche que si l'utilisateur a les droits */
+  requiresWrite?: boolean;
 }
 
 const tabs: Tab[] = [
@@ -26,6 +29,12 @@ const tabs: Tab[] = [
     label: "Archivage physique",
     icon: InventoryRoundedIcon,
     id: "physicalArchive",
+  },
+  {
+    label: "Utilisateurs",
+    icon: PeopleOutlineRoundedIcon,
+    id: "userManagement",
+    requiresWrite: true,
   },
   {
     label: "Aide",

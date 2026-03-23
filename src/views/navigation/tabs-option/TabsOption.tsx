@@ -1,17 +1,25 @@
 import React, { useMemo } from "react";
 import { List, ListItemButton, ListItemIcon, ListItemText, alpha, useTheme } from "@mui/material";
 import { useLocation } from "react-router-dom";
-import tabs from "./tabs";
+import allTabs from "./tabs";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
+import useArchivePermissions from "@/hooks/useArchivePermissions";
 
 export default function TabsOption() {
   const location = useLocation();
   const navigateTo = useNavigateSetState();
   const theme = useTheme();
+  const { canWrite } = useArchivePermissions();
 
   const value = useMemo(
     () => location.state?.navigation?.tabs?.option,
     [location.state?.navigation?.tabs?.option]
+  );
+
+  // Filtrer les tabs selon les permissions
+  const tabs = useMemo(
+    () => allTabs.filter((tab) => !tab.requiresWrite || canWrite),
+    [canWrite]
   );
 
   const handleChange = (option: string) => {
