@@ -193,15 +193,13 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
       <TextField
         size="small"
         fullWidth
-        autoFocus={false}
-        placeholder={indexReady ? "Trouver un élément…" : "Chargement…"}
+        placeholder="Trouver un élément…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        disabled={!indexReady}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              {loading ? <CircularProgress size={16} /> : <SearchRoundedIcon fontSize="small" color="action" />}
+              {loading ? <CircularProgress size={14} /> : <SearchRoundedIcon fontSize="small" color="action" />}
             </InputAdornment>
           ),
           endAdornment: query ? (
