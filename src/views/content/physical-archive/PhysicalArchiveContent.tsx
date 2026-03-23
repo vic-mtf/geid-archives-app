@@ -426,7 +426,8 @@ export default function PhysicalArchiveContent() {
             </Box>
             <PhysicalTreeView
               headers={headers}
-              selectedId={selected ? (selected.item as { _id: string })._id : parentId ?? null}
+              selectedId={parentId ?? null}
+              expandedIds={breadcrumb.map((b) => b.id)}
               onSelect={handleNavigateTo}
             />
           </Box>
