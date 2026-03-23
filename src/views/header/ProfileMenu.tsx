@@ -13,11 +13,11 @@ import {
 } from "@mui/material";
 import AddAPhotoRoundedIcon from "@mui/icons-material/AddAPhotoRounded";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../redux/store";
+import type { RootState } from "@/redux/store";
 import LogoutIcon from "@mui/icons-material/Logout";
-import getFile from "../../utils/getFile";
+import getFile from "@/utils/getFile";
 import { useCallback } from "react";
-import getFullName from "../../utils/getFullName";
+import getFullName from "@/utils/getFullName";
 
 interface ProfileMenuProps {
   anchorEl: HTMLElement | null;

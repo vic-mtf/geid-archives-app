@@ -2,7 +2,7 @@ import { Paper, Table, TableContainer, TablePagination } from "@mui/material";
 import React, { useCallback, useMemo, useState } from "react";
 import DataGridHeader from "./header/DataGridHeader";
 import DataGridBody from "./body/DataGridBody";
-import { sortFuncDate, sortFuncString } from "../../utils/sortDate";
+import { sortFuncDate, sortFuncString } from "@/utils/sortDate";
 import type { Column } from "./columns/columns";
 
 export interface Row {

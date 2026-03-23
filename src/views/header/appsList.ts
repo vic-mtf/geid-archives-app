@@ -1,9 +1,9 @@
-//import _archives_logo from "../../assets/crdoy0js-removebg-preview.webp";
-import _media_logo from "../../assets/5a229b479641b7.26338722151221741.webp";
+//import _archives_logo from "@/assets/crdoy0js-removebg-preview.webp";
+import _media_logo from "@/assets/5a229b479641b7.26338722151221741.webp";
 //import _arcives_server_logo from '../../assets/kisspng-paper-drawer-archive-rin.webp';
 // import _checklist_logo from '../../assets/kisspng-hand-stop-sign-symbol-cl.webp';
-import _group_speak_logo from "../../assets/group_speak.webp";
-import _workspace_logo from "../../assets/5a3636b951df37.87798883151350239.webp";
+import _group_speak_logo from "@/assets/group_speak.webp";
+import _workspace_logo from "@/assets/5a3636b951df37.87798883151350239.webp";
 
 interface AppItem {
   name: string;

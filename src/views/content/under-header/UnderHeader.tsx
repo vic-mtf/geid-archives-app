@@ -1,6 +1,6 @@
 import { Toolbar } from "@mui/material";
 import headers from "./headers";
-import NavigationMenuButton from "../../navigation/NavigationMenuButton";
+import NavigationMenuButton from "@/views/navigation/NavigationMenuButton";
 import { useLocation } from "react-router-dom";
 import { useMemo } from "react";
 

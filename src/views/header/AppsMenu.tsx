@@ -7,8 +7,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../redux/store";
-import checkAuth from "../../utils/checkAuth";
+import type { RootState } from "@/redux/store";
+import checkAuth from "@/utils/checkAuth";
 //import inArray from '../../../utils/inArray';
 import appsList from "./appsList";
 

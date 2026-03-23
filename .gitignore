@@ -28,3 +28,6 @@ dist-ssr
 
 # PDF générés
 src/assets/*.pdf
+
+# npm lockfile (on utilise pnpm)
+package-lock.json

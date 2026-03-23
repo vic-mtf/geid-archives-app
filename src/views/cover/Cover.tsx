@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
-import Box from "../../components/Box";
-import _archives_logo from "../../assets/crdoy0js-removebg-preview.webp";
+import Box from "@/components/Box";
+import _archives_logo from "@/assets/crdoy0js-removebg-preview.webp";
 import {
   CardMedia,
   Stack,
@@ -8,14 +8,14 @@ import {
   Divider,
   Typography,
 } from "@mui/material";
-import _logo_geid from "../../assets/geid_logo_blue_without_title.webp";
-import SwingAnimation from "../../components/SwingAnimation";
+import _logo_geid from "@/assets/geid_logo_blue_without_title.webp";
+import SwingAnimation from "@/components/SwingAnimation";
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "../../redux/store";
+import type { RootState, AppDispatch } from "@/redux/store";
 import openSignIn from "./openSignIn";
-import channels from "../../utils/channels";
-import { decrypt } from "../../utils/crypt";
-import { updateUser } from "../../redux/user";
+import channels from "@/utils/channels";
+import { decrypt } from "@/utils/crypt";
+import { updateUser } from "@/redux/user";
 
 interface CoverProps {
   setOpened: (opened: boolean) => void;

@@ -13,10 +13,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../../redux/store";
-import { removeUser } from "../../redux/app";
-import { removeData } from "../../redux/data";
-import { disconnected } from "../../redux/user";
+import type { AppDispatch } from "@/redux/store";
+import { removeUser } from "@/redux/app";
+import { removeData } from "@/redux/data";
+import { disconnected } from "@/redux/user";
 
 export default function DisconnectDialog() {
   const [open, setOpen] = useState(false);

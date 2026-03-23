@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import type { RootState } from "../../redux/store";
+import type { RootState } from "@/redux/store";
 import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
 import AppsMenu from "./AppsMenu";
 import ProfileMenu from "./ProfileMenu";
