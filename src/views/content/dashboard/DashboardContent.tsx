@@ -280,23 +280,23 @@ export default function DashboardContent() {
               <Divider sx={{ mb: 1.5 }} />
               {anyLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
-                  <Skeleton variant="circular" width={140} height={140} />
+                  <Skeleton variant="circular" width={190} height={190} />
                 </Box>
               ) : pieData.length === 0 ? (
                 <EmptyPlaceholder label="Aucune archive" />
               ) : (
                 <Box flex={1} display="flex" flexDirection="column">
                   {/* Chart */}
-                  <Box sx={{ height: 180, width: "100%", mb: 1 }}>
+                  <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
                     <PieChart
                       series={[{
                         data: pieData,
-                        innerRadius: 35,
-                        outerRadius: 70,
-                        paddingAngle: 2,
-                        cornerRadius: 4,
+                        innerRadius: 50,
+                        outerRadius: 95,
+                        paddingAngle: 3,
+                        cornerRadius: 5,
                       }]}
-                      height={180}
+                      height={240}
                     />
                   </Box>
                   {/* Légende détaillée */}
