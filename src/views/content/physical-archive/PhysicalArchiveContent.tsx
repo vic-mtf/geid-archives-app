@@ -289,10 +289,15 @@ export default function PhysicalArchiveContent() {
     setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
   }, [currentLevel, getItemRaw]);
 
-  /** Navigation depuis l'arbre ou la recherche → synchronise l'explorateur.
-   *  Quand on clique sur un noeud dans l'arbre, on veut voir SES ENFANTS
-   *  dans l'explorateur (comme si on avait cliqué dessus dans la liste). */
-  const handleNavigateTo = useCallback((id: string, level: Level, label: string) => {
+  /** Navigation depuis l'arbre → synchronise l'explorateur avec le chemin complet.
+   *  Le breadcrumb est reconstruit exactement comme le chemin dans l'arbre. */
+  const handleNavigateFromTree = useCallback((path: Array<{ id: string; label: string; level: Level }>) => {
+    setBreadcrumb(path);
+    setSelected(null);
+  }, []);
+
+  /** Navigation depuis la recherche → un seul item dans le breadcrumb */
+  const handleNavigateFromSearch = useCallback((id: string, level: Level, label: string) => {
     setBreadcrumb([{ id, label, level }]);
     setSelected(null);
   }, []);
@@ -353,7 +358,7 @@ export default function PhysicalArchiveContent() {
               sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" }, fontSize: { xs: "0.75rem", sm: "0.875rem" }, maxWidth: { xs: 100, sm: 200 }, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               color={i === breadcrumb.length - 1 ? "text.primary" : "text.secondary"}
               onClick={() => handleBreadcrumb(i + 1)}>
-              {b.label}
+              {levelConfig[b.level]?.label} : {b.label}
             </Typography>
           </React.Fragment>
         ))}
@@ -388,13 +393,13 @@ export default function PhysicalArchiveContent() {
             </Box>
             {/* Recherche — entre le header et l'arbre */}
             <Box px={1} py={0.75} borderBottom={1} borderColor="divider">
-              <PhysicalSearch headers={headers} onNavigate={handleNavigateTo} />
+              <PhysicalSearch headers={headers} onNavigate={handleNavigateFromSearch} />
             </Box>
             <PhysicalTreeView
               headers={headers}
               selectedId={parentId ?? null}
               expandedIds={breadcrumb.map((b) => b.id)}
-              onSelect={handleNavigateTo}
+              onSelect={handleNavigateFromTree}
             />
           </Box>
         ) : null}
