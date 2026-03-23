@@ -1,5 +1,6 @@
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
+import openArchiveFile from "@/utils/openArchiveFile";
 import { Box } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
@@ -69,10 +70,8 @@ export default function ArchivingServiceContent() {
             "& *": scrollBarSx as Record<string, unknown>,
           }}
           onRowClick={(e) => {
-            if (e.row.fileUrl) {
-              window.open(
-                new URL(e.row.fileUrl, import.meta.env.VITE_SERVER_BASE_URL)
-              );
+            if (e.row.fileUrl && e.row._id) {
+              openArchiveFile(e.row._id);
             }
           }}
           disableRowSelectionOnClick

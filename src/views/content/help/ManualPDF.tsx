@@ -777,11 +777,9 @@ function Chapter4() {
           reportez-le ici pour assurer la continuité entre vos outils existants et GEID Archives.
         </Field>
 
-        <Field label="Dossier" required example="Ressources humaines / Gestion des carrières">
-          Le dossier thématique ou fonctionnel auquel appartient le document. Ce champ structure
-          la hiérarchie documentaire et permet de regrouper les archives par domaine d'activité.
-          Utilisez une notation cohérente à l'échelle de votre service (par exemple :
-          "Domaine / Sous-domaine").
+        <Field label="Dossier" example="(automatique)">
+          Le dossier de classement est déterminé automatiquement par le serveur à partir du type
+          de document choisi. Vous n'avez pas besoin de le renseigner manuellement.
         </Field>
 
         <Field label="Description">
@@ -1183,7 +1181,7 @@ function Chapter8() {
         fichier compatible Excel. Cliquez sur l'icône de téléchargement dans la barre de
         navigation gauche. Le fichier est généré immédiatement et téléchargé dans votre dossier
         de téléchargements habituel. Il contient les colonnes : Désignation, Numéro de classe,
-        Numéro de référence, Dossier, Statut, Date de création.
+        Numéro de référence, Dossier (attribué automatiquement), Statut, Date de création.
       </P2>
       <P2>
         L'export tient compte des filtres actifs : si vous avez filtré par statut Actif, seules
@@ -1362,7 +1360,7 @@ function Chapter10() {
       <Bullet>Désignation : premier critère, le plus important.</Bullet>
       <Bullet>Description : le résumé libre du contenu.</Bullet>
       <Bullet>Numéro de classe et numéro de référence.</Bullet>
-      <Bullet>Dossier de classement.</Bullet>
+      <Bullet>Dossier de classement (attribué automatiquement depuis le type).</Bullet>
       <Bullet>Étiquettes (tags) si configurées.</Bullet>
 
       <H4>Pour les documents physiques</H4>

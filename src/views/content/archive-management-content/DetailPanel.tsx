@@ -36,6 +36,7 @@ import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
 import { STATUS_LABEL, normalizeStatus } from "@/constants/lifecycle";
 import scrollBarSx from "@/utils/scrollBarSx";
 import formatDate  from "@/utils/formatTime";
+import openArchiveFile from "@/utils/openArchiveFile";
 import StatusChip  from "./StatusChip";
 import { computeExpiresAt } from "./helpers";
 
@@ -138,14 +139,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
               <Tooltip title="Ouvrir le fichier">
                 <IconButton
                   size="small"
-                  onClick={() =>
-                    window.open(
-                      new URL(
-                        doc.fileUrl as string,
-                        (import.meta.env.VITE_SERVER_BASE_URL as string) ?? ""
-                      ).toString()
-                    )
-                  }
+                  onClick={() => openArchiveFile(doc._id as string)}
                 >
                   <OpenInNewRoundedIcon fontSize="small" />
                 </IconButton>

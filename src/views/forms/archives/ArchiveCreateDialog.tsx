@@ -43,7 +43,6 @@ export default function ArchiveCreateDialog() {
   // Form fields
   const designation  = useRef<string>("");
   const description  = useRef<string>("");
-  const folder       = useRef<string>("");
   const typeRef      = useRef<string | null | undefined>(undefined);
   const subTypeRef   = useRef<string | null | undefined>(undefined);
 
@@ -56,7 +55,6 @@ export default function ArchiveCreateDialog() {
       setError(null);
       designation.current = "";
       description.current = "";
-      folder.current = "";
       typeRef.current = undefined;
       subTypeRef.current = undefined;
     };
@@ -88,7 +86,6 @@ export default function ArchiveCreateDialog() {
     if (!file)                      return setError("Veuillez sélectionner un fichier.");
     if (!designation.current?.trim()) return setError("La désignation est requise.");
     if (!description.current?.trim()) return setError("La description est requise.");
-    if (!folder.current?.trim())      return setError("L'activité / dossier est requis.");
     if (!typeRef.current)             return setError("Le type de document est requis.");
 
     setLoading(true);
@@ -96,7 +93,6 @@ export default function ArchiveCreateDialog() {
     formData.append("file",        file);
     formData.append("designation", designation.current.trim());
     formData.append("description", description.current.trim());
-    formData.append("folder",      folder.current.trim());
     formData.append("type",        typeRef.current);
     if (subTypeRef.current) formData.append("subtype", subTypeRef.current);
 
@@ -194,15 +190,6 @@ export default function ArchiveCreateDialog() {
           />
 
           <Typology type={typeRef} subType={subTypeRef} />
-
-          <TextField
-            label="Activité / Dossier *"
-            fullWidth
-            size="small"
-            placeholder="Ex : Gestion des ressources humaines"
-            onChange={(e) => { folder.current = e.target.value; }}
-            helperText="Nom du projet, service ou mission"
-          />
 
           <TextField
             label="Description *"

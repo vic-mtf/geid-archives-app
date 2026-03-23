@@ -35,14 +35,12 @@ export default function ArchivesFrom() {
   const subType = useRef<string | null | undefined>(undefined);
   const designation = useRef<string | null | undefined>(undefined);
   const description = useRef<string | null | undefined>(undefined);
-  const folder = useRef<string | null | undefined>(undefined);
   const getFieldsRef = useCallback(
     () => ({
       type,
       subType,
       designation,
       description,
-      folder,
     }),
     []
   );

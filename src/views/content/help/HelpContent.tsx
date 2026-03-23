@@ -76,8 +76,8 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "formulaire-creation", number: "4.1", title: "Soumettre une nouvelle archive",
-    keywords: ["formulaire", "création", "désignation", "type", "description", "fichier", "dossier", "référence"],
-    body: "Pour soumettre une archive cliquez sur le bouton Ajouter dans la barre de navigation gauche. Un formulaire s'ouvre avec les champs suivants : désignation obligatoire nom du document, type documentaire catégorie administrative, numéro de classe, numéro de référence, dossier de rattachement, description, pièce jointe PDF ou autre.",
+    keywords: ["formulaire", "création", "désignation", "type", "description", "fichier", "référence"],
+    body: "Pour soumettre une archive cliquez sur le bouton Ajouter dans la barre de navigation gauche. Un formulaire s'ouvre avec les champs suivants : désignation (nom du document, obligatoire), type documentaire (catégorie administrative), description et pièce jointe (PDF ou autre). Le dossier de classement est déterminé automatiquement à partir du type de document choisi.",
   },
   {
     id: "cycle-de-vie", number: "5", title: "Le cycle de vie d'une archive",
@@ -676,9 +676,9 @@ export default function HelpContent() {
           Si votre organisation utilise un système de numérotation, reportez-le ici.
         </FieldDoc>
 
-        <FieldDoc label="Dossier" required example="Ressources humaines / Contrats">
-          Le dossier thématique ou fonctionnel auquel appartient le document. Ce champ structure
-          la hiérarchie documentaire et facilite le regroupement des archives par domaine d'activité.
+        <FieldDoc label="Dossier" example="(automatique)">
+          Le dossier de classement est déterminé automatiquement par le serveur à partir du type
+          de document choisi. Vous n'avez pas besoin de le renseigner manuellement.
         </FieldDoc>
 
         <FieldDoc label="Description">
@@ -836,7 +836,7 @@ export default function HelpContent() {
         <SubTitle>Procédure de validation</SubTitle>
         <Step number={1}>Accédez à la section Archives depuis le menu de navigation.</Step>
         <Step number={2}>Cliquez sur la ligne de l'archive en attente pour ouvrir son panneau de détail.</Step>
-        <Step number={3}>Examinez les informations saisies par le déposant : désignation, type, dossier, description et fichier joint.</Step>
+        <Step number={3}>Examinez les informations saisies par le déposant : désignation, type, description et fichier joint. Le dossier de classement est attribué automatiquement.</Step>
         <Step number={4}>Si tout est conforme, cliquez sur le bouton Valider dans la barre d'actions rapides. Un message de confirmation s'affiche.</Step>
         <Step number={5}>Si le document comporte des erreurs, contactez le déposant pour qu'il corrige sa soumission.</Step>
 

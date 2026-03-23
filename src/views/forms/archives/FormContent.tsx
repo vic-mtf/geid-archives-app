@@ -18,7 +18,6 @@ interface FormContentProps {
     designation?: React.MutableRefObject<string | null | undefined>;
     subType?: React.MutableRefObject<string | null | undefined>;
     description?: React.MutableRefObject<string | null | undefined>;
-    folder?: React.MutableRefObject<string | null | undefined>;
   };
   onClose: (event: React.MouseEvent) => void;
 }
