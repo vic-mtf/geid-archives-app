@@ -21,11 +21,13 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
+import { PieChart } from "@mui/x-charts/PieChart";
 import StorageRoundedIcon        from "@mui/icons-material/StorageRounded";
 import QrCodeRoundedIcon         from "@mui/icons-material/QrCodeRounded";
 import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
@@ -161,173 +163,97 @@ export default function DashboardContent() {
   const totalCount  = fullList.length;
   const anyLoading  = archivesLoading;
 
+
+  // ── Données PieChart ────────────────────────────────────────
+  const pieData = useMemo(() => [
+    { id: 0, value: statusCounts.ACTIVE,      label: "Actives",         color: "#4caf50" },
+    { id: 1, value: statusCounts.PENDING,     label: "En attente",      color: "#ff9800" },
+    { id: 2, value: statusCounts.SEMI_ACTIVE, label: "Intermédiaires",  color: "#2196f3" },
+    { id: 3, value: statusCounts.PERMANENT,   label: "Historiques",     color: "#9c27b0" },
+    { id: 4, value: statusCounts.DESTROYED,   label: "Détruites",       color: "#f44336" },
+  ].filter((d) => d.value > 0), [statusCounts]);
+
   // ── Rendu ─────────────────────────────────────────────────────
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2 }, overflowY: "auto", height: "100%", width: "100%" }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, overflowY: "auto", height: "100%", width: "100%" }}>
 
       {/* ── Alertes prioritaires ──────────────────────────── */}
       {(statusCounts.PENDING > 0 || duaExpired.length > 0 || criticalBinders.length > 0) && (
         <Stack spacing={1} mb={2}>
           {statusCounts.PENDING > 0 && (
-            <Alert
-              severity="warning"
-              icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
-              action={
-                <Chip
-                  label="Consulter"
-                  size="small"
-                  onClick={() => goTo("archiveManager")}
-                  icon={<ArrowForwardRoundedIcon fontSize="small" />}
-                  clickable
-                />
-              }>
-              <strong>{statusCounts.PENDING}</strong> archive{statusCounts.PENDING > 1 ? "s sont" : " est"} en attente de validation et nécessite{statusCounts.PENDING > 1 ? "nt" : ""} une action.
+            <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
+              action={<Chip label="Consulter" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <strong>{statusCounts.PENDING}</strong> archive{statusCounts.PENDING > 1 ? "s" : ""} en attente de validation.
             </Alert>
           )}
           {duaExpired.length > 0 && (
-            <Alert
-              severity="error"
-              icon={<AlarmRoundedIcon fontSize="inherit" />}
-              action={
-                <Chip
-                  label="Voir"
-                  size="small"
-                  onClick={() => goTo("archiveManager")}
-                  icon={<ArrowForwardRoundedIcon fontSize="small" />}
-                  clickable
-                />
-              }>
-              <strong>{duaExpired.length}</strong> DUA expirée{duaExpired.length > 1 ? "s" : ""} — ces archives ont dépassé leur durée d&apos;utilité administrative.
+            <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
+              action={<Chip label="Voir" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <strong>{duaExpired.length}</strong> DUA expirée{duaExpired.length > 1 ? "s" : ""} nécessitent une action.
             </Alert>
           )}
           {criticalBinders.length > 0 && (
-            <Alert
-              severity="warning"
-              icon={<WarningAmberRoundedIcon fontSize="inherit" />}
-              action={
-                <Chip
-                  label="Archivage physique"
-                  size="small"
-                  onClick={() => goTo("physicalArchive")}
-                  icon={<ArrowForwardRoundedIcon fontSize="small" />}
-                  clickable
-                />
-              }>
-              <strong>{criticalBinders.length}</strong> classeur{criticalBinders.length > 1 ? "s sont" : " est"} à plus de 90 % de sa capacité.
+            <Alert severity="warning" icon={<WarningAmberRoundedIcon fontSize="inherit" />}
+              action={<Chip label="Physique" size="small" onClick={() => goTo("physicalArchive")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <strong>{criticalBinders.length}</strong> classeur{criticalBinders.length > 1 ? "s" : ""} à plus de 90% de capacité.
             </Alert>
           )}
         </Stack>
       )}
 
-      {/* ── Cartes statistiques ───────────────────────────── */}
+      {/* ── Rangée 1 : Cartes stats principales ──────────── */}
       <Grid container spacing={2} mb={2.5}>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="Total archives"
-            value={totalCount}
-            loading={anyLoading}
-            icon={<ManageHistoryRoundedIcon />}
-            color="primary.main"
-            onClick={() => goTo("archiveManager")}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="En attente"
-            value={statusCounts.PENDING}
-            loading={anyLoading}
-            icon={<HourglassTopOutlinedIcon />}
-            color="warning.main"
-            onClick={() => goTo("archiveManager")}
-            highlight={statusCounts.PENDING > 0}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="Actives"
-            value={statusCounts.ACTIVE}
-            loading={anyLoading}
-            icon={<CheckCircleOutlineIcon />}
-            color="success.main"
-            onClick={() => goTo("archiveManager")}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="Intermédiaires"
-            value={statusCounts.SEMI_ACTIVE}
-            loading={anyLoading}
-            icon={<ArchiveOutlinedIcon />}
-            color="info.main"
-            onClick={() => goTo("archiveManager")}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="Locaux physiques"
-            value={containerList.length}
-            loading={containersLoading}
-            icon={<StorageRoundedIcon />}
-            color="secondary.main"
-            onClick={() => goTo("physicalArchive")}
-          />
-        </Grid>
-        <Grid item xs={6} sm={4} md={2}>
-          <StatCard
-            label="Documents"
-            value={recordList.length}
-            loading={recordsLoading}
-            icon={<QrCodeRoundedIcon />}
-            color="text.primary"
-            onClick={() => goTo("physicalArchive")}
-          />
-        </Grid>
+        {[
+          { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager" },
+          { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", highlight: statusCounts.PENDING > 0 },
+          { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager" },
+          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveOutlinedIcon />, color: "info.main", tab: "archiveManager" },
+          { label: "Locaux physiques", value: containerList.length, icon: <StorageRoundedIcon />, color: "secondary.main", tab: "physicalArchive" },
+          { label: "Dossiers", value: recordList.length, icon: <QrCodeRoundedIcon />, color: "text.primary", tab: "physicalArchive" },
+        ].map((s) => (
+          <Grid item xs={6} sm={4} md={2} key={s.label}>
+            <StatCard
+              label={s.label}
+              value={s.value}
+              loading={anyLoading}
+              icon={s.icon}
+              color={s.color}
+              onClick={() => goTo(s.tab)}
+              highlight={s.highlight}
+            />
+          </Grid>
+        ))}
       </Grid>
 
-      {/* ── Rangée principale ─────────────────────────────── */}
-      <Grid container spacing={2} mb={2}>
+      {/* ── Rangée 2 : Activité + Répartition PieChart ──── */}
+      <Grid container spacing={2} mb={2.5}>
 
         {/* Activité récente */}
         <Grid item xs={12} md={7}>
           <Card variant="outlined" sx={{ height: "100%" }}>
-            <CardContent sx={{ pb: 1 }}>
+            <CardContent sx={{ pb: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                <Typography variant="body1" fontWeight="bold">
-                  Activité récente
-                </Typography>
-                <Chip
-                  label="Tout voir"
-                  size="small"
-                  onClick={() => goTo("archiveManager")}
-                  icon={<ArrowForwardRoundedIcon fontSize="small" />}
-                  clickable
-                  variant="outlined"
-                />
+                <Typography variant="body1" fontWeight="bold">Activité récente</Typography>
+                <Chip label="Tout voir" size="small" variant="outlined" onClick={() => goTo("archiveManager")} clickable />
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {anyLoading ? (
-                <Box display="flex" justifyContent="center" p={3}>
-                  <CircularProgress size={24} />
-                </Box>
+                <Stack spacing={0.5}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={40} />)}</Stack>
               ) : recentArchives.length === 0 ? (
-                <EmptyPlaceholder label="Aucune archive trouvée" />
+                <EmptyPlaceholder label="Aucune archive récente" />
               ) : (
-                <List disablePadding dense>
+                <List dense disablePadding sx={{ flex: 1, overflow: "auto" }}>
                   {recentArchives.map((doc) => {
                     const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
                     return (
-                      <ListItemButton
-                        key={doc._id}
-                        dense
-                        sx={{ borderRadius: 1, py: 0.4 }}
-                        onClick={() => goTo("archiveManager")}>
-                        <ListItemIcon sx={{ minWidth: 30 }}>
-                          <InsertDriveFileOutlinedIcon fontSize="small" />
+                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.5 }} onClick={() => goTo("archiveManager")}>
+                        <ListItemIcon sx={{ minWidth: 28 }}>
+                          <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: STATUS_COLOR[norm] ? `${STATUS_COLOR[norm]}.main` : "text.disabled" }} />
                         </ListItemIcon>
                         <ListItemText
-                          primary={doc.designation ?? (doc as Record<string, unknown>).title as string ?? "—"}
+                          primary={doc.designation ?? "—"}
                           secondary={formatDate(doc.createdAt as string)}
-                          primaryTypographyProps={{ noWrap: true, variant: "body2", sx: { maxWidth: { xs: 120, sm: 200, md: 260 } } }}
+                          primaryTypographyProps={{ noWrap: true, variant: "body2", sx: { maxWidth: { xs: 140, sm: 200, md: 260 } } }}
                           secondaryTypographyProps={{ variant: "caption" }}
                         />
                         <Chip
@@ -335,7 +261,7 @@ export default function DashboardContent() {
                           label={STATUS_LABEL[norm] ?? norm}
                           color={STATUS_COLOR[norm] ?? "default"}
                           variant="outlined"
-                          sx={{ ml: 1, flexShrink: 0 }}
+                          sx={{ height: 20, fontSize: "0.65rem", flexShrink: 0 }}
                         />
                       </ListItemButton>
                     );
@@ -346,66 +272,67 @@ export default function DashboardContent() {
           </Card>
         </Grid>
 
-        {/* Répartition par statut */}
+        {/* Répartition par statut — PieChart */}
         <Grid item xs={12} md={5}>
           <Card variant="outlined" sx={{ height: "100%" }}>
-            <CardContent>
-              <Typography variant="body1" fontWeight="bold" mb={1}>
-                Répartition par statut
-              </Typography>
+            <CardContent sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+              <Typography variant="body1" fontWeight="bold" mb={1}>Répartition par statut</Typography>
               <Divider sx={{ mb: 1.5 }} />
               {anyLoading ? (
-                <Box display="flex" justifyContent="center" p={3}>
-                  <CircularProgress size={24} />
+                <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
+                  <Skeleton variant="circular" width={140} height={140} />
                 </Box>
-              ) : fullList.length === 0 ? (
-                <EmptyPlaceholder label="Aucune archive trouvée" />
+              ) : pieData.length === 0 ? (
+                <EmptyPlaceholder label="Aucune archive" />
               ) : (
-                <Stack spacing={1.25}>
-                  {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"] as const).map((key) => {
-                    const count = statusCounts[key] ?? 0;
-                    const pct   = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-                    return (
-                      <Box
-                        key={key}
-                        sx={{ cursor: "pointer", "&:hover .bar": { opacity: 0.8 } }}
-                        onClick={() => goTo("archiveManager")}>
-                        <Box display="flex" justifyContent="space-between" mb={0.25}>
-                          <Typography variant="body2">{STATUS_LABEL[key]}</Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {count} ({pct}%)
-                          </Typography>
+                <Box flex={1} display="flex" flexDirection="column">
+                  {/* Chart */}
+                  <Box sx={{ height: 180, width: "100%", mb: 1 }}>
+                    <PieChart
+                      series={[{
+                        data: pieData,
+                        innerRadius: 35,
+                        outerRadius: 70,
+                        paddingAngle: 2,
+                        cornerRadius: 4,
+                      }]}
+                      height={180}
+                    />
+                  </Box>
+                  {/* Légende détaillée */}
+                  <Stack spacing={0.75}>
+                    {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"] as const).map((key) => {
+                      const count = statusCounts[key] ?? 0;
+                      const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
+                      return (
+                        <Box key={key} display="flex" alignItems="center" gap={1} sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, borderRadius: 0.5, px: 0.5 }}
+                          onClick={() => goTo("archiveManager")}>
+                          <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: `${STATUS_COLOR[key]}.main`, flexShrink: 0 }} />
+                          <Typography variant="caption" flex={1}>{STATUS_LABEL[key]}</Typography>
+                          <Typography variant="caption" fontWeight="bold">{count}</Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ width: 35, textAlign: "right" }}>{pct}%</Typography>
                         </Box>
-                        <LinearProgress
-                          className="bar"
-                          variant="determinate"
-                          value={pct}
-                          color={(STATUS_COLOR[key] === "default" ? "inherit" : STATUS_COLOR[key]) ?? "inherit"}
-                          sx={{ borderRadius: 1, height: 6, transition: "opacity 0.2s" }}
-                        />
-                      </Box>
-                    );
-                  })}
-                </Stack>
+                      );
+                    })}
+                  </Stack>
+                </Box>
               )}
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* ── Rangée secondaire ─────────────────────────────── */}
+      {/* ── Rangée 3 : DUA + Classeurs + Inventaire + Users ─ */}
       <Grid container spacing={2}>
 
-        {/* DUA bientôt expirées */}
+        {/* DUA alertes */}
         {(duaExpired.length > 0 || duaSoon.length > 0) && (
-          <Grid item xs={12} md={canWrite ? 3 : 4}>
-            <Card variant="outlined" sx={{ borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card variant="outlined" sx={{ height: "100%", borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                   <AlarmRoundedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Alertes DUA
-                  </Typography>
+                  <Typography variant="body2" fontWeight="bold">Alertes DUA</Typography>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
                 {duaExpired.length > 0 && (
@@ -415,41 +342,22 @@ export default function DashboardContent() {
                     </Typography>
                     <List dense disablePadding>
                       {duaExpired.slice(0, 3).map((doc) => (
-                        <ListItemButton
-                          key={doc._id}
-                          dense
-                          sx={{ borderRadius: 1, py: 0.25 }}
-                          onClick={() => goTo("archiveManager")}>
-                          <ListItemText
-                            primary={doc.designation ?? "—"}
-                            primaryTypographyProps={{ noWrap: true, variant: "caption" }}
-                          />
+                        <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
+                          <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
                         </ListItemButton>
                       ))}
-                      {duaExpired.length > 3 && (
-                        <Typography variant="caption" color="text.disabled" pl={1}>
-                          +{duaExpired.length - 3} autre{duaExpired.length - 3 > 1 ? "s" : ""}…
-                        </Typography>
-                      )}
                     </List>
                   </Box>
                 )}
                 {duaSoon.length > 0 && (
                   <Box>
                     <Typography variant="caption" color="warning.main" fontWeight="bold" display="block" mb={0.5}>
-                      Expirent dans 30 jours ({duaSoon.length})
+                      Bientôt ({duaSoon.length})
                     </Typography>
                     <List dense disablePadding>
                       {duaSoon.slice(0, 3).map((doc) => (
-                        <ListItemButton
-                          key={doc._id}
-                          dense
-                          sx={{ borderRadius: 1, py: 0.25 }}
-                          onClick={() => goTo("archiveManager")}>
-                          <ListItemText
-                            primary={doc.designation ?? "—"}
-                            primaryTypographyProps={{ noWrap: true, variant: "caption" }}
-                          />
+                        <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
+                          <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
                         </ListItemButton>
                       ))}
                     </List>
@@ -462,86 +370,68 @@ export default function DashboardContent() {
 
         {/* Capacité des classeurs */}
         {!bindersLoading && binderList.length > 0 && (
-          <Grid item xs={12} md={canWrite ? 3 : (duaExpired.length > 0 ? 4 : 6)}>
-            <Card variant="outlined">
+          <Grid item xs={12} sm={6} md={3}>
+            <Card variant="outlined" sx={{ height: "100%" }}>
               <CardContent>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <FolderOpenOutlinedIcon fontSize="small" color="action" />
-                    <Typography variant="body1" fontWeight="bold">Capacité des classeurs</Typography>
-                  </Stack>
-                  <Chip
-                    label="Archivage physique"
-                    size="small"
-                    onClick={() => goTo("physicalArchive")}
-                    icon={<ArrowForwardRoundedIcon fontSize="small" />}
-                    clickable
-                    variant="outlined"
-                  />
+                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+                  <FolderOpenOutlinedIcon fontSize="small" color="action" />
+                  <Typography variant="body2" fontWeight="bold">Classeurs</Typography>
                 </Stack>
-                <Divider sx={{ mb: 1.5 }} />
-                <Stack spacing={1}>
-                  {binderList.slice(0, 5).map((binder) => {
-                    const pct = binder.maxCapacity
-                      ? Math.min(100, Math.round(((binder.currentCount ?? 0) / binder.maxCapacity) * 100))
-                      : 0;
-                    return (
-                      <Box key={binder._id}>
-                        <Box display="flex" justifyContent="space-between" mb={0.25}>
-                          <Tooltip title={binder.name} placement="top">
-                            <Typography noWrap sx={{ maxWidth: { xs: 100, sm: 130, md: 160 } }} variant="body2">
-                              {binder.name}
+                <Divider sx={{ mb: 1 }} />
+                <Stack spacing={0.75}>
+                  {[...binderList]
+                    .sort((a, b) => ((b.currentCount ?? 0) / b.maxCapacity) - ((a.currentCount ?? 0) / a.maxCapacity))
+                    .slice(0, 5)
+                    .map((binder) => {
+                      const pct = Math.min(100, Math.round(((binder.currentCount ?? 0) / binder.maxCapacity) * 100));
+                      return (
+                        <Box key={binder._id}>
+                          <Box display="flex" justifyContent="space-between" mb={0.25}>
+                            <Tooltip title={binder.name} placement="top">
+                              <Typography noWrap sx={{ maxWidth: { xs: 100, sm: 130, md: 160 } }} variant="caption">{binder.name}</Typography>
+                            </Tooltip>
+                            <Typography variant="caption" color={pct >= 90 ? "error.main" : "text.secondary"}>
+                              {binder.currentCount ?? 0}/{binder.maxCapacity}
                             </Typography>
-                          </Tooltip>
-                          <Typography color="text.secondary" variant="body2">
-                            {binder.currentCount ?? 0}&thinsp;/&thinsp;{binder.maxCapacity}
-                          </Typography>
+                          </Box>
+                          <LinearProgress variant="determinate" value={pct}
+                            color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"}
+                            sx={{ height: 5, borderRadius: 1 }} />
                         </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={pct}
-                          color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "success"}
-                          sx={{ borderRadius: 1, height: 5 }}
-                        />
-                      </Box>
-                    );
-                  })}
+                      );
+                    })}
                 </Stack>
               </CardContent>
             </Card>
           </Grid>
         )}
 
-        {/* Synthèse de l'inventaire physique */}
-        <Grid item xs={12} md={canWrite ? 3 : (duaExpired.length > 0 ? 4 : 6)}>
+        {/* Inventaire physique */}
+        <Grid item xs={12} sm={6} md={3}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("physicalArchive")}>
               <CardContent>
-                <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                   <LayersOutlinedIcon fontSize="small" color="action" />
-                  <Typography variant="body1" fontWeight="bold">
-                    Inventaire physique
-                  </Typography>
+                  <Typography variant="body2" fontWeight="bold">Inventaire physique</Typography>
                 </Stack>
-                <Divider sx={{ mb: 1.5 }} />
+                <Divider sx={{ mb: 1 }} />
                 {containersLoading || bindersLoading || recordsLoading ? (
-                  <Box display="flex" justifyContent="center" p={2}>
-                    <CircularProgress size={20} />
-                  </Box>
+                  <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={20} />)}</Stack>
                 ) : (
                   <Stack spacing={0.75}>
                     {[
-                      { label: "Locaux / emplacements", value: containerList.length, color: theme.palette.primary.main },
-                      { label: "Classeurs",              value: binderList.length,    color: theme.palette.warning.main },
-                      { label: "Documents physiques",    value: recordList.length,    color: theme.palette.info.main },
-                      { label: "Archives rattachées",    value: archiveList.filter(a => (a as Record<string,unknown>).record).length, color: theme.palette.success.main },
+                      { label: "Conteneurs", value: containerList.length, color: theme.palette.primary.main },
+                      { label: "Classeurs", value: binderList.length, color: theme.palette.warning.main },
+                      { label: "Dossiers", value: recordList.length, color: theme.palette.info.main },
+                      { label: "Archives liées", value: archiveList.filter(a => (a as Record<string, unknown>).record).length, color: theme.palette.success.main },
                     ].map(({ label, value, color }) => (
                       <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-                          <Typography variant="body2" color="text.secondary">{label}</Typography>
+                          <Typography variant="caption" color="text.secondary">{label}</Typography>
                         </Stack>
-                        <Typography variant="body2" fontWeight="bold">{value}</Typography>
+                        <Typography variant="caption" fontWeight="bold">{value}</Typography>
                       </Stack>
                     ))}
                   </Stack>
@@ -556,40 +446,34 @@ export default function DashboardContent() {
           </Card>
         </Grid>
 
-        {/* Carte utilisateurs — visible si canWrite */}
+        {/* Utilisateurs */}
         {canWrite && (
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Card variant="outlined" sx={{ height: "100%" }}>
               <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("userManagement")}>
                 <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                  <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                     <PeopleOutlineRoundedIcon fontSize="small" color="action" />
-                    <Typography variant="body1" fontWeight="bold">
-                      Utilisateurs
-                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">Utilisateurs</Typography>
                   </Stack>
-                  <Divider sx={{ mb: 1.5 }} />
+                  <Divider sx={{ mb: 1 }} />
                   {statsLoading ? (
-                    <Box display="flex" justifyContent="center" p={2}>
-                      <CircularProgress size={20} />
-                    </Box>
+                    <Stack spacing={0.75}>{[1, 2, 3].map((i) => <Skeleton key={i} variant="rounded" height={20} />)}</Stack>
                   ) : globalStats ? (
                     <Stack spacing={0.75}>
                       {[
-                        { label: "Total utilisateurs",    value: globalStats.users.total,             color: theme.palette.primary.main },
-                        { label: "Comptes actifs",         value: globalStats.users.active,            color: theme.palette.success.main },
-                        { label: "Comptes inactifs",       value: globalStats.users.inactive,          color: theme.palette.error.main },
-                        { label: "Accès archives",         value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
-                        { label: "Administrateurs",        value: globalStats.users.admins,            color: theme.palette.warning.main },
-                        { label: "Écriture",               value: globalStats.users.writers,           color: theme.palette.success.main },
-                        { label: "Lecture seule",          value: globalStats.users.readers,           color: theme.palette.info.main },
+                        { label: "Total", value: globalStats.users.total, color: theme.palette.primary.main },
+                        { label: "Actifs", value: globalStats.users.active, color: theme.palette.success.main },
+                        { label: "Inactifs", value: globalStats.users.inactive, color: theme.palette.error.main },
+                        { label: "Accès archives", value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
+                        { label: "Admins", value: globalStats.users.admins, color: theme.palette.warning.main },
                       ].map(({ label, value, color }) => (
                         <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
                           <Stack direction="row" alignItems="center" spacing={1}>
                             <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-                            <Typography variant="body2" color="text.secondary">{label}</Typography>
+                            <Typography variant="caption" color="text.secondary">{label}</Typography>
                           </Stack>
-                          <Typography variant="body2" fontWeight="bold">{value}</Typography>
+                          <Typography variant="caption" fontWeight="bold">{value}</Typography>
                         </Stack>
                       ))}
                     </Stack>
@@ -605,36 +489,26 @@ export default function DashboardContent() {
           </Grid>
         )}
 
-        {/* Accès rapide — comble l'espace quand les cartes conditionnelles sont absentes */}
-        {!(duaExpired.length > 0 || duaSoon.length > 0) && (!binderList.length || bindersLoading) && (
-          <Grid item xs={12} md={canWrite ? 6 : 12}>
+        {/* Accès rapide — quand il manque des cartes */}
+        {!(duaExpired.length > 0 || duaSoon.length > 0) && (
+          <Grid item xs={12} sm={6} md={canWrite ? 3 : 6}>
             <Card variant="outlined" sx={{ height: "100%" }}>
               <CardContent>
-                <Typography variant="body1" fontWeight="bold" mb={1}>
-                  Accès rapide
-                </Typography>
-                <Divider sx={{ mb: 1.5 }} />
-                <Stack spacing={1}>
+                <Typography variant="body2" fontWeight="bold" mb={1}>Accès rapide</Typography>
+                <Divider sx={{ mb: 1 }} />
+                <Stack spacing={0.75}>
                   {[
-                    { label: "Gérer les archives numériques", tab: "archiveManager", desc: "Soumettre, valider, modifier" },
-                    { label: "Explorer l'archivage physique", tab: "physicalArchive", desc: "Conteneurs, classeurs, dossiers" },
-                    { label: "Consulter la documentation", tab: "help", desc: "Manuel utilisateur complet" },
-                    ...(canWrite ? [{ label: "Gérer les utilisateurs", tab: "userManagement", desc: "Permissions, rôles, activité" }] : []),
+                    { label: "Archives numériques", desc: "Soumettre, valider, modifier", tab: "archiveManager" },
+                    { label: "Archivage physique", desc: "Conteneurs, classeurs, dossiers", tab: "physicalArchive" },
+                    { label: "Documentation", desc: "Manuel utilisateur", tab: "help" },
                   ].map(({ label, tab, desc }) => (
-                    <Box
-                      key={tab}
-                      onClick={() => goTo(tab)}
-                      sx={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        px: 1.5, py: 1, borderRadius: 1, cursor: "pointer",
-                        "&:hover": { bgcolor: "action.hover" },
-                        border: "1px solid", borderColor: "divider",
-                      }}>
+                    <Box key={tab} onClick={() => goTo(tab)}
+                      sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1, py: 0.75, borderRadius: 1, cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, border: "1px solid", borderColor: "divider" }}>
                       <Box>
-                        <Typography variant="body2" fontWeight={500}>{label}</Typography>
-                        <Typography variant="caption" color="text.secondary">{desc}</Typography>
+                        <Typography variant="caption" fontWeight={500}>{label}</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">{desc}</Typography>
                       </Box>
-                      <ArrowForwardRoundedIcon fontSize="small" color="action" />
+                      <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} color="action" />
                     </Box>
                   ))}
                 </Stack>
@@ -647,7 +521,6 @@ export default function DashboardContent() {
     </Box>
   );
 }
-
 // ── Composants internes ────────────────────────────────────────
 
 interface StatCardProps {
