@@ -398,7 +398,7 @@ export default function DashboardContent() {
 
         {/* DUA bientôt expirées */}
         {(duaExpired.length > 0 || duaSoon.length > 0) && (
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={canWrite ? 3 : 4}>
             <Card variant="outlined" sx={{ borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
@@ -462,7 +462,7 @@ export default function DashboardContent() {
 
         {/* Capacité des classeurs */}
         {!bindersLoading && binderList.length > 0 && (
-          <Grid item xs={12} md={duaExpired.length > 0 || duaSoon.length > 0 ? 4 : 6}>
+          <Grid item xs={12} md={canWrite ? 3 : (duaExpired.length > 0 ? 4 : 6)}>
             <Card variant="outlined">
               <CardContent>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
@@ -513,7 +513,7 @@ export default function DashboardContent() {
         )}
 
         {/* Synthèse de l'inventaire physique */}
-        <Grid item xs={12} md={duaExpired.length > 0 || duaSoon.length > 0 ? 4 : 6}>
+        <Grid item xs={12} md={canWrite ? 3 : (duaExpired.length > 0 ? 4 : 6)}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("physicalArchive")}>
               <CardContent>
@@ -558,7 +558,7 @@ export default function DashboardContent() {
 
         {/* Carte utilisateurs — visible si canWrite */}
         {canWrite && (
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} md={3}>
             <Card variant="outlined" sx={{ height: "100%" }}>
               <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("userManagement")}>
                 <CardContent>
@@ -601,6 +601,44 @@ export default function DashboardContent() {
                   </Box>
                 </CardContent>
               </CardActionArea>
+            </Card>
+          </Grid>
+        )}
+
+        {/* Accès rapide — comble l'espace quand les cartes conditionnelles sont absentes */}
+        {!(duaExpired.length > 0 || duaSoon.length > 0) && (!binderList.length || bindersLoading) && (
+          <Grid item xs={12} md={canWrite ? 6 : 12}>
+            <Card variant="outlined" sx={{ height: "100%" }}>
+              <CardContent>
+                <Typography variant="body1" fontWeight="bold" mb={1}>
+                  Accès rapide
+                </Typography>
+                <Divider sx={{ mb: 1.5 }} />
+                <Stack spacing={1}>
+                  {[
+                    { label: "Gérer les archives numériques", tab: "archiveManager", desc: "Soumettre, valider, modifier" },
+                    { label: "Explorer l'archivage physique", tab: "physicalArchive", desc: "Conteneurs, classeurs, dossiers" },
+                    { label: "Consulter la documentation", tab: "help", desc: "Manuel utilisateur complet" },
+                    ...(canWrite ? [{ label: "Gérer les utilisateurs", tab: "userManagement", desc: "Permissions, rôles, activité" }] : []),
+                  ].map(({ label, tab, desc }) => (
+                    <Box
+                      key={tab}
+                      onClick={() => goTo(tab)}
+                      sx={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        px: 1.5, py: 1, borderRadius: 1, cursor: "pointer",
+                        "&:hover": { bgcolor: "action.hover" },
+                        border: "1px solid", borderColor: "divider",
+                      }}>
+                      <Box>
+                        <Typography variant="body2" fontWeight={500}>{label}</Typography>
+                        <Typography variant="caption" color="text.secondary">{desc}</Typography>
+                      </Box>
+                      <ArrowForwardRoundedIcon fontSize="small" color="action" />
+                    </Box>
+                  ))}
+                </Stack>
+              </CardContent>
             </Card>
           </Grid>
         )}
