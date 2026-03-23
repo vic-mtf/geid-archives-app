@@ -314,29 +314,29 @@ export default function PhysicalArchiveContent() {
     [currentLevel, containers, shelves, floors, binders, records, documents]
   );
 
-  const handleSelect = (id: string, label: string, itemType?: string) => {
-    // Les archives sont des feuilles — pas de navigation
+  /** Clic sur un item dans l'explorateur → descend d'un niveau */
+  const handleSelect = useCallback((id: string, label: string, itemType?: string) => {
     if (itemType === "archive") return;
 
     const raw = getItemRaw(id);
     if (raw) setSelected({ level: currentLevel, item: raw as Container });
 
-    // Naviguer dans les sous-éléments
     setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
-  };
+  }, [currentLevel, getItemRaw]);
 
-  /** Navigation depuis l'arbre ou la recherche → synchronise l'explorateur */
+  /** Navigation depuis l'arbre ou la recherche → synchronise l'explorateur.
+   *  Quand on clique sur un noeud dans l'arbre, on veut voir SES ENFANTS
+   *  dans l'explorateur (comme si on avait cliqué dessus dans la liste). */
   const handleNavigateTo = useCallback((id: string, level: Level, label: string) => {
-    // Construire le breadcrumb pour pointer vers cet élément
-    // On simplifie : on met l'élément comme dernier breadcrumb
     setBreadcrumb([{ id, label, level }]);
     setSelected(null);
   }, []);
 
-  const handleBreadcrumb = (index: number) => {
+  /** Clic sur un breadcrumb → remonte au niveau demandé */
+  const handleBreadcrumb = useCallback((index: number) => {
     setBreadcrumb((prev) => prev.slice(0, index));
     setSelected(null);
-  };
+  }, []);
 
   /** Clic droit sur un élément → menu contextuel */
   const handleContextMenu = useCallback((e: React.MouseEvent, id: string, label: string) => {

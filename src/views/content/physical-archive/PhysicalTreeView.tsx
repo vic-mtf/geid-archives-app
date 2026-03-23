@@ -191,7 +191,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         }}
         sx={{
           "& > .MuiTreeItem-content": selectedId === node.id
-            ? { bgcolor: "action.selected", fontWeight: "bold" }
+            ? { bgcolor: "primary.main", color: "primary.contrastText", borderRadius: 1, "& *": { color: "inherit" } }
             : {},
         }}
       >
@@ -204,8 +204,11 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   // Charger les racines au montage
   React.useEffect(() => { loadRoots(); }, [loadRoots]);
 
-  // Quand le breadcrumb externe change, charger les enfants des noeuds non chargés
+  // Quand le breadcrumb externe change, réinitialiser les toggles manuels
+  // et charger les enfants des noeuds non chargés
   React.useEffect(() => {
+    // Réinitialiser les toggles pour suivre exactement le breadcrumb
+    setUserToggled(new Set());
     if (!externalExpanded?.length) return;
     const findNode = (list: TreeNode[], id: string): TreeNode | null => {
       for (const n of list) {
