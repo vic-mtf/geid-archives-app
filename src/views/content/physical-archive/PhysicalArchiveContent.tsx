@@ -407,9 +407,9 @@ export default function PhysicalArchiveContent() {
         {items.length > 0 || breadcrumb.length > 0 ? (
           <Box
             sx={{
-              width: { lg: 240, xl: 280 },
+              width: { lg: 300, xl: 340 },
               flexShrink: 0,
-              display: { xs: "none", lg: "flex" },
+              display: { xs: "none", md: "flex" },
               flexDirection: "column",
               borderRight: "1px solid",
               borderColor: "divider",

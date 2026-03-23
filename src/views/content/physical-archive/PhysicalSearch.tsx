@@ -1,12 +1,12 @@
 /**
- * PhysicalSearch — Barre de recherche indexée pour l'archivage physique.
+ * PhysicalSearch — Recherche dans l'archivage physique via API backend.
  *
- * Utilise MiniSearch pour une recherche full-text performante côté client.
- * Les résultats sont regroupés par niveau avec l'icône correspondante.
- * Un clic sur un résultat navigue directement vers l'élément.
+ * Cherche dans tous les niveaux : conteneurs, étagères, niveaux,
+ * classeurs, dossiers, documents et archives numériques.
+ * Cache les résultats en local pour les requêtes déjà effectuées.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
   Chip,
@@ -21,33 +21,29 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import SearchRoundedIcon    from "@mui/icons-material/SearchRounded";
-import CloseRoundedIcon     from "@mui/icons-material/CloseRounded";
+import SearchRoundedIcon      from "@mui/icons-material/SearchRounded";
+import CloseRoundedIcon       from "@mui/icons-material/CloseRounded";
 import WarehouseOutlinedIcon  from "@mui/icons-material/WarehouseOutlined";
 import DnsOutlinedIcon        from "@mui/icons-material/DnsOutlined";
 import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon      from "@mui/icons-material/StyleOutlined";
 import FolderOutlinedIcon     from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon      from "@mui/icons-material/TopicOutlined";
-import MiniSearch from "minisearch";
+import ArticleOutlinedIcon    from "@mui/icons-material/ArticleOutlined";
 import useAxios from "@/hooks/useAxios";
 
 // ── Types ────────────────────────────────────────────────────
 
-type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
+type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document" | "archive";
 
-interface SearchItem {
-  id: string;
-  level: Level;
-  name: string;
-  sub?: string;
+interface SearchResult {
+  _id: string;
+  _level: Level;
+  _label: string;
+  [key: string]: unknown;
 }
 
-interface SearchResult extends SearchItem {
-  score: number;
-}
-
-// ── Config ───────────────────────────────────────────────────
+// ── Config icônes par niveau ─────────────────────────────────
 
 const LEVEL_ICON: Record<Level, React.ReactNode> = {
   container: <WarehouseOutlinedIcon sx={{ fontSize: 18, color: "#5C6BC0" }} />,
@@ -56,23 +52,31 @@ const LEVEL_ICON: Record<Level, React.ReactNode> = {
   binder:    <StyleOutlinedIcon sx={{ fontSize: 18, color: "#FFA726" }} />,
   record:    <FolderOutlinedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
   document:  <TopicOutlinedIcon sx={{ fontSize: 18, color: "#78909C" }} />,
+  archive:   <ArticleOutlinedIcon sx={{ fontSize: 18, color: "#43A047" }} />,
 };
 
 const LEVEL_LABEL: Record<Level, string> = {
   container: "Conteneur",
-  shelf: "Étagère",
-  floor: "Niveau",
-  binder: "Classeur",
-  record: "Dossier",
-  document: "Document",
+  shelf:     "Étagère",
+  floor:     "Niveau",
+  binder:    "Classeur",
+  record:    "Dossier",
+  document:  "Document",
+  archive:   "Archive",
 };
+
+// ── Cache local des résultats ────────────────────────────────
+
+const searchCache = new Map<string, SearchResult[]>();
 
 // ── Props ────────────────────────────────────────────────────
 
+/** Niveaux navigables (sans archive — les archives redirigent vers document) */
+type NavigableLevel = Exclude<Level, "archive">;
+
 export interface PhysicalSearchProps {
   headers: Record<string, string>;
-  /** Callback quand un résultat est cliqué — navigue vers l'élément */
-  onNavigate: (id: string, level: Level, label: string) => void;
+  onNavigate: (id: string, level: NavigableLevel, label: string) => void;
 }
 
 // ── Composant ────────────────────────────────────────────────
@@ -80,113 +84,77 @@ export interface PhysicalSearchProps {
 export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [indexReady, setIndexReady] = useState(false);
   const [loading, setLoading] = useState(false);
-  const indexRef = useRef<MiniSearch<SearchItem> | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelRef = useRef(false);
 
-  const [, fetchData] = useAxios({ headers }, { manual: true });
+  const [, execute] = useAxios<{ query: string; total: number; results: SearchResult[] }>(
+    { headers },
+    { manual: true },
+  );
 
-  // ── Construction de l'index au montage ─────────────────────
-  useEffect(() => {
-    let cancelled = false;
-
-    async function buildIndex() {
-      setLoading(true);
-      const base = "/api/stuff/archives/physical";
-      const allItems: SearchItem[] = [];
-
-      try {
-        // Charger chaque niveau individuellement (ne pas tout planter si un échoue)
-        const endpoints: { url: string; level: Level; nameKey: string; subKey?: string }[] = [
-          { url: `${base}/containers`, level: "container", nameKey: "name", subKey: "location" },
-          { url: `${base}/shelves`, level: "shelf", nameKey: "name", subKey: "description" },
-          { url: `${base}/floors`, level: "floor", nameKey: "label", subKey: "number" },
-          { url: `${base}/binders`, level: "binder", nameKey: "name", subKey: "nature" },
-          { url: `${base}/records`, level: "record", nameKey: "internalNumber", subKey: "subject" },
-          { url: `${base}/documents`, level: "document", nameKey: "title", subKey: "description" },
-        ];
-
-        // Charger en parallèle, ignorer les erreurs individuelles
-        const results = await Promise.allSettled(
-          endpoints.map((ep) => fetchData({ url: ep.url }))
-        );
-
-        results.forEach((result, i) => {
-          if (result.status !== "fulfilled") return;
-          const ep = endpoints[i];
-          const data = result.value.data as Record<string, unknown>[] | null;
-          (data ?? []).forEach((item) => {
-            allItems.push({
-              id: item._id as string,
-              level: ep.level,
-              name: (item[ep.nameKey] as string) ?? String(item._id),
-              sub: ep.subKey ? String(item[ep.subKey] ?? "") : undefined,
-            });
-          });
-        });
-
-        if (cancelled || allItems.length === 0) return;
-
-        // Construire l'index MiniSearch
-        const ms = new MiniSearch<SearchItem>({
-          fields: ["name", "sub"],
-          storeFields: ["id", "level", "name", "sub"],
-          searchOptions: {
-            fuzzy: 0.2,
-            prefix: true,
-            boost: { name: 2 },
-          },
-        });
-        ms.addAll(allItems);
-        indexRef.current = ms;
-        setIndexReady(true);
-      } catch {
-        // Index échoué
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    buildIndex();
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Recherche avec debounce ────────────────────────────────
+  // ── Recherche avec debounce + cache ────────────────────────
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!indexRef.current || query.trim().length < 2) {
+
+    const q = query.trim();
+    if (q.length < 2) {
       setResults([]);
+      setShowDropdown(false);
       return;
     }
-    debounceRef.current = setTimeout(() => {
-      const found = indexRef.current!.search(query.trim()).slice(0, 15);
-      setResults(found.map((r) => ({
-        id: r.id as string,
-        level: r.level as Level,
-        name: r.name as string,
-        sub: r.sub as string | undefined,
-        score: r.score,
-      })));
-    }, 200);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [query]);
+
+    // Vérifier le cache
+    if (searchCache.has(q)) {
+      setResults(searchCache.get(q)!);
+      setShowDropdown(true);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      cancelRef.current = false;
+      setLoading(true);
+      try {
+        const res = await execute({
+          url: `/api/stuff/archives/physical/search?q=${encodeURIComponent(q)}&limit=10`,
+        });
+        if (!cancelRef.current) {
+          const data = res.data.results ?? [];
+          searchCache.set(q, data);
+          setResults(data);
+          setShowDropdown(true);
+        }
+      } catch {
+        if (!cancelRef.current) {
+          setResults([]);
+          setShowDropdown(true);
+        }
+      } finally {
+        if (!cancelRef.current) setLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelRef.current = true;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, execute]);
 
   // Grouper par niveau
-  const grouped = useMemo(() => {
-    const groups: Partial<Record<Level, SearchResult[]>> = {};
-    results.forEach((r) => {
-      if (!groups[r.level]) groups[r.level] = [];
-      groups[r.level]!.push(r);
-    });
-    return groups;
-  }, [results]);
+  const grouped: Partial<Record<Level, SearchResult[]>> = {};
+  results.forEach((r) => {
+    const lvl = r._level;
+    if (!grouped[lvl]) grouped[lvl] = [];
+    grouped[lvl]!.push(r);
+  });
 
   const handleSelect = useCallback((item: SearchResult) => {
-    onNavigate(item.id, item.level, item.name);
+    const navLevel: NavigableLevel = item._level === "archive" ? "document" : item._level as NavigableLevel;
+    onNavigate(item._id, navLevel, item._label);
     setQuery("");
     setResults([]);
+    setShowDropdown(false);
   }, [onNavigate]);
 
   return (
@@ -197,6 +165,8 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
         placeholder="Trouver un élément…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => { if (results.length > 0) setShowDropdown(true); }}
+        onBlur={() => { setTimeout(() => setShowDropdown(false), 200); }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -205,7 +175,7 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
           ),
           endAdornment: query ? (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={() => { setQuery(""); setResults([]); }}>
+              <IconButton size="small" onClick={() => { setQuery(""); setResults([]); setShowDropdown(false); }}>
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </InputAdornment>
@@ -215,7 +185,7 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
       />
 
       {/* Dropdown des résultats */}
-      {results.length > 0 && (
+      {showDropdown && results.length > 0 && (
         <Paper
           elevation={8}
           sx={{
@@ -239,15 +209,13 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
               </Box>
               <List dense disablePadding>
                 {items.map((item) => (
-                  <ListItemButton key={item.id} onClick={() => handleSelect(item)} sx={{ py: 0.5 }}>
+                  <ListItemButton key={item._id} onMouseDown={() => handleSelect(item)} sx={{ py: 0.5 }}>
                     <ListItemIcon sx={{ minWidth: 28 }}>
-                      {LEVEL_ICON[item.level]}
+                      {LEVEL_ICON[item._level]}
                     </ListItemIcon>
                     <ListItemText
-                      primary={item.name}
-                      secondary={item.sub}
+                      primary={item._label}
                       primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: 500 }}
-                      secondaryTypographyProps={{ variant: "caption", noWrap: true }}
                     />
                   </ListItemButton>
                 ))}
@@ -257,18 +225,8 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
         </Paper>
       )}
 
-      {/* Index en cours de chargement */}
-      {query.trim().length >= 2 && !indexReady && (
-        <Paper elevation={4} sx={{ position: "absolute", zIndex: 20, left: 0, right: 0, mt: 0.5, p: 2, textAlign: "center", borderRadius: 1.5 }}>
-          <CircularProgress size={16} sx={{ mr: 1 }} />
-          <Typography variant="body2" color="text.secondary" component="span">
-            Construction de l&apos;index en cours…
-          </Typography>
-        </Paper>
-      )}
-
       {/* Aucun résultat */}
-      {query.trim().length >= 2 && results.length === 0 && indexReady && (
+      {showDropdown && query.trim().length >= 2 && results.length === 0 && !loading && (
         <Paper elevation={4} sx={{ position: "absolute", zIndex: 20, left: 0, right: 0, mt: 0.5, p: 2, textAlign: "center", borderRadius: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
             Aucun résultat pour « {query.trim()} »
