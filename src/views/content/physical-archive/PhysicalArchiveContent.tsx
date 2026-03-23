@@ -14,12 +14,12 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
+  Skeleton,
   Stack,
   Tooltip,
   Typography,
@@ -393,11 +393,6 @@ export default function PhysicalArchiveContent() {
           </React.Fragment>
         ))}
         <Box flex={1} />
-        <Tooltip title={`Ajouter un(e) ${levelConfig[currentLevel].label.toLowerCase()}`}>
-          <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
-            <AddRoundedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
       </Box>
 
       {/* ── Contenu principal : arbre + explorateur + détail ────── */}
@@ -415,8 +410,8 @@ export default function PhysicalArchiveContent() {
               borderColor: "divider",
               overflow: "hidden",
             }}>
-            {/* En-tête : titre + bouton ajouter */}
-            <Box px={1.5} py={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center">
+            {/* En-tête : titre + bouton ajouter — même hauteur que le header du milieu */}
+            <Box px={1.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" minHeight={42}>
               <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} flex={1}>
                 Arborescence
               </Typography>
@@ -451,25 +446,26 @@ export default function PhysicalArchiveContent() {
             overflow: "hidden",
           }}>
 
-          {/* Titre contextuel — indique le niveau courant */}
+          {/* Titre contextuel — même hauteur que le header arborescence */}
           <Box
             px={2}
-            py={1}
             display="flex"
             alignItems="center"
             gap={1}
             borderBottom={1}
             borderColor="divider"
-            bgcolor="action.hover">
+            bgcolor="action.hover"
+            minHeight={42}>
             <Box sx={{ color: levelConfig[currentLevel].color, display: "flex" }}>
               {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
             </Box>
             <Typography variant="body2" fontWeight="bold" color={levelConfig[currentLevel].color}>
               {levelConfig[currentLevel].label}s
             </Typography>
-            {!loading && (
-              <Chip label={items.length} size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
-            )}
+            {loading
+              ? <Skeleton variant="rounded" width={28} height={20} />
+              : <Chip label={items.length} size="small" sx={{ height: 20, fontSize: "0.7rem" }} />
+            }
             <Box flex={1} />
             <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ width: { xs: 70, sm: 100, md: 120 }, textAlign: "right", textTransform: "uppercase", letterSpacing: 0.5, display: { xs: "none", sm: "block" } }}>
               Type
@@ -497,18 +493,29 @@ export default function PhysicalArchiveContent() {
           {/* Liste des éléments */}
           <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
             {loading ? (
-              <Box display="flex" justifyContent="center" p={3}>
-                <CircularProgress size={24} />
-              </Box>
+              <Stack spacing={0}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Box key={i} px={2} py={0.75} display="flex" alignItems="center" gap={1} borderBottom="1px solid" borderColor="divider">
+                    <Skeleton variant="circular" width={20} height={20} />
+                    <Box flex={1}>
+                      <Skeleton variant="text" width="60%" height={20} />
+                      <Skeleton variant="text" width="40%" height={14} />
+                    </Box>
+                    <Skeleton variant="text" width={80} height={14} sx={{ display: { xs: "none", sm: "block" } }} />
+                  </Box>
+                ))}
+              </Stack>
             ) : items.length === 0 ? (
               <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={1}>
-                {levelConfig[currentLevel].icon}
+                <Box sx={{ color: levelConfig[currentLevel].color, opacity: 0.4 }}>
+                  {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { sx: { fontSize: 40 } })}
+                </Box>
                 <Typography color="text.secondary" variant="body2">
                   Aucun {levelConfig[currentLevel].label.toLowerCase()}
                 </Typography>
-                <Button size="small" startIcon={<AddRoundedIcon />} onClick={() => setFormOpen(true)}>
-                  Créer
-                </Button>
+                <Typography color="text.disabled" variant="caption">
+                  Utilisez le bouton + dans l&apos;arborescence pour en créer
+                </Typography>
               </Box>
             ) : (
               items.map((item) => {
