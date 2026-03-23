@@ -3,6 +3,7 @@ import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
 
@@ -35,6 +36,11 @@ const tabs: Tab[] = [
     icon: PeopleOutlineRoundedIcon,
     id: "userManagement",
     requiresWrite: true,
+  },
+  {
+    label: "Paramètres",
+    icon: SettingsOutlinedIcon,
+    id: "settings",
   },
   {
     label: "Aide",
