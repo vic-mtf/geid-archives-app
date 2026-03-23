@@ -1,8 +1,8 @@
-import useTheme from "../hooks/useTheme";
+import useTheme from "@/hooks/useTheme";
 import { useSelector } from "react-redux";
 import { useLayoutEffect, useMemo } from "react";
 import { ThemeProvider } from "@mui/material";
-import type { RootState } from "../redux/store";
+import type { RootState } from "@/redux/store";
 
 interface ConfigAppProviderProps {
   children: React.ReactNode;
