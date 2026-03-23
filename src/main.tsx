@@ -9,6 +9,7 @@ import "./styles/index.css";
 import App from "./App";
 import ConfigAppProvider from "./components/ConfigAppProvider";
 import NoticeStackProvider from "./components/NoticeStackProvider";
+import SocketIOProvider from "./components/SocketIOProvider";
 
 const rootElement = document.getElementById("root");
 
@@ -24,7 +25,9 @@ root.render(
       <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="fr">
         <ConfigAppProvider>
           <NoticeStackProvider>
-            <App />
+            <SocketIOProvider>
+              <App />
+            </SocketIOProvider>
           </NoticeStackProvider>
         </ConfigAppProvider>
       </LocalizationProvider>
