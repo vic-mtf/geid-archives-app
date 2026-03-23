@@ -62,6 +62,7 @@ import {
   GridToolbarQuickFilter,
   GridRowSelectionModel,
   GridRowParams,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios              from "@/hooks/useAxios";
@@ -73,7 +74,7 @@ import NavigationMenuButton  from "@/views/navigation/NavigationMenuButton";
 import { useSnackbar }       from "notistack";
 import { useLocation }       from "react-router-dom";
 import type { DeepTarget }   from "@/utils/deepNavigate";
-import useHighlightElement   from "@/hooks/useHighlightElement";
+// useHighlightElement utilisé dans PhysicalArchive — ici on utilise apiRef.scrollToIndexes
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 import archiveColumns from "./columns";
 import DetailPanel    from "./DetailPanel";
@@ -233,22 +234,61 @@ export default function ArchiveManagementContent() {
     return () => root?.removeEventListener("__tree_archive_select", handler);
   }, []);
 
-  // Écouter le deep navigate — ouvrir une archive ou appliquer un filtre
+  // Écouter le deep navigate — ouvrir une archive, appliquer un filtre, scroll + flash
+  const apiRef = useGridApiRef();
+
   useEffect(() => {
     const target = location.state?.deepTarget as DeepTarget | undefined;
     if (!target) return;
+
+    if (target.statusFilter) {
+      setStatusFilter(target.statusFilter as StatusFilter);
+      setQuickFilter(null);
+    }
+
     if (target.archiveId) {
       setFocusedId(target.archiveId);
       setDetailOpen(true);
-    }
-    if (target.statusFilter) {
-      setStatusFilter(target.statusFilter as StatusFilter);
-    }
-  }, [location.state?.deepTarget]);
 
-  // Flash + scroll vers l'archive ciblée par deep navigate
-  const deepArchiveId = (location.state?.deepTarget as DeepTarget | undefined)?.archiveId;
-  useHighlightElement(deepArchiveId);
+      // Attendre que les rows soient chargées puis scroller vers la ligne
+      const scrollToRow = () => {
+        try {
+          const allRowIds = apiRef.current.getAllRowIds();
+          const rowIndex = allRowIds.indexOf(target.archiveId!);
+          if (rowIndex >= 0) {
+            // Changer de page si nécessaire
+            const pageSize = apiRef.current.state.pagination.paginationModel.pageSize;
+            const targetPage = Math.floor(rowIndex / pageSize);
+            apiRef.current.setPage(targetPage);
+
+            // Scroller vers la ligne après le changement de page
+            setTimeout(() => {
+              apiRef.current.scrollToIndexes({ rowIndex });
+              // Flash jaune sur la ligne
+              setTimeout(() => {
+                const el = document.querySelector(`[data-id="${target.archiveId}"]`);
+                if (el) {
+                  el.classList.add("geid-highlight-flash");
+                  setTimeout(() => el.classList.remove("geid-highlight-flash"), 2200);
+                }
+              }, 300);
+            }, 200);
+            return true;
+          }
+        } catch { /* apiRef pas encore prêt */ }
+        return false;
+      };
+
+      // Essayer immédiatement, sinon réessayer après chargement
+      if (!scrollToRow()) {
+        const interval = setInterval(() => {
+          if (scrollToRow()) clearInterval(interval);
+        }, 500);
+        setTimeout(() => clearInterval(interval), 5000);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state?.deepTarget]);
 
   // ── Rows ──────────────────────────────────────────────────────
 
@@ -740,6 +780,7 @@ export default function ArchiveManagementContent() {
         <MuiBox flex={1} position="relative" overflow="hidden" minHeight={0}>
           <MuiBox position="absolute" top={0} left={0} right={0} bottom={0}>
             <DataGrid
+              apiRef={apiRef}
               rows={rows}
               loading={loading}
               columns={archiveColumns}
