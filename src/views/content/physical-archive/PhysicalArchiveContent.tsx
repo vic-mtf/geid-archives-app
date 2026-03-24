@@ -191,21 +191,7 @@ export default function PhysicalArchiveContent() {
 
   // ── Items courants ──────────────────────────────────────
 
-  const isInsideDocument = currentLevel === "document" && parentLevel === "document";
-  const [docArchivesData, setDocArchivesData] = useState<{
-    document: string; count: number;
-    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; createdAt?: string }>;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!isInsideDocument || !parentId) { setDocArchivesData(null); return; }
-    executeFetch({ url: `/api/stuff/archives/physical/documents/${parentId}/archives` })
-      .then((res) => setDocArchivesData(res.data as typeof docArchivesData))
-      .catch(() => setDocArchivesData(null));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInsideDocument, parentId]);
-
-  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string; itemType?: "document" | "archive" }[]>(() => {
+  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string }[]>(() => {
     const data = levelData as Record<string, unknown>[];
     switch (currentLevel) {
       case "container":
@@ -218,36 +204,24 @@ export default function PhysicalArchiveContent() {
         return data.map((b) => ({ id: b._id as string, label: b.name as string, sub: `Nature : ${b.nature}`, meta: `${b.currentCount ?? 0} / ${b.maxCapacity} dossiers` }));
       case "record":
         return data.map((r) => ({ id: r._id as string, label: r.internalNumber as string, sub: r.subject as string, meta: r.nature as string }));
-      case "document": {
-        const docItems = data.map((d) => ({
+      case "document":
+        return data.map((d) => ({
           id: d._id as string,
           label: d.title as string,
           sub: (d.nature as string) ?? (d.description as string),
           meta: d.documentDate ? new Date(d.documentDate as string).toLocaleDateString("fr-FR") : undefined,
-          itemType: "document" as const,
         }));
-        const archiveItems = isInsideDocument
-          ? (docArchivesData?.archives ?? []).map((a) => ({
-              id: a._id, label: a.designation ?? a.folder ?? a._id,
-              sub: a.classNumber ? `N° ${a.classNumber}` : undefined,
-              meta: a.createdAt ? new Date(a.createdAt).toLocaleDateString("fr-FR") : undefined,
-              itemType: "archive" as const,
-            }))
-          : [];
-        return [...docItems, ...archiveItems];
-      }
       default:
         return [];
     }
-  }, [currentLevel, levelData, isInsideDocument, docArchivesData]);
+  }, [currentLevel, levelData]);
 
   const getItemRaw = useCallback(
     (id: string) => (levelData as Array<{ _id: string }>).find((i) => i._id === id),
     [levelData]
   );
 
-  const handleSelect = useCallback((id: string, label: string, itemType?: string) => {
-    if (itemType === "archive") return;
+  const handleSelect = useCallback((id: string, label: string) => {
     const raw = getItemRaw(id);
     if (raw) setSelected({ level: currentLevel, item: raw as Container });
     setBreadcrumb((prev) => [...prev, { id, label, level: currentLevel }]);
@@ -413,8 +387,10 @@ export default function PhysicalArchiveContent() {
 
         {/* ── Panneau droit : détail ── */}
         {insideContainer && (
-        <Box flex={1} overflow="auto" p={2} sx={{
+        <Box flex={1} p={2} sx={{
           ...scrollBarSx,
+          overflowY: "auto",
+          minHeight: 0,
           display: isMobile && !showDetail ? "none" : "flex",
           flexDirection: "column",
         }}>

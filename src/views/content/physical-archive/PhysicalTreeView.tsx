@@ -24,6 +24,7 @@ import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
+import openArchiveFile from "@/utils/openArchiveFile";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -210,6 +211,36 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   const renderTree = (nodeList: TreeNode[], parentPath: PathItem[] = []): React.ReactNode =>
     nodeList.map((node) => {
       const nodePath: PathItem[] = [...parentPath, { id: node.id, label: node.label, level: node.level }];
+
+      // Archive numérique = feuille simple, clic = ouvrir le fichier
+      if (node.isArchive) {
+        const fi = getFileIcon(node.fileUrl ?? node.label);
+        return (
+          <TreeItem
+            key={node.id}
+            nodeId={node.id}
+            icon={React.cloneElement(fi.icon, { sx: { fontSize: 16, color: fi.color } })}
+            label={
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={0.5}
+                py={0.25}
+                onClick={(e) => { e.stopPropagation(); openArchiveFile(node.id); }}
+                sx={{ cursor: "pointer" }}
+              >
+                <Typography variant="body2" noWrap sx={{ fontSize: "0.8rem", opacity: 0.85 }}>
+                  {node.label}
+                </Typography>
+              </Box>
+            }
+            sx={{
+              "& > .MuiTreeItem-content .MuiTreeItem-iconContainer": { width: 20 },
+            }}
+          />
+        );
+      }
+
       return (
         <TreeItem
           key={node.id}
@@ -230,14 +261,11 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
                 onContextMenu?.(e, node.id, node.label, node.level);
               }}
             >
-              {node.isArchive
-                ? React.cloneElement(getFileIcon(node.fileUrl ?? node.label).icon, { sx: { fontSize: 18, color: getFileIcon(node.fileUrl ?? node.label).color } })
-                : LEVEL_ICON[node.level]
-              }
+              {LEVEL_ICON[node.level]}
               <InlineEditableLabel
                 value={node.label}
-                editable={!node.isArchive && (canWrite ?? false)}
-                forceEdit={!node.isArchive && renamingId === node.id}
+                editable={canWrite ?? false}
+                forceEdit={renamingId === node.id}
                 onEditEnd={onRenamingEnd}
                 onSave={async (newValue) => {
                   await onRename?.(node.id, node.level, newValue);
@@ -256,8 +284,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
               : {},
           }}
         >
-          {!node.loaded && !node.isArchive ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
-          {node.children && !node.isArchive && renderTree(node.children, nodePath)}
+          {!node.loaded ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
+          {node.children && renderTree(node.children, nodePath)}
         </TreeItem>
       );
     });
