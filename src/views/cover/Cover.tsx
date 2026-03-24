@@ -7,8 +7,6 @@ import {
   Box as MuiBox,
   Divider,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import _logo_geid from "@/assets/geid_logo_blue_without_title.webp";
 import SwingAnimation from "@/components/SwingAnimation";
@@ -26,9 +24,6 @@ interface CoverProps {
 export default function Cover({ setOpened }: CoverProps) {
   const connected = useSelector((store: RootState) => store.user.connected);
   const dispatch = useDispatch<AppDispatch>();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-
   const handleFinish = useCallback(() => {
     if (connected) setOpened(true);
     else openSignIn();
@@ -127,11 +122,11 @@ export default function Cover({ setOpened }: CoverProps) {
         </MuiBox>
       </Stack>
       <Typography
-        variant={isMobile ? "caption" : "body2"}
+        variant="caption"
         paragraph
-        color="text.secondary"
+        color="text.primary"
         textAlign="center"
-        sx={{ px: { xs: 1, sm: 2 }, maxWidth: 500 }}>
+        sx={{ px: { xs: 2, sm: 3 }, opacity: 0.7 }}>
         {footerText}
       </Typography>
     </Box>
