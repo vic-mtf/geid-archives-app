@@ -415,9 +415,9 @@ export default function PhysicalEntityForm({
         )}
       </DialogTitle>
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <DialogContent>
-          <Stack spacing={2} mt={0.5}>
+      <DialogContent dividers sx={{ maxHeight: "65vh", overflowY: "auto" }}>
+        <form id="physical-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Stack spacing={2}>
             {config.fields.map((field) =>
               field.type === "date" ? (
                 <Controller
@@ -457,17 +457,17 @@ export default function PhysicalEntityForm({
               )
             )}
           </Stack>
-        </DialogContent>
+        </form>
+      </DialogContent>
 
-        <DialogActions>
-          <Button onClick={handleClose} color="inherit">
-            Annuler
-          </Button>
-          <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Enregistrer
-          </Button>
-        </DialogActions>
-      </form>
+      <DialogActions>
+        <Button onClick={handleClose} color="inherit">
+          Annuler
+        </Button>
+        <Button type="submit" form="physical-form" variant="contained" disabled={isSubmitting}>
+          Enregistrer
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }
