@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
-import HistoryRoundedIcon        from "@mui/icons-material/HistoryRounded";
+import MenuBookRoundedIcon       from "@mui/icons-material/MenuBookRounded";
 import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import CheckCircleOutlineIcon    from "@mui/icons-material/CheckCircleOutline";
@@ -36,7 +36,7 @@ import HourglassTopOutlinedIcon  from "@mui/icons-material/HourglassTopOutlined"
 import LayersOutlinedIcon        from "@mui/icons-material/LayersOutlined";
 import WarningAmberRoundedIcon   from "@mui/icons-material/WarningAmberRounded";
 import FolderOpenOutlinedIcon    from "@mui/icons-material/FolderOpenOutlined";
-import ArchiveOutlinedIcon       from "@mui/icons-material/ArchiveOutlined";
+import ArchiveRoundedIcon        from "@mui/icons-material/ArchiveRounded";
 import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
 
@@ -232,8 +232,8 @@ export default function DashboardContent() {
           { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager" },
           { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", highlight: statusCounts.PENDING > 0 },
           { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager" },
-          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveOutlinedIcon />, color: "info.main", tab: "archiveManager" },
-          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <HistoryRoundedIcon />, color: "#9c27b0", tab: "archiveManager" },
+          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager" },
+          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager" },
           { label: "Conteneurs", value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
         ].map((s) => (
           <Grid item xs={6} sm={4} md={2} key={s.label}>
