@@ -19,7 +19,6 @@ import {
 import AddRoundedIcon             from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon   from "@mui/icons-material/DeleteOutlineRounded";
 import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
-import ContentCopyOutlinedIcon    from "@mui/icons-material/ContentCopyOutlined";
 import EditOutlinedIcon           from "@mui/icons-material/EditOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 
@@ -91,12 +90,6 @@ export default function PhysicalContextMenu({
       <MenuItem onClick={() => { onViewDetail(state.itemId, state.level); onClose(); }}>
         <ListItemIcon><OpenInNewRoundedIcon fontSize="small" /></ListItemIcon>
         <ListItemText>Voir le détail</ListItemText>
-      </MenuItem>
-
-      {/* Copier l'identifiant */}
-      <MenuItem onClick={() => { navigator.clipboard.writeText(state.itemId); onClose(); }}>
-        <ListItemIcon><ContentCopyOutlinedIcon fontSize="small" /></ListItemIcon>
-        <ListItemText>Copier l&apos;identifiant</ListItemText>
       </MenuItem>
 
       {/* Actions d'écriture — masquées si pas de droits */}

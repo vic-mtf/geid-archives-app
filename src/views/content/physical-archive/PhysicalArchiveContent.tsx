@@ -518,6 +518,13 @@ export default function PhysicalArchiveContent() {
         onClose={() => setArchiveMenu(null)}
         canWrite={canWrite}
         onOpen={(archiveId) => openArchiveFile(archiveId, archiveMenu?.archiveLabel)}
+        onMove={(archiveId, label) => {
+          document.getElementById("root")?.dispatchEvent(
+            new CustomEvent("__link_physical_record", {
+              detail: { doc: { _id: archiveId, designation: label } },
+            })
+          );
+        }}
         onUnlink={async (archiveId, label) => {
           try {
             await executeFetch({

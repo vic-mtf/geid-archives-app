@@ -1,9 +1,11 @@
 /**
- * ArchiveContextMenu — Menu contextuel pour les archives numériques dans le tree.
+ * ArchiveContextMenu — Menu contextuel pour les archives numériques.
  *
  * Options :
- * - Ouvrir le fichier (toujours)
- * - Dissocier de l'archive physique (si autorisé)
+ * - Ouvrir le fichier
+ * - Télécharger
+ * - Déplacer vers un autre document (si autorisé)
+ * - Dissocier du document (si autorisé)
  */
 
 import React from "react";
@@ -15,9 +17,9 @@ import {
   MenuItem,
 } from "@mui/material";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
+import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
 
 export interface ArchiveMenuState {
   mouseX: number;
@@ -32,6 +34,7 @@ export interface ArchiveContextMenuProps {
   canWrite: boolean;
   onOpen: (archiveId: string) => void;
   onUnlink: (archiveId: string, label: string) => void;
+  onMove: (archiveId: string, label: string) => void;
 }
 
 const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
@@ -40,6 +43,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
   canWrite,
   onOpen,
   onUnlink,
+  onMove,
 }: ArchiveContextMenuProps) {
   if (!state) return null;
 
@@ -50,7 +54,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
       anchorReference="anchorPosition"
       anchorPosition={{ top: state.mouseY, left: state.mouseX }}
       slotProps={{
-        paper: { sx: { minWidth: 200, borderRadius: 1.5 } },
+        paper: { sx: { minWidth: 220, borderRadius: 1.5 } },
       }}
     >
       {/* Ouvrir le fichier */}
@@ -59,20 +63,24 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
         <ListItemText>Ouvrir le fichier</ListItemText>
       </MenuItem>
 
-      {/* Copier l'identifiant */}
-      <MenuItem onClick={() => { navigator.clipboard.writeText(state.archiveId); onClose(); }}>
-        <ListItemIcon><ContentCopyOutlinedIcon fontSize="small" /></ListItemIcon>
-        <ListItemText>Copier l&apos;identifiant</ListItemText>
-      </MenuItem>
-
       {/* Télécharger */}
       <MenuItem onClick={() => { onOpen(state.archiveId); onClose(); }}>
         <ListItemIcon><FileDownloadOutlinedIcon fontSize="small" /></ListItemIcon>
         <ListItemText>Télécharger</ListItemText>
       </MenuItem>
 
-      {/* Dissocier — réservé aux utilisateurs avec droits d'écriture */}
+      {/* Actions d'écriture */}
       {canWrite && <Divider />}
+
+      {/* Déplacer vers un autre document */}
+      {canWrite && (
+        <MenuItem onClick={() => { onMove(state.archiveId, state.archiveLabel); onClose(); }}>
+          <ListItemIcon><DriveFileMoveOutlinedIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>Déplacer vers un autre document</ListItemText>
+        </MenuItem>
+      )}
+
+      {/* Dissocier */}
       {canWrite && (
         <MenuItem
           onClick={() => { onUnlink(state.archiveId, state.archiveLabel); onClose(); }}

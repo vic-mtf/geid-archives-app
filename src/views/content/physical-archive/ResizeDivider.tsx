@@ -1,8 +1,10 @@
 /**
- * ResizeDivider — Séparateur vertical draggable pour redimensionner deux panneaux.
+ * ResizeDivider — Séparateur vertical draggable.
+ * Le drag ne commence que si le curseur est sur la ligne (zone de 6px).
+ * Un overlay couvre l'écran pendant le drag pour capter le mousemove/mouseup.
  */
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useState } from "react";
 import { Box } from "@mui/material";
 
 interface ResizeDividerProps {
@@ -10,48 +12,57 @@ interface ResizeDividerProps {
 }
 
 const ResizeDivider = React.memo(function ResizeDivider({ onResize }: ResizeDividerProps) {
-  const startX = useRef(0);
-  const dragging = useRef(false);
+  const [dragging, setDragging] = useState(false);
+  const lastX = React.useRef(0);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    startX.current = e.clientX;
-    dragging.current = true;
+    lastX.current = e.clientX;
+    setDragging(true);
+  }, []);
 
-    const handleMouseMove = (ev: MouseEvent) => {
-      if (!dragging.current) return;
-      const delta = ev.clientX - startX.current;
-      startX.current = ev.clientX;
-      onResize(delta);
-    };
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!dragging) return;
+    const delta = e.clientX - lastX.current;
+    lastX.current = e.clientX;
+    onResize(delta);
+  }, [dragging, onResize]);
 
-    const handleMouseUp = () => {
-      dragging.current = false;
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  }, [onResize]);
+  const handleMouseUp = useCallback(() => {
+    setDragging(false);
+  }, []);
 
   return (
-    <Box
-      onMouseDown={handleMouseDown}
-      sx={{
-        width: 4,
-        flexShrink: 0,
-        cursor: "col-resize",
-        bgcolor: "transparent",
-        "&:hover": { bgcolor: "primary.main", opacity: 0.3 },
-        transition: "background-color 0.15s",
-        display: { xs: "none", md: "block" },
-      }}
-    />
+    <>
+      {/* Ligne visible — zone de déclenchement */}
+      <Box
+        onMouseDown={handleMouseDown}
+        sx={{
+          width: 6,
+          flexShrink: 0,
+          cursor: "col-resize",
+          bgcolor: dragging ? "primary.main" : "transparent",
+          opacity: dragging ? 0.4 : 1,
+          "&:hover": { bgcolor: "primary.main", opacity: 0.3 },
+          transition: "background-color 0.15s",
+          display: { xs: "none", md: "block" },
+        }}
+      />
+      {/* Overlay transparent pendant le drag — capte le curseur même hors de la ligne */}
+      {dragging && (
+        <Box
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          sx={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            cursor: "col-resize",
+          }}
+        />
+      )}
+    </>
   );
 });
 
