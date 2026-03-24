@@ -5,8 +5,26 @@ const BASE = (import.meta.env.VITE_SERVER_BASE_URL as string) ?? "";
 let loading = false;
 let activeController: AbortController | null = null;
 
+// Callbacks injectés depuis React
 let _enqueue: ((msg: string, opts?: Record<string, unknown>) => unknown) | null = null;
 let _close: ((key: unknown) => void) | null = null;
+
+// Callback de mise à jour de la progression (pour le composant React)
+let _onProgress: ((state: FileLoadingState) => void) | null = null;
+
+export interface FileLoadingState {
+  open: boolean;
+  fileName: string;
+  progress: number; // 0-100, -1 si taille inconnue
+  received: number; // octets reçus
+  total: number;    // octets totaux (0 si inconnu)
+  error: string | null;
+  cancelled: boolean;
+}
+
+const INITIAL_STATE: FileLoadingState = {
+  open: false, fileName: "", progress: 0, received: 0, total: 0, error: null, cancelled: false,
+};
 
 export function setSnackbarFunctions(
   enqueue: typeof _enqueue,
@@ -16,12 +34,17 @@ export function setSnackbarFunctions(
   _close = close;
 }
 
-/** Annule le chargement en cours */
+export function setProgressCallback(cb: typeof _onProgress) {
+  _onProgress = cb;
+}
+
 export function cancelFileLoading() {
   if (activeController) {
     activeController.abort();
     activeController = null;
     loading = false;
+    _onProgress?.({ ...INITIAL_STATE, open: true, cancelled: true });
+    setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 2500);
   }
 }
 
@@ -31,28 +54,21 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
+export { formatSize };
+
 /**
  * Ouvre le fichier d'une archive via l'endpoint authentifié.
- * Affiche la progression + possibilité d'annuler.
  */
-export default async function openArchiveFile(archiveId: string): Promise<void> {
-  if (loading) {
-    _enqueue?.("Un fichier est déjà en cours de chargement, veuillez patienter.", { variant: "warning" });
-    return;
-  }
+export default async function openArchiveFile(archiveId: string, fileName?: string): Promise<void> {
+  if (loading) return;
   const token = (store.getState().user as { token?: string }).token;
   if (!token) return;
 
   loading = true;
   activeController = new AbortController();
-  let snackKey: unknown = null;
+  const displayName = fileName || "Fichier";
 
-  // Premier snackbar — début du chargement
-  snackKey = _enqueue?.("Connexion au serveur…", {
-    variant: "info",
-    autoHideDuration: null,
-    title: "Ouverture du fichier",
-  });
+  _onProgress?.({ ...INITIAL_STATE, open: true, fileName: displayName });
 
   try {
     const res = await fetch(`${BASE}/api/stuff/archives/file/${archiveId}`, {
@@ -61,25 +77,22 @@ export default async function openArchiveFile(archiveId: string): Promise<void> 
     });
 
     if (!res.ok) {
-      _close?.(snackKey);
-      if (res.status === 403) {
-        _enqueue?.("Vous n'avez pas les droits nécessaires pour accéder à ce fichier.", { variant: "error", title: "Accès refusé" });
-      } else if (res.status === 404) {
-        _enqueue?.("Ce fichier est introuvable. Il a peut-être été supprimé.", { variant: "error", title: "Fichier introuvable" });
-      } else {
-        _enqueue?.("Une erreur est survenue lors de la récupération du fichier.", { variant: "error" });
-      }
+      const errorMsg = res.status === 403
+        ? "Vous n'avez pas les droits nécessaires pour accéder à ce fichier."
+        : res.status === 404
+          ? "Ce fichier est introuvable. Il a peut-être été supprimé ou déplacé."
+          : "Une erreur inattendue est survenue lors de la récupération du fichier.";
+      _onProgress?.({ ...INITIAL_STATE, open: true, fileName: displayName, error: errorMsg });
+      setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
       return;
     }
 
-    // Lire le stream avec progression
     const contentLength = Number(res.headers.get("content-length") ?? 0);
     const reader = res.body?.getReader();
 
     if (!reader) {
-      // Fallback si pas de stream
       const blob = await res.blob();
-      _close?.(snackKey);
+      _onProgress?.({ ...INITIAL_STATE });
       openBlob(blob);
       return;
     }
@@ -94,30 +107,24 @@ export default async function openArchiveFile(archiveId: string): Promise<void> 
       chunks.push(value);
       received += value.length;
 
-      // Mettre à jour le snackbar avec la progression
-      const progress = contentLength > 0
-        ? `${Math.round((received / contentLength) * 100)} %`
-        : formatSize(received);
-
-      _close?.(snackKey);
-      snackKey = _enqueue?.(`Chargement en cours… ${progress}`, {
-        variant: "info",
-        autoHideDuration: null,
-        title: "Ouverture du fichier",
-      });
+      const progress = contentLength > 0 ? Math.round((received / contentLength) * 100) : -1;
+      _onProgress?.({ open: true, fileName: displayName, progress, received, total: contentLength, error: null, cancelled: false });
     }
 
-    _close?.(snackKey);
-
-    const blob = new Blob(chunks);
-    openBlob(blob);
+    _onProgress?.({ ...INITIAL_STATE });
+    openBlob(new Blob(chunks));
 
   } catch (err: unknown) {
-    _close?.(snackKey);
     if ((err as Error).name === "AbortError") {
-      _enqueue?.("Le chargement du fichier a été annulé.", { variant: "warning", title: "Annulé" });
+      // Déjà géré dans cancelFileLoading
     } else {
-      _enqueue?.("Le chargement du fichier a échoué. Vérifiez votre connexion et réessayez.", { variant: "error", title: "Erreur de chargement" });
+      _onProgress?.({
+        ...INITIAL_STATE,
+        open: true,
+        fileName: displayName,
+        error: "Le chargement a échoué. Vérifiez votre connexion et réessayez.",
+      });
+      setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
     }
   } finally {
     loading = false;

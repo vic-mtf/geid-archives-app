@@ -8,6 +8,7 @@ import DuaConfigDialog from "./archives/DuaConfigDialog";
 import GlobalSearchDialog from "./search/GlobalSearchDialog";
 import ArchiveSourcePicker from "./archives/ArchiveSourcePicker";
 import WorkspaceFilePicker from "./archives/WorkspaceFilePicker";
+import FileLoadingSnackbar from "./archives/FileLoadingSnackbar";
 
 export default function Forms() {
   return (
@@ -22,6 +23,7 @@ export default function Forms() {
       <GlobalSearchDialog />
       <ArchiveSourcePicker />
       <WorkspaceFilePicker />
+      <FileLoadingSnackbar />
     </>
   );
 }

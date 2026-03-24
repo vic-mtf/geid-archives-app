@@ -228,7 +228,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
                 alignItems="center"
                 gap={0.5}
                 py={0.25}
-                onClick={(e) => { e.stopPropagation(); openArchiveFile(node.id); }}
+                onClick={(e) => { e.stopPropagation(); openArchiveFile(node.id, node.label); }}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   e.stopPropagation();

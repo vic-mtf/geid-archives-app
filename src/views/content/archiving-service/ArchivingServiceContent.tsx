@@ -71,7 +71,7 @@ export default function ArchivingServiceContent() {
           }}
           onRowClick={(e) => {
             if (e.row.fileUrl && e.row._id) {
-              openArchiveFile(e.row._id);
+              openArchiveFile(e.row._id, e.row.designation ?? "Fichier");
             }
           }}
           disableRowSelectionOnClick

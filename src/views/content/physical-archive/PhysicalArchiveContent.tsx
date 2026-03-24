@@ -471,7 +471,7 @@ export default function PhysicalArchiveContent() {
         state={archiveMenu}
         onClose={() => setArchiveMenu(null)}
         canWrite={canWrite}
-        onOpen={(archiveId) => openArchiveFile(archiveId)}
+        onOpen={(archiveId) => openArchiveFile(archiveId, archiveMenu?.archiveLabel)}
         onUnlink={async (archiveId, label) => {
           try {
             await executeFetch({

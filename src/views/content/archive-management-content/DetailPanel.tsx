@@ -139,7 +139,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
               <Tooltip title="Ouvrir le fichier">
                 <IconButton
                   size="small"
-                  onClick={() => openArchiveFile(doc._id as string)}
+                  onClick={() => openArchiveFile(doc._id as string, doc.designation as string ?? "Fichier")}
                 >
                   <OpenInNewRoundedIcon fontSize="small" />
                 </IconButton>
