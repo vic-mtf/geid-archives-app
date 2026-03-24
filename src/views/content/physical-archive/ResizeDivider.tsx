@@ -1,7 +1,8 @@
 /**
  * ResizeDivider — Séparateur vertical ajustable.
  *
- * Largeur fixe. Change de couleur au hover. Curseur col-resize.
+ * Conteneur fixe 8px (invisible). Ligne intérieure via ::before.
+ * Hover = couleur bleue. Drag = ligne plus épaisse.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -15,7 +16,7 @@ interface ResizeDividerProps {
 
 const ResizeDivider = React.memo(function ResizeDivider({
   minLeft = 180,
-  minRight = 250,
+  minRight = 580,
   onResize,
 }: ResizeDividerProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -57,13 +58,26 @@ const ResizeDivider = React.memo(function ResizeDivider({
       ref={containerRef}
       onMouseDown={onMouseDown}
       sx={{
-        width: isDragging ? 3 : 1,
+        // Taille fixe — ne change jamais
+        width: 8,
         flexShrink: 0,
         cursor: "col-resize",
-        display: { xs: "none", md: "block" },
-        bgcolor: isDragging ? "primary.main" : "divider",
-        transition: isDragging ? "none" : "background-color 0.2s",
-        "&:hover": { bgcolor: "primary.main" },
+        display: { xs: "none", md: "flex" },
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "transparent",
+        // Ligne intérieure via pseudo-element
+        "&::before": {
+          content: '""',
+          display: "block",
+          width: isDragging ? 3 : 1,
+          height: "100%",
+          bgcolor: isDragging ? "primary.main" : "divider",
+          transition: isDragging ? "none" : "width 0.15s, background-color 0.15s",
+        },
+        "&:hover::before": {
+          bgcolor: "primary.main",
+        },
       }}
     />
   );
