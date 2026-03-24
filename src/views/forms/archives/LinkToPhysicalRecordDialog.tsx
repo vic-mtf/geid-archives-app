@@ -13,21 +13,13 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography, Box, Stack, Paper, Chip,
+  Button, Typography, Box, Stack,
   CircularProgress, Breadcrumbs, Link, Skeleton,
-  LinearProgress, Tooltip,
 } from "@mui/material";
 import NavigateNextIcon    from "@mui/icons-material/NavigateNext";
-import WarehouseOutlinedIcon       from "@mui/icons-material/WarehouseOutlined";
-import LayersOutlinedIcon          from "@mui/icons-material/LayersOutlined";
-import FolderOpenOutlinedIcon      from "@mui/icons-material/FolderOpenOutlined";
-import BookmarkBorderOutlinedIcon  from "@mui/icons-material/BookmarkBorderOutlined";
-import ArticleOutlinedIcon         from "@mui/icons-material/ArticleOutlined";
-import CheckCircleIcon             from "@mui/icons-material/CheckCircle";
-import LinkIcon                    from "@mui/icons-material/Link";
-import LinkOffIcon                 from "@mui/icons-material/LinkOff";
-import ChevronRightIcon            from "@mui/icons-material/ChevronRight";
-import InfoOutlinedIcon            from "@mui/icons-material/InfoOutlined";
+import LinkIcon            from "@mui/icons-material/Link";
+import LinkOffIcon         from "@mui/icons-material/LinkOff";
+import InfoOutlinedIcon    from "@mui/icons-material/InfoOutlined";
 import { useDispatch } from "react-redux";
 import { useSnackbar } from "notistack";
 import type { AppDispatch } from "@/redux/store";
@@ -36,219 +28,9 @@ import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import type { ArchiveDocument } from "@/types";
 
-// ── Types ────────────────────────────────────────────────────
-
-type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
-
-interface Item extends Record<string, unknown> {
-  _id: string;
-}
-
-const LEVELS: Level[] = ["container", "shelf", "floor", "binder", "record", "document"];
-
-const LEVEL_LABELS: Record<Level, string> = {
-  container : "Conteneur",
-  shelf     : "Étagère",
-  floor     : "Étage",
-  binder    : "Classeur",
-  record    : "Dossier physique",
-  document  : "Document",
-};
-
-const LEVEL_ICONS: Record<Level, React.ReactNode> = {
-  container : <WarehouseOutlinedIcon fontSize="small" />,
-  shelf     : <LayersOutlinedIcon fontSize="small" />,
-  floor     : <FolderOpenOutlinedIcon fontSize="small" />,
-  binder    : <BookmarkBorderOutlinedIcon fontSize="small" />,
-  record    : <ArticleOutlinedIcon fontSize="small" />,
-  document  : <ArticleOutlinedIcon fontSize="small" />,
-};
-
-// URL de l'API pour chaque niveau (parentId = _id du niveau supérieur)
-const levelUrl = (level: Level, parentId?: string, parentLevel?: Level) => {
-  const base = "/api/stuff/archives/physical";
-  switch (level) {
-    case "container": return `${base}/containers`;
-    case "shelf"    : return `${base}/shelves/container/${parentId}`;
-    case "floor"    : return `${base}/floors/shelf/${parentId}`;
-    case "binder"   : return `${base}/binders/floor/${parentId}`;
-    case "record"   : return `${base}/records/binder/${parentId}`;
-    case "document" : return parentLevel === "document"
-      ? `${base}/documents/parent/${parentId}`
-      : `${base}/documents/record/${parentId}`;
-  }
-};
-
-const EVENT_NAME = "__link_physical_record";
-
-// ── Sous-composants — cartes par niveau ──────────────────────
-
-function ContainerCard({ item, onClick }: { item: Item; onClick: () => void }) {
-  return (
-    <Paper variant="outlined" onClick={onClick} sx={cardSx}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ color: "primary.main", flexShrink: 0 }}>
-          <WarehouseOutlinedIcon />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" fontWeight={700} noWrap>{item.name as string}</Typography>
-          {!!item.location && (
-            <Typography variant="caption" color="text.secondary" noWrap display="block">
-              {item.location as string}
-            </Typography>
-          )}
-        </Box>
-        <ChevronRightIcon sx={{ color: "text.disabled", flexShrink: 0 }} />
-      </Stack>
-    </Paper>
-  );
-}
-
-function ShelfCard({ item, onClick }: { item: Item; onClick: () => void }) {
-  return (
-    <Paper variant="outlined" onClick={onClick} sx={cardSx}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ color: "primary.main", flexShrink: 0 }}>
-          <LayersOutlinedIcon />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" fontWeight={700} noWrap>{item.name as string}</Typography>
-          {!!item.description && (
-            <Typography variant="caption" color="text.secondary" noWrap display="block">
-              {item.description as string}
-            </Typography>
-          )}
-        </Box>
-        <ChevronRightIcon sx={{ color: "text.disabled", flexShrink: 0 }} />
-      </Stack>
-    </Paper>
-  );
-}
-
-function FloorCard({ item, onClick }: { item: Item; onClick: () => void }) {
-  const unit = (item.administrativeUnit as Record<string, unknown> | undefined)?.name as string | undefined;
-  return (
-    <Paper variant="outlined" onClick={onClick} sx={cardSx}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ color: "primary.main", flexShrink: 0 }}>
-          <FolderOpenOutlinedIcon />
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" fontWeight={700}>
-            Étage {item.number as number}
-            {item.label ? ` — ${item.label as string}` : ""}
-          </Typography>
-          {unit && (
-            <Typography variant="caption" color="text.secondary" noWrap display="block">
-              {unit}
-            </Typography>
-          )}
-        </Box>
-        <ChevronRightIcon sx={{ color: "text.disabled", flexShrink: 0 }} />
-      </Stack>
-    </Paper>
-  );
-}
-
-function BinderCard({ item, onClick }: { item: Item; onClick: () => void }) {
-  const current  = (item.currentCount as number) ?? 0;
-  const capacity = (item.maxCapacity  as number) ?? 1;
-  const pct      = Math.min((current / capacity) * 100, 100);
-  const full     = current >= capacity;
-  return (
-    <Tooltip title={full ? "Classeur plein — aucun nouveau dossier possible" : ""} placement="top">
-      <Paper
-        variant="outlined"
-        onClick={full ? undefined : onClick}
-        sx={{ ...cardSx, opacity: full ? 0.5 : 1, cursor: full ? "not-allowed" : "pointer" }}>
-        <Stack direction="row" alignItems="center" spacing={1.5} mb={0.75}>
-          <Box sx={{ color: full ? "text.disabled" : "primary.main", flexShrink: 0 }}>
-            <BookmarkBorderOutlinedIcon />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" fontWeight={700} noWrap>{item.name as string}</Typography>
-            <Chip
-              label={item.nature as string}
-              size="small"
-              variant="outlined"
-              sx={{ height: 18, fontSize: "0.65rem", mt: 0.25 }}
-            />
-          </Box>
-          {!full && <ChevronRightIcon sx={{ color: "text.disabled", flexShrink: 0 }} />}
-        </Stack>
-        {/* Barre de capacité */}
-        <Box>
-          <Stack direction="row" justifyContent="space-between" mb={0.25}>
-            <Typography variant="caption" color="text.secondary">Occupation</Typography>
-            <Typography variant="caption" color={full ? "error.main" : "text.secondary"}>
-              {current} / {capacity}
-            </Typography>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={pct}
-            color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"}
-            sx={{ borderRadius: 1, height: 5 }}
-          />
-        </Box>
-      </Paper>
-    </Tooltip>
-  );
-}
-
-function RecordCard({ item, selected, onClick, onDrillDown }: { item: Item; selected: boolean; onClick: () => void; onDrillDown?: () => void }) {
-  return (
-    <Paper
-      variant="outlined"
-      onClick={onClick}
-      sx={{
-        ...cardSx,
-        borderColor: selected ? "primary.main" : undefined,
-        bgcolor: selected ? "action.selected" : undefined,
-        outline: selected ? "2px solid" : "none",
-        outlineColor: "primary.main",
-      }}>
-      <Stack direction="row" alignItems="flex-start" spacing={1.5}>
-        <Box sx={{ color: selected ? "primary.main" : "text.secondary", flexShrink: 0, mt: 0.2 }}>
-          {selected ? <CheckCircleIcon fontSize="small" color="primary" /> : <ArticleOutlinedIcon fontSize="small" />}
-        </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={1} alignItems="center" mb={0.25}>
-            <Typography variant="body2" fontWeight={700}>{String(item.internalNumber ?? "")}</Typography>
-            {!!item.category && <Chip label={String(item.category)} size="small" variant="outlined" sx={{ height: 18, fontSize: "0.65rem" }} />}
-          </Stack>
-          {!!item.subject && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              {String(item.subject)}
-            </Typography>
-          )}
-          {!!item.refNumber && (
-            <Typography variant="caption" color="text.disabled">
-              Réf. {String(item.refNumber)}
-            </Typography>
-          )}
-        </Box>
-        {onDrillDown && (
-          <Tooltip title="Voir le contenu">
-            <Box
-              onClick={(e) => { e.stopPropagation(); onDrillDown(); }}
-              sx={{ cursor: "pointer", color: "text.disabled", flexShrink: 0, "&:hover": { color: "primary.main" } }}>
-              <ChevronRightIcon />
-            </Box>
-          </Tooltip>
-        )}
-      </Stack>
-    </Paper>
-  );
-}
-
-const cardSx = {
-  p: 1.5,
-  cursor: "pointer",
-  borderRadius: 1.5,
-  transition: "all .15s",
-  "&:hover": { borderColor: "primary.main", bgcolor: "action.hover" },
-};
+import type { Level, Item } from "@/views/forms/archives/hierarchyTypes";
+import { LEVELS, LEVEL_LABELS, LEVEL_ICONS, levelUrl, EVENT_NAME } from "@/views/forms/archives/hierarchyTypes";
+import { ContainerCard, ShelfCard, FloorCard, BinderCard, RecordCard } from "@/views/forms/archives/HierarchyLevelCards";
 
 // ── Composant principal ──────────────────────────────────────
 
@@ -307,7 +89,6 @@ export default function LinkToPhysicalRecordDialog() {
     const nextLevel = LEVELS[LEVELS.indexOf(lvl) + 1];
     setSelected(prev => ({ ...prev, [lvl]: item }));
     if (nextLevel) {
-      // Sauvegarder l'état actuel pour le retour
       const parentLevel = LEVELS[LEVELS.indexOf(lvl) - 1];
       const parentId = parentLevel ? selected[parentLevel]?._id : undefined;
       setNavHistory(h => [...h, { level: lvl, parentId, parentLevel }]);

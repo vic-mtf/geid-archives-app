@@ -68,9 +68,9 @@ function formatRemaining(expiresAt: Date): string {
   const days  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const months = Math.floor(days / 30);
   const years  = Math.floor(days / 365);
-  if (years  >= 1) return `${years} an${years > 1 ? "s" : ""} restant${years > 1 ? "s" : ""}`;
-  if (months >= 1) return `${months} mois restant${months > 1 ? "s" : ""}`;
-  return `${days} jour${days > 1 ? "s" : ""} restant${days > 1 ? "s" : ""}`;
+  if (years  >= 1) return years === 1 ? "1 an restant" : `${years} ans restants`;
+  if (months >= 1) return months === 1 ? "1 mois restant" : `${months} mois restants`;
+  return days === 1 ? "1 jour restant" : `${days} jours restants`;
 }
 
 export default function DuaConfigDialog() {

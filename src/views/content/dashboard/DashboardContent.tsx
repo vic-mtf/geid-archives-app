@@ -74,7 +74,6 @@ export default function DashboardContent() {
   const dataVersion   = useSelector((store: RootState) => store.data.dataVersion);
   const navigateTo    = useNavigateSetState();
   const theme         = useTheme();
-
   const { canWrite } = useArchivePermissions();
 
   // ── Préférences utilisateur du dashboard ────────────────────
@@ -208,19 +207,19 @@ export default function DashboardContent() {
           {statusCounts.PENDING > 0 && (
             <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
               action={<Chip label="Consulter" size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{statusCounts.PENDING}</strong> archive{statusCounts.PENDING > 1 ? "s" : ""} en attente de validation.
+              <strong>{statusCounts.PENDING}</strong> archives en attente de validation.
             </Alert>
           )}
           {duaExpired.length > 0 && (
             <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
               action={<Chip label="Voir" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{duaExpired.length}</strong> Durée de conservation dépassée{duaExpired.length > 1 ? "s" : ""} nécessitent une action.
+              <strong>{duaExpired.length}</strong> durées de conservation dépassées nécessitent une action.
             </Alert>
           )}
           {criticalBinders.length > 0 && (
             <Alert severity="warning" icon={<WarningAmberRoundedIcon fontSize="inherit" />}
               action={<Chip label="Physique" size="small" onClick={() => goTo("physicalArchive")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{criticalBinders.length}</strong> classeur{criticalBinders.length > 1 ? "s" : ""} à plus de 90% de capacité.
+              <strong>{criticalBinders.length}</strong> classeurs à plus de 90 % de capacité.
             </Alert>
           )}
         </Stack>

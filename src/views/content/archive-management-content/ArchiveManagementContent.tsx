@@ -1,13 +1,4 @@
 /**
- * ArchiveManagementContent
- *
- * Disposition 3 colonnes : Sidebar gauche | DataGrid | Panneau détail
- * Responsive :
- *   – xs/sm : sidebar cachée, filtres en chips horizontaux, détail en bottom-drawer
- *   – md+   : sidebar 200 px, panneau détail 300 px inline
- */
-
-/**
  * ArchiveManagementContent — Vue principale de gestion des archives.
  *
  * Disposition 3 colonnes responsive :
@@ -15,135 +6,42 @@
  *   md+   : sidebar gauche (180-200px) + DataGrid + panneau détail (280-380px)
  *
  * Les sous-composants sont dans des fichiers séparés :
- *   - StatusChip.tsx : Chip coloré du statut
- *   - DuaCell.tsx    : Cellule DUA dans le DataGrid
- *   - DetailPanel.tsx : Panneau de détail complet
- *   - columns.tsx     : Définition des colonnes DataGrid
- *   - helpers.ts      : computeExpiresAt et utilitaires
+ *   - StatusChip.tsx        : Chip coloré du statut
+ *   - DuaCell.tsx           : Cellule DUA dans le DataGrid
+ *   - DetailPanel.tsx       : Panneau de détail complet
+ *   - columns.tsx           : Définition des colonnes DataGrid
+ *   - helpers.ts            : computeExpiresAt et utilitaires
+ *   - ArchiveSidebar.tsx    : Panneau latéral gauche (filtres, accès rapide)
+ *   - MobileFilterChips.tsx : Chips de filtre mobile
+ *   - exportCSV.ts          : Export CSV
  */
 
-import React, { useEffect, useMemo, useCallback, useState } from "react";
+import { useEffect, useMemo, useCallback, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { updateData, incrementVersion } from "@/redux/data";
-import {
-  Box as MuiBox,
-  Button,
-  Chip,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  Toolbar,
-  Tooltip,
-  Typography,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import AddRoundedIcon                 from "@mui/icons-material/AddRounded";
-import DeleteOutlineOutlinedIcon      from "@mui/icons-material/DeleteOutlineOutlined";
-import AllInboxRoundedIcon            from "@mui/icons-material/AllInboxRounded";
-import PendingActionsRoundedIcon      from "@mui/icons-material/PendingActionsRounded";
-import CheckCircleOutlineRoundedIcon  from "@mui/icons-material/CheckCircleOutlineRounded";
-import ArchiveRoundedIcon             from "@mui/icons-material/ArchiveRounded";
-import MenuBookRoundedIcon            from "@mui/icons-material/MenuBookRounded";
-import DeleteSweepRoundedIcon         from "@mui/icons-material/DeleteSweepRounded";
-import SearchRoundedIcon              from "@mui/icons-material/SearchRounded";
-import FileDownloadOutlinedIcon       from "@mui/icons-material/FileDownloadOutlined";
-import BoltRoundedIcon                from "@mui/icons-material/BoltRounded";
-import {
-  DataGrid,
-  GridToolbarColumnsButton,
-  GridToolbarFilterButton,
-  GridToolbarQuickFilter,
-  GridRowSelectionModel,
-  GridRowParams,
-  useGridApiRef,
-} from "@mui/x-data-grid";
+import { Box as MuiBox, Drawer, useMediaQuery, useTheme } from "@mui/material";
+import { DataGrid, GridRowSelectionModel, GridRowParams, useGridApiRef } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios              from "@/hooks/useAxios";
 import useToken              from "@/hooks/useToken";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
 import type { Archive, ArchiveDocument, NavigationState } from "@/types";
-import scrollBarSx           from "@/utils/scrollBarSx";
-import NavigationMenuButton  from "@/views/navigation/NavigationMenuButton";
+import scrollBarSx from "@/utils/scrollBarSx";
 import { useSnackbar }       from "notistack";
 import { useLocation }       from "react-router-dom";
 import type { DeepTarget }   from "@/utils/deepNavigate";
-// useHighlightElement utilisé dans PhysicalArchive — ici on utilise apiRef.scrollToIndexes
-import { STATUS_LABEL, STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
-import archiveColumns from "./columns";
-import DetailPanel    from "./DetailPanel";
+import { STATUS_LABEL, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
+import archiveColumns          from "./columns";
+import DetailPanel             from "./DetailPanel";
+import ArchiveManagementHeader from "./ArchiveManagementHeader";
+import ArchiveSidebar          from "./ArchiveSidebar";
+import MobileFilterChips       from "./MobileFilterChips";
+import SummaryPanel            from "./SummaryPanel";
+import STATUS_NAV, { type StatusFilter } from "./statusNav";
+import { exportArchivesCSV }   from "./exportCSV";
+import { computeExpiresAt, dispatchArchiveAction } from "./helpers";
 
-import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
-import CalendarTodayRoundedIcon  from "@mui/icons-material/CalendarTodayRounded";
-import { computeExpiresAt } from "./helpers";
-
-// ── Filtres par statut ───────────────────────────────────────
-
-type StatusFilter = "ALL" | NormalizedStatus;
-
-const STATUS_NAV: { key: StatusFilter; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: "ALL",         label: "Toutes",         icon: <AllInboxRoundedIcon fontSize="small" />,          color: "text.primary"    },
-  { key: "PENDING",     label: "En attente",     icon: <PendingActionsRoundedIcon fontSize="small" />,    color: "warning.main"    },
-  { key: "ACTIVE",      label: "Actifs",         icon: <CheckCircleOutlineRoundedIcon fontSize="small" />,color: "success.main"    },
-  { key: "SEMI_ACTIVE", label: "Intermédiaires", icon: <ArchiveRoundedIcon fontSize="small" />,           color: "info.main"       },
-  { key: "PERMANENT",   label: "Historique",     icon: <MenuBookRoundedIcon fontSize="small" />,          color: "secondary.main"  },
-  { key: "DESTROYED",   label: "Détruits",       icon: <DeleteSweepRoundedIcon fontSize="small" />,       color: "error.main"      },
-];
-
-
-interface ArchiveToolbarProps {
-  canWrite: boolean;
-  onAdd: () => void;
-  selectedCount: number;
-  onBulkDelete: () => void;
-}
-
-const ArchiveManagementHeader = React.memo(function ArchiveManagementHeader({
-  canWrite,
-  onAdd,
-  selectedCount,
-  onBulkDelete,
-}: ArchiveToolbarProps) {
-  return (
-    <Toolbar sx={{ gap: 1, flexWrap: "wrap", py: 0.5, minHeight: "unset" }}>
-      <NavigationMenuButton hide IconProps={{ sx: { transform: "rotate(-180deg)" } }} />
-      <GridToolbarColumnsButton slotProps={{ button: { variant: "outlined", color: "inherit", size: "small" } }} />
-      <GridToolbarFilterButton  slotProps={{ button: { variant: "outlined", color: "inherit", size: "small" } }} />
-      <MuiBox flex={1} />
-      <GridToolbarQuickFilter size="small" sx={{ "& .MuiInputBase-root": { borderRadius: 1 } }} />
-      {selectedCount > 1 && canWrite && (
-        <Button
-          variant="outlined"
-          size="small"
-          color="error"
-          startIcon={<DeleteOutlineOutlinedIcon />}
-          onClick={onBulkDelete}
-        >
-          Supprimer ({selectedCount})
-        </Button>
-      )}
-      {/* Ajouter visible sur mobile seulement — sur desktop c'est dans la sidebar */}
-      {canWrite && (
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddRoundedIcon />}
-          onClick={onAdd}
-          disableElevation
-          sx={{ display: { xs: "flex", md: "none" } }}
-        >
-          Ajouter
-        </Button>
-      )}
-    </Toolbar>
-  );
-});
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -256,15 +154,12 @@ export default function ArchiveManagementContent() {
           const allRowIds = apiRef.current.getAllRowIds();
           const rowIndex = allRowIds.indexOf(target.archiveId!);
           if (rowIndex >= 0) {
-            // Changer de page si nécessaire
             const pageSize = apiRef.current.state.pagination.paginationModel.pageSize;
             const targetPage = Math.floor(rowIndex / pageSize);
             apiRef.current.setPage(targetPage);
 
-            // Scroller vers la ligne après le changement de page
             setTimeout(() => {
               apiRef.current.scrollToIndexes({ rowIndex });
-              // Flash jaune sur la ligne
               setTimeout(() => {
                 const el = document.querySelector(`[data-id="${target.archiveId}"]`);
                 if (el) {
@@ -279,7 +174,6 @@ export default function ArchiveManagementContent() {
         return false;
       };
 
-      // Essayer immédiatement, sinon réessayer après chargement
       if (!scrollToRow()) {
         const interval = setInterval(() => {
           if (scrollToRow()) clearInterval(interval);
@@ -367,34 +261,9 @@ export default function ArchiveManagementContent() {
     return base;
   }, [allRows, statusFilter, quickFilter]);
 
-  // ── Export CSV de la liste filtrée courante ─────────────────
+  // ── Export CSV ─────────────────────────────────────────────────
   const exportCSV = useCallback(() => {
-    const cols = [
-      { key: "designation",   label: "Désignation" },
-      { key: "classNumber",   label: "N° de classe" },
-      { key: "refNumber",     label: "N° référence" },
-      { key: "folder",        label: "Dossier" },
-      { key: "status",        label: "Statut" },
-      { key: "createdAt",     label: "Date création" },
-    ];
-    const escape = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const header = cols.map((c) => escape(c.label)).join(";");
-    const body = rows.map((r) =>
-      cols.map((c) => {
-        const raw = (r as Record<string, unknown>)[c.key];
-        if (c.key === "status") return escape(STATUS_LABEL[normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined)] ?? raw);
-        if (c.key === "createdAt" && raw) return escape(new Date(raw as string).toLocaleDateString("fr-FR"));
-        return escape(raw);
-      }).join(";")
-    ).join("\n");
-    const csv = "\uFEFF" + header + "\n" + body; // BOM UTF-8 pour Excel
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `archives_export_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportArchivesCSV(rows as unknown as Parameters<typeof exportArchivesCSV>[0]);
   }, [rows]);
 
   const focusedDoc = useMemo(
@@ -430,66 +299,13 @@ export default function ArchiveManagementContent() {
   );
 
   const handleAction = useCallback(
-    async (action: string) => {
+    (action: string) => {
       const id  = focusedId ?? (selectedElements as string[])[0];
       const doc = focusedDoc;
-
-      switch (action) {
-        case "verify":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__validate_archive_doc", { detail: { doc: id, name: "__validate_archive_doc" } })
-          );
-          break;
-        case "edit":
-          if (doc)
-            document.getElementById("root")?.dispatchEvent(
-              new CustomEvent("__edit_archive_doc", { detail: { doc } })
-            );
-          break;
-        case "link-physical":
-          if (doc)
-            document.getElementById("root")?.dispatchEvent(
-              new CustomEvent("__link_physical_record", { detail: { doc } })
-            );
-          break;
-        case "configure-dua":
-          if (doc)
-            document.getElementById("root")?.dispatchEvent(
-              new CustomEvent("__configure_dua", { detail: { doc } })
-            );
-          break;
-        case "to-semi-active":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "SEMI_ACTIVE" } })
-          );
-          break;
-        case "reactivate":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "ACTIVE" } })
-          );
-          break;
-        case "to-permanent":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PERMANENT" } })
-          );
-          break;
-        case "to-destroyed":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "DESTROYED" } })
-          );
-          break;
-        case "restore":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PERMANENT" } })
-          );
-          break;
-        case "delete":
-          document.getElementById("root")?.dispatchEvent(
-            new CustomEvent("__delete_archive_docs", { detail: { ids: [id] } })
-          );
-          setDetailOpen(false);
-          setFocusedId(null);
-          break;
+      const isDelete = dispatchArchiveAction(action, id, doc);
+      if (isDelete) {
+        setDetailOpen(false);
+        setFocusedId(null);
       }
     },
     [focusedId, focusedDoc, selectedElements]
@@ -532,249 +348,60 @@ export default function ArchiveManagementContent() {
     setFocusedId(null);
   }, []);
 
+  const handleSelectArchive = useCallback((id: string) => {
+    setFocusedId(id);
+    setDetailOpen(true);
+  }, []);
+
+  const handleStatusFilter = useCallback((key: StatusFilter) => {
+    setStatusFilter(key);
+    setQuickFilter(null);
+  }, []);
+
+  const handleQuickFilter = useCallback((key: "dua_expired" | "this_month" | null) => {
+    setQuickFilter(key);
+    setStatusFilter("ALL");
+  }, []);
+
   // ── Render ────────────────────────────────────────────────────
 
   return (
     <MuiBox display="flex" flex={1} height="100%" overflow="hidden">
 
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}
-      <MuiBox
-        sx={{
-          width: { md: 180, lg: 200 },
-          flexShrink: 0,
-          borderRight: 1,
-          borderColor: "divider",
-          display: { xs: "none", md: "flex" },
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
-        {/* Boutons Ajouter + Rechercher + Exporter */}
-        <MuiBox px={1.5} pt={1.5} pb={0.75} display="flex" gap={1}>
-          {canWrite && (
-            <Button
-              variant="contained"
-              size="small"
-              fullWidth
-              startIcon={<AddRoundedIcon />}
-              onClick={openAdd}
-              disableElevation
-            >
-              Ajouter
-            </Button>
-          )}
-          <Tooltip title="Recherche globale (Ctrl+K)" placement="right">
-            <IconButton
-              size="small"
-              onClick={() => {
-                document.getElementById("root")?.dispatchEvent(
-                  new CustomEvent("__global_search_open")
-                );
-              }}
-              sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-              <SearchRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={`Exporter la liste en CSV (${rows.length} ligne${rows.length !== 1 ? "s" : ""})`} placement="right">
-            <IconButton
-              size="small"
-              onClick={exportCSV}
-              disabled={rows.length === 0}
-              sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-              <FileDownloadOutlinedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </MuiBox>
-
-        {/* Filtres scrollables */}
-        <MuiBox flex={1} overflow="auto" sx={{ ...scrollBarSx, pt: canWrite ? 0.5 : 1 }}>
-          <List dense disablePadding>
-            {STATUS_NAV.map(({ key, label, icon, color }) => {
-              const count    = key === "ALL" ? totalCount : statusCounts[key] ?? 0;
-              const isActive = statusFilter === key && quickFilter === null;
-              return (
-                <ListItemButton
-                  key={key}
-                  selected={isActive}
-                  onClick={() => { setStatusFilter(key); setQuickFilter(null); }}
-                  sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}
-                >
-                  <ListItemIcon sx={{ minWidth: 28, color: isActive ? undefined : color }}>
-                    {icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={label}
-                    primaryTypographyProps={{ variant: "body2", noWrap: true }}
-                  />
-                  {count > 0 && (
-                    <Chip
-                      label={count}
-                      size="small"
-                      color={key === "PENDING" ? "warning" : "default"}
-                      sx={{ height: 18, fontSize: 11, ".MuiChip-label": { px: 0.75 } }}
-                    />
-                  )}
-                </ListItemButton>
-              );
-            })}
-          </List>
-
-          {/* Filtres rapides */}
-          <Divider sx={{ mx: 1, my: 0.75 }} />
-          <List dense disablePadding>
-            <ListItemButton
-              selected={quickFilter === "dua_expired"}
-              onClick={() => {
-                setQuickFilter((q) => (q === "dua_expired" ? null : "dua_expired"));
-                setStatusFilter("ALL");
-              }}
-              sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}
-            >
-              <ListItemIcon sx={{ minWidth: 28, color: quickFilter === "dua_expired" ? undefined : "error.main" }}>
-                <AlarmRoundedIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Durée de conservation dépassées" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
-              {duaExpiredCount > 0 && (
-                <Chip
-                  label={duaExpiredCount}
-                  size="small"
-                  color="error"
-                  sx={{ height: 18, fontSize: 11, ".MuiChip-label": { px: 0.75 } }}
-                />
-              )}
-            </ListItemButton>
-
-            <ListItemButton
-              selected={quickFilter === "this_month"}
-              onClick={() => {
-                setQuickFilter((q) => (q === "this_month" ? null : "this_month"));
-                setStatusFilter("ALL");
-              }}
-              sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}
-            >
-              <ListItemIcon sx={{ minWidth: 28, color: quickFilter === "this_month" ? undefined : "text.secondary" }}>
-                <CalendarTodayRoundedIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary="Ce mois" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
-              {thisMonthCount > 0 && (
-                <Chip
-                  label={thisMonthCount}
-                  size="small"
-                  sx={{ height: 18, fontSize: 11, ".MuiChip-label": { px: 0.75 } }}
-                />
-              )}
-            </ListItemButton>
-          </List>
-        </MuiBox>
-
-        {/* ── Accès rapide : 5 dernières archives ────────────── */}
-        {recentArchives.length > 0 && (
-          <>
-            <Divider sx={{ mx: 1, my: 0.75 }} />
-            <MuiBox px={1} pb={0.5}>
-              <MuiBox display="flex" alignItems="center" gap={0.5} px={0.5} pb={0.25}>
-                <BoltRoundedIcon sx={{ fontSize: 14, color: "text.disabled" }} />
-                <Typography variant="caption" color="text.disabled" fontWeight="bold" textTransform="uppercase" letterSpacing={0.5}>
-                  Récents
-                </Typography>
-              </MuiBox>
-              <List dense disablePadding>
-                {recentArchives.map((r) => {
-                  const norm = normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined);
-                  const isFocused = focusedId === r.id;
-                  return (
-                    <ListItemButton
-                      key={r.id}
-                      selected={isFocused}
-                      onClick={() => { setFocusedId(r.id as string); setDetailOpen(true); }}
-                      sx={{ borderRadius: 1, mx: 0, my: 0.125, py: 0.5, px: 0.75 }}>
-                      <MuiBox
-                        sx={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          bgcolor: `${STATUS_COLOR[norm]}.main`,
-                          flexShrink: 0,
-                          mr: 0.75,
-                        }}
-                      />
-                      <ListItemText
-                        primary={(r as Record<string, unknown>).designation as string ?? r.id}
-                        primaryTypographyProps={{ variant: "caption", noWrap: true }}
-                      />
-                    </ListItemButton>
-                  );
-                })}
-              </List>
-            </MuiBox>
-          </>
-        )}
-
-        {/* Pied de sidebar — statistiques */}
-        <Divider />
-        <MuiBox px={2} py={1.25}>
-          <Typography variant="caption" color="text.disabled" display="block">
-            {totalCount} archive{totalCount !== 1 ? "s" : ""}
-          </Typography>
-          {statusCounts.PENDING > 0 && (
-            <Typography variant="caption" color="warning.main" display="block">
-              {statusCounts.PENDING} en attente de validation
-            </Typography>
-          )}
-          {duaExpiredCount > 0 && (
-            <Typography variant="caption" color="error.main" display="block">
-              {duaExpiredCount} Durée de conservation dépassée{duaExpiredCount !== 1 ? "s" : ""}
-            </Typography>
-          )}
-        </MuiBox>
-      </MuiBox>
+      <ArchiveSidebar
+        canWrite={canWrite}
+        statusNav={STATUS_NAV}
+        statusFilter={statusFilter}
+        quickFilter={quickFilter}
+        totalCount={totalCount}
+        statusCounts={statusCounts}
+        duaExpiredCount={duaExpiredCount}
+        thisMonthCount={thisMonthCount}
+        recentArchives={recentArchives as unknown as { id: string; status?: string; validated?: boolean; designation?: string }[]}
+        focusedId={focusedId}
+        rowCount={rows.length}
+        onStatusFilter={handleStatusFilter}
+        onQuickFilter={handleQuickFilter}
+        onOpenAdd={openAdd}
+        onExportCSV={exportCSV}
+        onSelectArchive={handleSelectArchive}
+      />
 
       {/* ── Colonne centrale ──────────────────────────────────── */}
       <MuiBox display="flex" flexDirection="column" flex={1} overflow="hidden" minWidth={0}>
 
         {/* Chips de filtre — mobile uniquement */}
-        <MuiBox
-          sx={{
-            display: { xs: "flex", md: "none" },
-            gap: 0.75,
-            px: 1.5,
-            py: 0.75,
-            overflow: "auto",
-            flexShrink: 0,
-            borderBottom: 1,
-            borderColor: "divider",
-            ...scrollBarSx,
-          }}
-        >
-          {STATUS_NAV.map(({ key, label }) => {
-            const count  = key === "ALL" ? totalCount : statusCounts[key] ?? 0;
-            const active = statusFilter === key && quickFilter === null;
-            return (
-              <Chip
-                key={key}
-                label={count > 0 ? `${label} (${count})` : label}
-                size="small"
-                variant={active ? "filled" : "outlined"}
-                color={key === "PENDING" ? "warning" : active ? "primary" : "default"}
-                onClick={() => { setStatusFilter(key); setQuickFilter(null); }}
-                sx={{ flexShrink: 0, cursor: "pointer" }}
-              />
-            );
-          })}
-          {duaExpiredCount > 0 && (
-            <Chip
-              label={`Conservation exp. (${duaExpiredCount})`}
-              size="small"
-              variant={quickFilter === "dua_expired" ? "filled" : "outlined"}
-              color="error"
-              onClick={() => {
-                setQuickFilter((q) => (q === "dua_expired" ? null : "dua_expired"));
-                setStatusFilter("ALL");
-              }}
-              sx={{ flexShrink: 0, cursor: "pointer" }}
-            />
-          )}
-        </MuiBox>
+        <MobileFilterChips
+          statusNav={STATUS_NAV}
+          statusFilter={statusFilter}
+          quickFilter={quickFilter}
+          totalCount={totalCount}
+          statusCounts={statusCounts}
+          duaExpiredCount={duaExpiredCount}
+          onStatusFilter={handleStatusFilter}
+          onQuickFilter={(key) => handleQuickFilter(key)}
+        />
 
         {/* DataGrid — remplit tout l'espace restant */}
         <MuiBox flex={1} position="relative" overflow="hidden" minHeight={0}>
@@ -841,104 +468,20 @@ export default function ArchiveManagementContent() {
               onAction={handleAction}
             />
           ) : (
-            /* Résumé + accès rapide quand rien n'est sélectionné */
-            <MuiBox flex={1} overflow="auto" sx={{ ...scrollBarSx }}>
-              {/* En-tête */}
-              <MuiBox px={2} py={1.5} borderBottom={1} borderColor="divider">
-                <Typography variant="subtitle2" fontWeight={700}>Résumé</Typography>
-              </MuiBox>
-
-              {/* Stats rapides */}
-              <MuiBox px={2} py={1.5}>
-                {[
-                  { label: "Total", value: totalCount, color: "primary.main" },
-                  { label: "En attente", value: statusCounts.PENDING, color: "warning.main" },
-                  { label: "Actives", value: statusCounts.ACTIVE, color: "success.main" },
-                  { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, color: "info.main" },
-                  { label: "Durée de conservation dépassées", value: duaExpiredCount, color: "error.main" },
-                ].map(({ label, value, color }) => (
-                  <MuiBox key={label} display="flex" justifyContent="space-between" alignItems="center" py={0.5}>
-                    <MuiBox display="flex" alignItems="center" gap={1}>
-                      <MuiBox sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color }} />
-                      <Typography variant="caption" color="text.secondary">{label}</Typography>
-                    </MuiBox>
-                    <Typography variant="caption" fontWeight="bold">{value}</Typography>
-                  </MuiBox>
-                ))}
-              </MuiBox>
-
-              <Divider />
-
-              {/* Suppression multiple — admin uniquement */}
-              {isAdmin && (selectedElements as string[]).length > 1 && (
-                <MuiBox px={2} py={1.5}>
-                  <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                    {(selectedElements as string[]).length} archives sélectionnées
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    color="error"
-                    fullWidth
-                    onClick={handleBulkDelete}
-                    startIcon={<DeleteOutlineOutlinedIcon />}>
-                    Supprimer définitivement ({(selectedElements as string[]).length})
-                  </Button>
-                </MuiBox>
-              )}
-
-              {isAdmin && (selectedElements as string[]).length > 1 && <Divider />}
-
-              {/* Accès rapide */}
-              <MuiBox px={2} py={1.5}>
-                <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold" display="block" mb={1}>
-                  Actions rapides
-                </Typography>
-                <Stack spacing={0.75}>
-                  {canWrite && (
-                    <Button size="small" variant="outlined" fullWidth onClick={openAdd} sx={{ justifyContent: "flex-start" }}>
-                      + Nouvelle archive
-                    </Button>
-                  )}
-                  <Button size="small" variant="outlined" fullWidth color="inherit" onClick={() => {
-                    document.getElementById("root")?.dispatchEvent(new CustomEvent("__global_search_open"));
-                  }} sx={{ justifyContent: "flex-start" }}>
-                    Rechercher (Ctrl+K)
-                  </Button>
-                  <Button size="small" variant="outlined" fullWidth color="inherit" onClick={exportCSV} disabled={rows.length === 0} sx={{ justifyContent: "flex-start" }}>
-                    Exporter CSV ({rows.length})
-                  </Button>
-                </Stack>
-              </MuiBox>
-
-              <Divider />
-
-              {/* 5 dernières archives */}
-              {recentArchives.length > 0 && (
-                <MuiBox px={2} py={1.5}>
-                  <Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.5} fontWeight="bold" display="block" mb={1}>
-                    Dernières archives
-                  </Typography>
-                  <List dense disablePadding>
-                    {recentArchives.slice(0, 5).map((r) => {
-                      const norm = normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined);
-                      return (
-                        <ListItemButton
-                          key={r.id}
-                          onClick={() => { setFocusedId(r.id as string); setDetailOpen(true); }}
-                          sx={{ borderRadius: 1, py: 0.5, px: 0.5 }}>
-                          <MuiBox sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: `${STATUS_COLOR[norm]}.main`, flexShrink: 0, mr: 0.75 }} />
-                          <ListItemText
-                            primary={(r as Record<string, unknown>).designation as string ?? r.id}
-                            primaryTypographyProps={{ variant: "caption", noWrap: true }}
-                          />
-                        </ListItemButton>
-                      );
-                    })}
-                  </List>
-                </MuiBox>
-              )}
-            </MuiBox>
+            <SummaryPanel
+              totalCount={totalCount}
+              statusCounts={statusCounts}
+              duaExpiredCount={duaExpiredCount}
+              canWrite={canWrite}
+              isAdmin={isAdmin}
+              selectedCount={(selectedElements as string[]).length}
+              rowCount={rows.length}
+              recentArchives={recentArchives as unknown as { id: string; status?: string; validated?: boolean; designation?: string }[]}
+              onBulkDelete={handleBulkDelete}
+              onOpenAdd={openAdd}
+              onExportCSV={exportCSV}
+              onSelectArchive={handleSelectArchive}
+            />
           )}
         </MuiBox>
       )}

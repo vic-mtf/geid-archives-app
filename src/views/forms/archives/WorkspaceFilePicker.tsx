@@ -22,6 +22,8 @@ import {
   ListItemText,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
@@ -93,6 +95,8 @@ const ROOT_CATEGORIES: WorkspaceItem[] = [
 ];
 
 export default function WorkspaceFilePicker() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
   const [folder, setFolder] = useState<string | null>(null); // null = racine
   const [folderHistory, setFolderHistory] = useState<string[]>([]);
@@ -168,7 +172,7 @@ export default function WorkspaceFilePicker() {
   const folderCount = items.filter((i) => i.isDirectory).length;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0 }}>
         Choisir un fichier de votre espace personnel
       </DialogTitle>
@@ -206,9 +210,9 @@ export default function WorkspaceFilePicker() {
           <Box flex={1} />
           {!loading && (
             <Typography variant="caption" color="text.disabled">
-              {folderCount > 0 && `${folderCount} dossier${folderCount > 1 ? "s" : ""}`}
+              {folderCount > 0 && `${folderCount} dossiers`}
               {folderCount > 0 && fileCount > 0 && ", "}
-              {fileCount > 0 && `${fileCount} fichier${fileCount > 1 ? "s" : ""}`}
+              {fileCount > 0 && `${fileCount} fichiers`}
             </Typography>
           )}
         </Stack>

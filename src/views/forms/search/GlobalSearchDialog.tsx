@@ -431,7 +431,7 @@ export default function GlobalSearchDialog() {
         {hasResults && (
           <Box px={2} py={1} borderTop={1} borderColor="divider" textAlign="right">
             <Typography variant="caption" color="text.secondary">
-              {results?.total} résultat{(results?.total ?? 0) > 1 ? "s" : ""} pour «&nbsp;{debouncedQuery}&nbsp;»
+              {results?.total} résultats pour «&nbsp;{debouncedQuery}&nbsp;»
             </Typography>
           </Box>
         )}

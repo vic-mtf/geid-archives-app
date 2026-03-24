@@ -71,13 +71,13 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "archives-numeriques", number: "4", title: "Les archives numériques",
-    keywords: ["archive numérique", "document", "fichier", "dépôt", "soumettre", "créer", "ajouter"],
-    body: "Une archive numérique représente un document électronique conservé dans le système. Elle peut être un contrat, un rapport, une décision administrative, un procès-verbal ou tout autre document officiel. Chaque archive suit un cycle de vie structuré depuis sa soumission jusqu'à sa destruction ou conservation définitive.",
+    keywords: ["archive numérique", "document", "fichier", "dépôt", "soumettre", "créer", "ajouter", "protégé", "sécurisé", "authentification"],
+    body: "Une archive numérique représente un document électronique conservé dans le système. Elle peut être un contrat, un rapport, une décision administrative, un procès-verbal ou tout autre document officiel. Chaque archive suit un cycle de vie structuré depuis sa soumission jusqu'à sa destruction ou conservation définitive. Les fichiers attachés aux archives sont protégés et ne sont pas accessibles publiquement. Le système vérifie votre identité et vos droits d'accès avant de vous autoriser à consulter un fichier.",
   },
   {
     id: "formulaire-creation", number: "4.1", title: "Soumettre une nouvelle archive",
-    keywords: ["formulaire", "création", "désignation", "type", "description", "fichier", "référence"],
-    body: "Pour soumettre une archive cliquez sur le bouton Ajouter dans la barre de navigation gauche. Un formulaire s'ouvre avec les champs suivants : désignation (nom du document, obligatoire), type documentaire (catégorie administrative), description et pièce jointe (PDF ou autre). Le dossier de classement est déterminé automatiquement à partir du type de document choisi.",
+    keywords: ["formulaire", "création", "désignation", "type", "description", "fichier", "référence", "appareil", "espace personnel", "workspace", "source"],
+    body: "Pour soumettre une archive cliquez sur le bouton Ajouter dans la barre de navigation gauche. Un formulaire s'ouvre avec les champs suivants : désignation (nom du document, obligatoire), type documentaire (catégorie administrative), description et pièce jointe (PDF ou autre). Le dossier de classement est déterminé automatiquement à partir du type de document choisi. Pour joindre un fichier, vous avez le choix entre deux sources : Depuis mon appareil pour sélectionner un fichier enregistré sur votre poste, ou Depuis mon espace personnel pour choisir un fichier déjà présent dans votre espace de travail.",
   },
   {
     id: "cycle-de-vie", number: "5", title: "Le cycle de vie d'une archive",
@@ -136,8 +136,8 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "archivage-physique", number: "10", title: "L'archivage physique",
-    keywords: ["archivage physique", "inventaire", "conteneur", "étagère", "classeur", "dossier", "document", "hiérarchie", "explorateur"],
-    body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à six niveaux correspondant à la réalité d'un centre d'archives physiques. L'interface adopte une disposition de type explorateur de fichiers avec un fil d'Ariane pour naviguer entre les niveaux, une ligne de retour (..) et un panneau de détail latéral.",
+    keywords: ["archivage physique", "inventaire", "conteneur", "étagère", "classeur", "dossier", "document", "hiérarchie", "explorateur", "renommer"],
+    body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à six niveaux correspondant à la réalité d'un centre d'archives physiques. L'interface adopte une disposition de type explorateur de fichiers avec un fil d'Ariane pour naviguer entre les niveaux, une ligne de retour (..) et un panneau de détail latéral. Les utilisateurs ayant les droits d'écriture peuvent renommer un élément en double-cliquant sur son nom ou via le menu contextuel accessible par un clic droit.",
   },
   {
     id: "hierarchie-physique", number: "10.1", title: "La hiérarchie des espaces physiques",
@@ -171,8 +171,8 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "recherche", number: "11", title: "Rechercher dans le système",
-    keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte"],
-    body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents physiques. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents physiques le sujet, la catégorie et la nature.",
+    keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte", "fuzzy", "accent", "approximatif", "tolérant"],
+    body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents physiques. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents physiques le sujet, la catégorie et la nature. La recherche est tolérante aux accents et aux mots partiels. Les termes correspondants sont mis en gras dans les résultats.",
   },
   {
     id: "export", number: "12", title: "Exporter la liste des archives",
@@ -646,6 +646,21 @@ export default function HelpContent() {
           différents états du cycle de vie.
         </Paragraph>
 
+        <SubTitle>Protection des fichiers</SubTitle>
+        <Paragraph>
+          Les fichiers attachés aux archives ne sont pas accessibles publiquement. Contrairement
+          à un simple lien de téléchargement, le système vérifie votre identité et vos droits
+          d'accès à chaque consultation de fichier. Lorsque vous cliquez sur un fichier pour
+          l'ouvrir, l'application transmet automatiquement vos informations de session au serveur,
+          qui contrôle que vous êtes bien connecté et autorisé à consulter cette archive avant
+          de vous afficher le document.
+        </Paragraph>
+        <InfoBox>
+          Si votre session a expiré au moment où vous tentez d'ouvrir un fichier, vous serez
+          invité à vous reconnecter. Ce mécanisme protège la confidentialité des documents
+          archivés.
+        </InfoBox>
+
         <SectionTitle id="formulaire-creation" number="4.1">Soumettre une nouvelle archive</SectionTitle>
         <Paragraph>
           Pour soumettre une archive, cliquez sur le bouton Ajouter en haut de la barre de
@@ -691,6 +706,21 @@ export default function HelpContent() {
           PDF, Word, Excel et les formats images courants. La taille maximale dépend de la
           configuration de votre serveur.
         </FieldDoc>
+
+        <SubTitle>Choisir la source du fichier</SubTitle>
+        <Paragraph>
+          Lors de l'ajout d'une pièce jointe, le formulaire vous propose deux options pour
+          sélectionner votre fichier.
+        </Paragraph>
+        <Step number={1}>
+          Depuis mon appareil — Sélectionnez un fichier enregistré sur votre ordinateur, tablette
+          ou téléphone. Cette option ouvre le sélecteur de fichiers classique de votre système.
+        </Step>
+        <Step number={2}>
+          Depuis mon espace personnel — Choisissez un fichier que vous avez déjà déposé dans votre
+          espace de travail personnel. Cette option est pratique si vous avez préparé le document
+          en amont dans votre espace avant de l'archiver.
+        </Step>
 
         <InfoBox>
           Après soumission, votre archive est immédiatement visible dans la liste mais son statut
@@ -961,6 +991,29 @@ export default function HelpContent() {
           document dans le système et y accéder à toutes les archives numériques rattachées.
         </Paragraph>
 
+        <SubTitle>Renommer un élément physique</SubTitle>
+        <Paragraph>
+          Les utilisateurs disposant des droits d'écriture peuvent renommer n'importe quel
+          élément de la hiérarchie physique (conteneur, étagère, section, classeur, dossier ou
+          document). Deux méthodes sont disponibles pour effectuer cette opération.
+        </Paragraph>
+        <Step number={1}>
+          Double-cliquez directement sur le nom de l'élément dans la liste. Le texte devient
+          modifiable. Saisissez le nouveau nom puis appuyez sur Entrée pour valider ou sur
+          Échap pour annuler.
+        </Step>
+        <Step number={2}>
+          Faites un clic droit sur l'élément pour ouvrir le menu contextuel, puis choisissez
+          Renommer. Le nom de l'élément devient modifiable de la même manière.
+        </Step>
+
+        <InfoBox>
+          La fonction de renommage n'est accessible qu'aux utilisateurs ayant les droits
+          d'écriture sur l'archivage physique. Si vous ne voyez pas l'option Renommer dans le
+          menu contextuel ou si le double-clic ne produit aucun effet, c'est que votre rôle ne
+          vous y autorise pas.
+        </InfoBox>
+
         <Divider sx={{ my: 3 }} />
 
         {/* ══════════════════════════════════════════════════
@@ -996,6 +1049,21 @@ export default function HelpContent() {
           s'affichent immédiatement, groupés en deux sections distinctes : Archives numériques
           et Documents physiques. Le nombre total de résultats est indiqué en bas de la fenêtre.
         </Paragraph>
+
+        <SubTitle>Recherche tolérante et mise en évidence</SubTitle>
+        <Paragraph>
+          Le moteur de recherche est tolérant aux imprécisions de saisie. Il gère
+          automatiquement les accents et les mots partiels : par exemple, saisir « decret » ou
+          « décret » donnera les mêmes résultats, et saisir « rapp » trouvera les documents
+          contenant « rapport ». Les parties du texte qui correspondent à votre recherche sont
+          mises en gras dans les résultats, ce qui vous permet d'identifier rapidement pourquoi
+          un document est apparu dans la liste.
+        </Paragraph>
+        <InfoBox severity="success">
+          Si vous ne trouvez pas un document avec un terme précis, essayez une variante sans
+          accent ou avec seulement le début du mot. La recherche tolérante augmente vos chances
+          de trouver le bon résultat même avec une saisie approximative.
+        </InfoBox>
 
         <Divider sx={{ my: 3 }} />
 

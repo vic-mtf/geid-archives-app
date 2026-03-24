@@ -368,7 +368,8 @@ function TocPage() {
     { num: "9.3", title: "Créer et gérer chaque niveau", sub: true },
     { num: "9.4", title: "Rattachement à un dossier ou un document", sub: true },
     { num: "9.5", title: "Le code QR et son utilisation", sub: true },
-    { num: "9.6", title: "Saisie des dates avec le calendrier", sub: true },
+    { num: "9.6", title: "Renommer un élément physique", sub: true },
+    { num: "9.7", title: "Saisie des dates avec le calendrier", sub: true },
     { num: "10",  title: "Recherche et indexation" },
     { num: "11",  title: "Rôles, permissions et sécurité" },
     { num: "12",  title: "Administration du système" },
@@ -801,6 +802,16 @@ function Chapter4() {
           dépend de la configuration de votre serveur.
         </Field>
 
+        <H4>Choisir la source du fichier</H4>
+        <P2>
+          Lors de l'ajout d'une pièce jointe, le formulaire propose deux options pour sélectionner
+          votre fichier. La première, Depuis mon appareil, ouvre le sélecteur de fichiers classique
+          de votre système pour choisir un fichier enregistré sur votre ordinateur, tablette ou
+          téléphone. La seconde, Depuis mon espace personnel, vous permet de sélectionner un
+          fichier déjà déposé dans votre espace de travail. Cette option est pratique si vous avez
+          préparé le document en amont avant de l'archiver.
+        </P2>
+
         <Succ>Avant de cliquer sur Soumettre, relisez une dernière fois la désignation et le dossier. Ce sont les deux champs les plus consultés par les archivistes et les plus utilisés dans les recherches.</Succ>
 
         <H2>4.5 — Le panneau de détail</H2>
@@ -819,6 +830,17 @@ function Chapter4() {
         <Bullet>Dossier physique : ouvre la fenêtre de rattachement à un document physique.</Bullet>
         <Bullet>DUA : ouvre la fenêtre de configuration de la Durée d'Utilité Administrative.</Bullet>
         <Bullet>Supprimer : ouvre la fenêtre de confirmation de suppression (administrateurs uniquement).</Bullet>
+
+        <H4>Protection des fichiers</H4>
+        <P2>
+          Les fichiers attachés aux archives ne sont pas accessibles publiquement. Le système
+          vérifie votre identité et vos droits d'accès à chaque consultation de fichier. Lorsque
+          vous cliquez sur un fichier pour l'ouvrir, l'application transmet automatiquement vos
+          informations de session au serveur, qui contrôle que vous êtes bien connecté et autorisé
+          à consulter cette archive avant de vous afficher le document. Si votre session a expiré,
+          vous serez invité à vous reconnecter.
+        </P2>
+        <Info label="CONFIDENTIALITÉ">Les fichiers d'archives sont protégés par le système d'authentification. Ils ne peuvent être consultés que par les utilisateurs connectés et autorisés, ce qui garantit la confidentialité des documents archivés.</Info>
         <Ftr />
       </Page>
     </>
@@ -1314,7 +1336,17 @@ function Chapter9() {
         </P2>
         <Succ>L'utilisation systématique des codes QR réduit considérablement le risque d'erreur lors des opérations de classement et de recherche physique. Elle est particulièrement recommandée dans les dépôts contenant un grand nombre de documents.</Succ>
 
-        <H2>9.6 — Saisie des dates avec le calendrier</H2>
+        <H2>9.6 — Renommer un élément physique</H2>
+        <P2>
+          Les utilisateurs disposant des droits d'écriture peuvent renommer n'importe quel élément
+          de la hiérarchie physique : conteneur, étagère, section, classeur, dossier ou document.
+          Deux méthodes sont disponibles pour effectuer cette opération.
+        </P2>
+        <NumBullet n={1}>Double-cliquez directement sur le nom de l'élément dans la liste. Le texte devient modifiable. Saisissez le nouveau nom puis appuyez sur la touche Entrée pour valider, ou sur Échap pour annuler.</NumBullet>
+        <NumBullet n={2}>Faites un clic droit sur l'élément pour ouvrir le menu contextuel, puis choisissez Renommer. Le nom devient modifiable de la même manière.</NumBullet>
+        <Info label="DROITS REQUIS">La fonction de renommage n'est accessible qu'aux utilisateurs ayant les droits d'écriture sur l'archivage physique. Si le double-clic ne produit aucun effet ou si l'option Renommer n'apparaît pas dans le menu contextuel, votre rôle ne vous y autorise pas.</Info>
+
+        <H2>9.7 — Saisie des dates avec le calendrier</H2>
         <P2>
           Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur
           de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA (français).
@@ -1375,10 +1407,20 @@ function Chapter10() {
       <Bullet>Si vous ne trouvez pas le document avec un terme, essayez un synonyme ou un extrait du numéro de référence.</Bullet>
       <Bullet>La recherche est insensible aux majuscules et minuscules : "rapport" et "Rapport" donnent les mêmes résultats.</Bullet>
       <Bullet>Évitez les termes trop génériques comme "document" ou "note" qui généreront trop de résultats sans intérêt.</Bullet>
+      <H2>10.5 — Recherche tolérante et mise en évidence</H2>
+      <P2>
+        Le moteur de recherche est tolérant aux imprécisions de saisie. Il gère automatiquement
+        les accents et les mots partiels : par exemple, saisir « decret » ou « décret » donnera
+        les mêmes résultats, et saisir « rapp » trouvera les documents contenant « rapport ».
+        Les parties du texte qui correspondent à votre recherche sont mises en gras dans les
+        résultats, ce qui vous permet d'identifier rapidement pourquoi un document apparaît dans
+        la liste.
+      </P2>
       <Info label="RECHERCHE APPROCHÉE">
-        Le moteur de recherche utilise un algorithme de correspondance approchée (fuzzy matching)
-        qui trouve des résultats même si votre saisie comporte de légères fautes de frappe ou
-        d'orthographe. Ainsi, saisir "rappotr" trouvera aussi les documents contenant "rapport".
+        Le moteur de recherche trouve des résultats même si votre saisie comporte de légères
+        fautes de frappe ou d'orthographe. Ainsi, saisir "rappotr" trouvera aussi les documents
+        contenant "rapport". Si vous ne trouvez pas un document avec un terme précis, essayez
+        une variante sans accent ou avec seulement le début du mot.
       </Info>
       <Ftr />
     </Page>
