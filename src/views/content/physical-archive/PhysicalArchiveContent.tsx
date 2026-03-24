@@ -480,7 +480,7 @@ export default function PhysicalArchiveContent() {
               data: { record: null, document: null },
             });
             dispatch(incrementVersion());
-            enqueueSnackbar(`L'archive « ${label} » a été dissociée du dossier physique.`, { variant: "success" });
+            enqueueSnackbar(`L'archive « ${label} » a été dissociée du document.`, { variant: "success" });
           } catch {
             enqueueSnackbar("La dissociation a échoué. Vérifiez vos droits et réessayez.", { variant: "error" });
           }

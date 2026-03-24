@@ -151,7 +151,8 @@ export default function LinkToPhysicalRecordDialog() {
 
   // Cible sélectionnée : record ou document
   const linkTarget = selected.document ?? selected.record;
-  const linkTargetType: "record" | "document" | null = selected.document ? "document" : selected.record ? "record" : null;
+  // Seul un document peut être la cible du rattachement (pas un dossier)
+  const linkTargetType: "document" | null = selected.document ? "document" : null;
   const linkTargetLabel = linkTarget
     ? (linkTarget.title as string ?? linkTarget.internalNumber as string ?? linkTarget._id)
     : "";
@@ -161,16 +162,12 @@ export default function LinkToPhysicalRecordDialog() {
     if (!doc || !linkTarget || !linkTargetType) return;
     setLinking(true);
     try {
-      const data = linkTargetType === "document"
-        ? { document: linkTarget._id, record: selected.record?._id ?? null }
-        : { record: linkTarget._id, document: null };
       await executePatch({
         url: `/api/stuff/archives/${doc._id ?? doc.id}`,
-        data,
+        data: { document: linkTarget._id, record: selected.record?._id ?? null },
       });
-      const typeLabel = linkTargetType === "document" ? "document" : "dossier";
       enqueueSnackbar(
-        `L'archive numérique est maintenant rattachée au ${typeLabel} « ${linkTargetLabel} ».`,
+        `L'archive est maintenant rattachée au document « ${linkTargetLabel} ».`,
         { variant: "success", title: "Rattachement effectué avec succès" }
       );
       dispatch(incrementVersion());
@@ -193,7 +190,7 @@ export default function LinkToPhysicalRecordDialog() {
         url: `/api/stuff/archives/${doc._id ?? doc.id}`,
         data: { record: null, document: null },
       });
-      enqueueSnackbar("L'archive a été détachée. Elle n'est plus associée à aucun support physique.", { variant: "success", title: "Détachement effectué" });
+      enqueueSnackbar("L'archive a été détachée. Elle n'est plus associée à aucun dossier.", { variant: "success", title: "Détachement effectué" });
       dispatch(incrementVersion());
       handleClose();
     } catch {
@@ -227,7 +224,7 @@ export default function LinkToPhysicalRecordDialog() {
       <DialogTitle component="div" sx={{ pb: 1 }}>
         <Stack direction="row" alignItems="center" spacing={1} mb={0.25}>
           <LinkIcon fontSize="small" color="primary" />
-          <Typography fontWeight={700}>Rattacher à un dossier ou document physique</Typography>
+          <Typography fontWeight={700}>Rattacher à un document</Typography>
         </Stack>
         {doc?.designation && (
           <Typography variant="caption" color="text.secondary" noWrap display="block" pl={3.5}>
@@ -239,7 +236,7 @@ export default function LinkToPhysicalRecordDialog() {
             sx={{ bgcolor: "info.50", borderRadius: 1, px: 1.5, py: 0.75 }}>
             <InfoOutlinedIcon fontSize="small" color="info" />
             <Typography variant="caption" color="info.dark">
-              Ce document est déjà rattaché à un dossier. Vous pouvez le modifier ou le détacher.
+              Cette archive est déjà rattachée à un document. Vous pouvez modifier ou détacher le rattachement.
             </Typography>
           </Stack>
         )}

@@ -79,7 +79,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
           sx={{ color: "error.main" }}
         >
           <ListItemIcon><LinkOffRoundedIcon fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText>Dissocier du dossier physique</ListItemText>
+          <ListItemText>Dissocier du document</ListItemText>
         </MenuItem>
       )}
     </Menu>
