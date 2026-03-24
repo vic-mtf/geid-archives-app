@@ -1,8 +1,7 @@
 /**
  * ResizeDivider — Séparateur vertical ajustable.
  *
- * Ligne fine (1px) qui change de couleur au survol et s'agrandit au maintien.
- * Pas de zone de touche invisible — juste la ligne naturelle.
+ * Largeur fixe. Change de couleur au hover. Curseur col-resize.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -20,7 +19,6 @@ const ResizeDivider = React.memo(function ResizeDivider({
   onResize,
 }: ResizeDividerProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isHover, setIsHover] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const applyPosition = useCallback((clientX: number) => {
@@ -54,21 +52,30 @@ const ResizeDivider = React.memo(function ResizeDivider({
     };
   }, [isDragging, applyPosition]);
 
-  const active = isDragging || isHover;
-
   return (
     <Box
       ref={containerRef}
       onMouseDown={onMouseDown}
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={() => { if (!isDragging) setIsHover(false); }}
       sx={{
-        width: isDragging ? 4 : active ? 3 : 1,
+        width: 4,
         flexShrink: 0,
         cursor: "col-resize",
-        bgcolor: isDragging ? "primary.main" : active ? "primary.light" : "divider",
-        transition: isDragging ? "none" : "width 0.15s, background-color 0.15s",
-        display: { xs: "none", md: "block" },
+        display: { xs: "none", md: "flex" },
+        alignItems: "center",
+        justifyContent: "center",
+        // Ligne intérieure centrée — seule la couleur change, pas la taille
+        "&::before": {
+          content: '""',
+          display: "block",
+          width: isDragging ? 3 : 1,
+          height: "100%",
+          bgcolor: isDragging ? "primary.main" : "divider",
+          borderRadius: 0.5,
+          transition: isDragging ? "none" : "background-color 0.2s",
+        },
+        "&:hover::before": {
+          bgcolor: "primary.main",
+        },
       }}
     />
   );
