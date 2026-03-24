@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 
+import { Virtuoso } from "react-virtuoso";
 import scrollBarSx from "@/utils/scrollBarSx";
 import type { PhysicalLevel } from "@/constants/physical";
 import InlineEditableLabel from "./InlineEditableLabel";
@@ -44,8 +45,9 @@ interface PhysicalItemsListProps {
   canWrite: boolean;
   renamingId: string | null;
   onRenamingEnd: () => void;
-  onSelect: (id: string, label: string, itemType?: string) => void;
+  onSelect: (id: string, label: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string, label: string) => void;
+  onArchiveContextMenu?: (e: React.MouseEvent, archiveId: string, label: string) => void;
   onRename: (id: string, newValue: string) => Promise<void>;
 }
 
@@ -62,6 +64,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
   onRenamingEnd,
   onSelect,
   onContextMenu,
+  onArchiveContextMenu,
   onRename,
 }: PhysicalItemsListProps) {
   if (loading) {
@@ -102,12 +105,15 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
   }
 
   return (
-    <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
-      {items.map((item) => {
+    <Virtuoso
+      style={{ flex: 1 }}
+      totalCount={items.length}
+      overscan={200}
+      itemContent={(index) => {
+        const item = items[index];
         const isSelected = selectedId === item.id;
         return (
           <Box
-            key={item.id}
             data-highlight-id={item.id}
             px={2}
             py={0.75}
@@ -128,7 +134,15 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
                 onSelect(item.id, item.label);
               }
             }}
-            onContextMenu={(e) => onContextMenu(e, item.id, item.label)}>
+            onContextMenu={(e) => {
+              if (item.isArchive) {
+                e.preventDefault();
+                e.stopPropagation();
+                onArchiveContextMenu?.(e, item.id, item.label);
+              } else {
+                onContextMenu(e, item.id, item.label);
+              }
+            }}>
             {/* Icone — typée pour les archives, niveau pour les éléments physiques */}
             {item.isArchive ? (() => {
               const fi = getFileIcon(item.fileUrl ?? item.label);
@@ -170,8 +184,8 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             )}
           </Box>
         );
-      })}
-    </Box>
+      }}
+    />
   );
 });
 

@@ -44,6 +44,7 @@ import PhysicalContextMenu, { type ContextMenuState } from "./PhysicalContextMen
 import ArchiveContextMenu, { type ArchiveMenuState } from "./ArchiveContextMenu";
 import PhysicalItemsList from "./PhysicalItemsList";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import ResizeDivider from "./ResizeDivider";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useDeletePhysical from "./useDeletePhysical";
 
@@ -63,6 +64,14 @@ export default function PhysicalArchiveContent() {
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { canWrite } = useArchivePermissions();
+
+  // Largeur du tree (ajustable par drag)
+  const [treeWidth, setTreeWidth] = useState(280);
+  const MIN_TREE = 180;
+  const MAX_TREE = 450;
+  const handleTreeResize = useCallback((delta: number) => {
+    setTreeWidth((prev) => Math.min(MAX_TREE, Math.max(MIN_TREE, prev + delta)));
+  }, []);
 
   // Formulaire de création
   const [formOpen, setFormOpen] = useState(false);
@@ -317,6 +326,7 @@ export default function PhysicalArchiveContent() {
           <SidebarTree
             headers={headers}
             parentId={parentId}
+            width={treeWidth}
             breadcrumb={breadcrumb}
             dataVersion={dataVersion}
             canWrite={canWrite}
@@ -338,13 +348,15 @@ export default function PhysicalArchiveContent() {
           />
         )}
 
+        {/* Séparateur ajustable entre tree et milieu */}
+        {insideContainer && <ResizeDivider onResize={handleTreeResize} />}
+
         {/* ── Panneau central (toujours visible) ──────── */}
         <Box sx={{
-          flex: 1, minWidth: 0,
+          flex: 1, minWidth: { xs: 0, md: 250 },
           display: isMobile && showDetail ? "none" : "flex",
           flexDirection: "column",
-          borderRight: showDetail ? { xs: "none", md: "1px solid" } : "none",
-          borderColor: "divider", overflow: "hidden",
+          overflow: "hidden",
         }}>
           <Box px={2} display="flex" alignItems="center" gap={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" minHeight={42}>
             {insideContainer && (() => {
@@ -409,6 +421,9 @@ export default function PhysicalArchiveContent() {
             onRenamingEnd={() => setRenamingId(null)}
             onSelect={handleSelect}
             onContextMenu={handleContextMenu}
+            onArchiveContextMenu={(e, archiveId, label) => {
+              setArchiveMenu({ mouseX: e.clientX, mouseY: e.clientY, archiveId, archiveLabel: label });
+            }}
             onRename={async (id, newValue) => {
               const field = RENAME_FIELD[currentLevel];
               await executeFetch({ url: `${UPDATE_ENDPOINTS[currentLevel]}/${id}`, method: "PUT", data: { [field]: newValue } });
@@ -419,14 +434,20 @@ export default function PhysicalArchiveContent() {
           />
         </Box>
 
-        {/* ── Panneau droit : détail ── */}
+        {/* ── Panneau droit : détail (largeur fixe, ne dépasse pas tree+milieu) ── */}
         {insideContainer && (
-        <Box flex={1} p={2} sx={{
+        <Box sx={{
           ...scrollBarSx,
+          width: { md: 280, lg: 320 },
+          maxWidth: "35%",
+          flexShrink: 0,
           overflowY: "auto",
           minHeight: 0,
+          p: 2,
           display: isMobile && !showDetail ? "none" : "flex",
           flexDirection: "column",
+          borderLeft: "1px solid",
+          borderColor: "divider",
         }}>
           {isMobile && showDetail && (
             <Button startIcon={<ArrowBackRoundedIcon />} onClick={() => setSelected(null)} sx={{ mb: 1, alignSelf: "flex-start" }} size="small">

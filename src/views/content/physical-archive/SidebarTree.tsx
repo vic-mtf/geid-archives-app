@@ -19,6 +19,7 @@ interface SidebarTreeProps {
   dataVersion: number;
   canWrite: boolean;
   renamingId: string | null;
+  width?: number;
   onSetFormOpen: (level: PhysicalLevel, parentId?: string, parentLevel?: PhysicalLevel) => void;
   onNavigateFromTree: (path: Array<{ id: string; label: string; level: PhysicalLevel }>) => void;
   onContextMenu: (state: ContextMenuState) => void;
@@ -40,6 +41,7 @@ const SidebarTree = React.memo(function SidebarTree({
   onContextMenu,
   onArchiveContextMenu,
   onRenamingEnd,
+  width,
   setBreadcrumb,
   executeFetch,
 }: SidebarTreeProps) {
@@ -47,7 +49,7 @@ const SidebarTree = React.memo(function SidebarTree({
 
   return (
     <Box sx={{
-      width: { lg: 300, xl: 340 },
+      width: width ?? 280,
       flexShrink: 0,
       display: { xs: "none", md: "flex" },
       flexDirection: "column",
