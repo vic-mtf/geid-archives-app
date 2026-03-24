@@ -1,41 +1,89 @@
 /**
  * WorkspaceFilePicker — Sélecteur de fichiers depuis l'espace personnel.
  *
- * Charge la liste des fichiers workspace de l'utilisateur et permet
- * d'en choisir un pour l'envoyer au service d'archivage.
+ * Affiche les fichiers avec une icône adaptée au type (PDF, Word, image, vidéo…)
+ * et la taille du fichier. Navigation par dossiers avec retour arrière.
  */
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
+  Avatar,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   List,
+  ListItemAvatar,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
   Stack,
   Typography,
 } from "@mui/material";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import VideoFileOutlinedIcon from "@mui/icons-material/VideoFileOutlined";
+import AudioFileOutlinedIcon from "@mui/icons-material/AudioFileOutlined";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
+import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import useAxios from "@/hooks/useAxios";
+import getFileExtension from "@/utils/getFileExtention";
+import fileExtensionBase from "@/utils/fileExtensionBase";
 
 const EVENT_NAME = "__open_workspace_file_picker";
 
 interface WorkspaceItem {
   name: string;
   isDirectory?: boolean;
+  size?: number;
   doc?: { _id: string };
   [key: string]: unknown;
 }
+
+// ── Icône et couleur selon l'extension ──────────────────────
+
+function getFileIcon(name: string) {
+  const ext = getFileExtension(name)?.toLowerCase() ?? "";
+
+  if (ext === "pdf")
+    return { icon: <PictureAsPdfOutlinedIcon />, color: "#E53935", bg: "#FFEBEE" };
+
+  const entry = fileExtensionBase.find(({ exts }) => exts.includes(ext));
+
+  if (entry?.docType === "word")
+    return { icon: <DescriptionOutlinedIcon />, color: "#1565C0", bg: "#E3F2FD" };
+  if (entry?.docType === "excel")
+    return { icon: <TableChartOutlinedIcon />, color: "#2E7D32", bg: "#E8F5E9" };
+  if (entry?.docType === "power point")
+    return { icon: <SlideshowOutlinedIcon />, color: "#E65100", bg: "#FFF3E0" };
+  if (entry?.type === "image")
+    return { icon: <ImageOutlinedIcon />, color: "#7B1FA2", bg: "#F3E5F5" };
+  if (entry?.type === "video")
+    return { icon: <VideoFileOutlinedIcon />, color: "#C62828", bg: "#FFEBEE" };
+  if (entry?.type === "audio")
+    return { icon: <AudioFileOutlinedIcon />, color: "#F57C00", bg: "#FFF3E0" };
+
+  return { icon: <InsertDriveFileOutlinedIcon />, color: "#78909C", bg: "#ECEFF1" };
+}
+
+function formatSize(bytes?: number): string {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+// ── Composant ───────────────────────────────────────────────
 
 export default function WorkspaceFilePicker() {
   const [open, setOpen] = useState(false);
@@ -52,7 +100,15 @@ export default function WorkspaceFilePicker() {
     { manual: !open }
   );
 
-  const items = Array.isArray(data) ? data : [];
+  const items = useMemo(() => {
+    if (!Array.isArray(data)) return [];
+    // Dossiers en premier, puis fichiers triés par nom
+    return [...data].sort((a, b) => {
+      if (a.isDirectory && !b.isDirectory) return -1;
+      if (!a.isDirectory && b.isDirectory) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [data]);
 
   useEffect(() => {
     const root = document.getElementById("root");
@@ -98,70 +154,123 @@ export default function WorkspaceFilePicker() {
     setSelectedFile(null);
   }, [selectedFile]);
 
-  const currentFolderName = folder.split("/").pop() || "Documents";
+  // Breadcrumb
+  const breadcrumbParts = folder.split("/");
+  const fileCount = items.filter((i) => !i.isDirectory).length;
+  const folderCount = items.filter((i) => i.isDirectory).length;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle component="div" fontWeight="bold">
+      <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0 }}>
         Choisir un fichier de votre espace personnel
       </DialogTitle>
 
-      <DialogContent dividers sx={{ maxHeight: "55vh", overflowY: "auto", p: 0 }}>
-        {/* Navigation */}
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 2, py: 1, bgcolor: "action.hover" }}>
+      <DialogContent dividers sx={{ maxHeight: "60vh", overflowY: "auto", p: 0 }}>
+        {/* Barre de navigation */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={0.5}
+          sx={{ px: 2, py: 1, bgcolor: "action.hover", borderBottom: "1px solid", borderColor: "divider" }}
+        >
           {folderHistory.length > 0 && (
-            <Button size="small" startIcon={<ArrowBackRoundedIcon />} onClick={goBack} sx={{ minWidth: 0 }}>
+            <Button
+              size="small"
+              onClick={goBack}
+              startIcon={<ArrowBackRoundedIcon />}
+              sx={{ minWidth: 0, mr: 1 }}
+            >
               Retour
             </Button>
           )}
-          <Typography variant="body2" fontWeight={500} noWrap flex={1}>
-            {currentFolderName.charAt(0).toUpperCase() + currentFolderName.slice(1)}
-          </Typography>
+          {breadcrumbParts.map((part, i) => (
+            <Stack key={i} direction="row" alignItems="center" spacing={0.5}>
+              {i > 0 && <NavigateNextRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
+              <Typography
+                variant="caption"
+                fontWeight={i === breadcrumbParts.length - 1 ? 600 : 400}
+                color={i === breadcrumbParts.length - 1 ? "text.primary" : "text.secondary"}
+              >
+                {part.charAt(0).toUpperCase() + part.slice(1)}
+              </Typography>
+            </Stack>
+          ))}
+          <Box flex={1} />
+          {!loading && (
+            <Typography variant="caption" color="text.disabled">
+              {folderCount > 0 && `${folderCount} dossier${folderCount > 1 ? "s" : ""}`}
+              {folderCount > 0 && fileCount > 0 && ", "}
+              {fileCount > 0 && `${fileCount} fichier${fileCount > 1 ? "s" : ""}`}
+            </Typography>
+          )}
         </Stack>
 
         {loading ? (
-          <Box display="flex" justifyContent="center" py={4}>
+          <Box display="flex" justifyContent="center" py={6}>
             <CircularProgress size={28} />
           </Box>
         ) : items.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: "center" }}>
-            Ce dossier est vide.
-          </Typography>
+          <Box textAlign="center" py={6}>
+            <Typography variant="body2" color="text.secondary">
+              Ce dossier est vide.
+            </Typography>
+          </Box>
         ) : (
           <List disablePadding>
-            {items.map((item) => (
-              <ListItemButton
-                key={item.name}
-                selected={selectedFile?.name === item.name && !item.isDirectory}
-                onClick={() => {
-                  if (item.isDirectory) {
-                    openFolder(item.name);
-                  } else {
+            {items.map((item) => {
+              const isDir = item.isDirectory;
+              const isSelected = !isDir && selectedFile?.name === item.name;
+              const fileInfo = !isDir ? getFileIcon(item.name) : null;
+              const size = !isDir ? formatSize(item.size as number | undefined) : null;
+              const ext = !isDir ? (getFileExtension(item.name)?.toUpperCase() ?? "") : "";
+
+              return (
+                <ListItemButton
+                  key={item.name}
+                  selected={isSelected}
+                  onClick={() => isDir ? openFolder(item.name) : setSelectedFile(item)}
+                  onDoubleClick={() => {
+                    if (isDir) { openFolder(item.name); return; }
                     setSelectedFile(item);
-                  }
-                }}
-                onDoubleClick={() => {
-                  if (item.isDirectory) {
-                    openFolder(item.name);
-                  } else {
-                    setSelectedFile(item);
-                    handleConfirm();
-                  }
-                }}
-                sx={{ px: 2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 36 }}>
-                  {item.isDirectory
-                    ? <FolderRoundedIcon sx={{ color: "#FFA726" }} />
-                    : <InsertDriveFileOutlinedIcon color="action" />
-                  }
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.name}
-                  primaryTypographyProps={{ variant: "body2", noWrap: true }}
-                />
-              </ListItemButton>
-            ))}
+                    setTimeout(() => handleConfirm(), 0);
+                  }}
+                  sx={{
+                    px: 2,
+                    py: 0.75,
+                    "&.Mui-selected": { bgcolor: "primary.50" },
+                  }}
+                >
+                  <ListItemAvatar sx={{ minWidth: 44 }}>
+                    {isDir ? (
+                      <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "#FFF3E0" }}>
+                        <FolderRoundedIcon sx={{ color: "#FFA726" }} />
+                      </Avatar>
+                    ) : (
+                      <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: fileInfo!.bg }}>
+                        {(() => {
+                          const { icon, color } = fileInfo!;
+                          return <Box sx={{ color, display: "flex" }}>{icon}</Box>;
+                        })()}
+                      </Avatar>
+                    )}
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={isDir ? null : size || ext}
+                    primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: isSelected ? 600 : 400 }}
+                    secondaryTypographyProps={{ variant: "caption" }}
+                  />
+                  {isDir && <NavigateNextRoundedIcon sx={{ color: "text.disabled", fontSize: 20 }} />}
+                  {!isDir && ext && (
+                    <Chip
+                      label={ext}
+                      size="small"
+                      sx={{ fontSize: "0.65rem", height: 20, bgcolor: fileInfo!.bg, color: fileInfo!.color, fontWeight: 600 }}
+                    />
+                  )}
+                </ListItemButton>
+              );
+            })}
           </List>
         )}
       </DialogContent>
