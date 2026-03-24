@@ -1,8 +1,9 @@
 /**
- * ResizeDivider — Séparateur vertical ajustable.
+ * ResizeDivider — Séparateur vertical ajustable via CSS Grid.
  *
- * Conteneur fixe étroit. Apparence d'un simple divider.
- * Au drag : s'épaissit et change de couleur via classe CSS directe.
+ * La colonne fait 1px dans le grid parent. Le divider remplit cette colonne.
+ * Aucun changement de taille — seule la couleur change.
+ * La zone de clic est élargie via un pseudo-element invisible.
  */
 
 import React, { useCallback, useRef } from "react";
@@ -28,11 +29,11 @@ const ResizeDivider = React.memo(function ResizeDivider({
     const parent = el?.parentElement;
     if (!parent) return;
     const rect = parent.getBoundingClientRect();
+    const children = Array.from(parent.children) as HTMLElement[];
+    const detailEl = children[children.length - 1];
+    const detailWidth = detailEl && detailEl !== el ? detailEl.getBoundingClientRect().width : 0;
     const raw = clientX - rect.left;
-    const dividerWidth = 1;
-    const lastChild = parent.lastElementChild as HTMLElement | null;
-    const detailWidth = lastChild && lastChild !== el ? lastChild.getBoundingClientRect().width : 0;
-    const maxLeft = rect.width - dividerWidth - minRight - detailWidth;
+    const maxLeft = rect.width - 1 - minRight - detailWidth;
     const clamped = Math.max(minLeft, Math.min(maxLeft, raw));
     onResizeRef.current(clamped);
   }, [minLeft, minRight]);
@@ -42,12 +43,12 @@ const ResizeDivider = React.memo(function ResizeDivider({
     const el = containerRef.current;
     if (!el) return;
 
-    el.classList.add("dragging");
+    el.classList.add("active");
     applyPosition(e.clientX);
 
     const onMove = (ev: MouseEvent) => applyPosition(ev.clientX);
     const onUp = () => {
-      el.classList.remove("dragging");
+      el.classList.remove("active");
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
       document.body.style.cursor = "";
@@ -65,23 +66,26 @@ const ResizeDivider = React.memo(function ResizeDivider({
       ref={containerRef}
       onMouseDown={onMouseDown}
       sx={{
-        // Largeur = un simple trait de 1px, comme un Divider MUI
-        width: 1,
-        flexShrink: 0,
+        // Remplit la colonne grid de 1px
+        width: "100%",
         bgcolor: "divider",
         cursor: "col-resize",
-        display: { xs: "none", md: "block" },
-        transition: "width 0.1s, background-color 0.15s",
-        // Hover → bleue
-        "&:hover": {
+        position: "relative",
+        // Zone de clic élargie (invisible, 12px)
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: -6,
+          width: 13,
+          cursor: "col-resize",
+          zIndex: 1,
+        },
+        "&:hover, &.active": {
           bgcolor: "primary.main",
         },
-        // Drag → épaisse + bleue
-        "&.dragging": {
-          width: 3,
-          bgcolor: "primary.main",
-          transition: "none",
-        },
+        transition: "background-color 0.15s",
       }}
     />
   );

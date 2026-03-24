@@ -332,15 +332,24 @@ export default function PhysicalArchiveContent() {
         onNavigateFromSearch={handleNavigateFromSearch}
       />
 
-      {/* ── Contenu principal : arbre + explorateur + détail ────── */}
-      <Box display="flex" flex={1} overflow="hidden">
+      {/* ── Contenu principal : CSS Grid stable ────── */}
+      <Box sx={{
+        display: "grid",
+        flex: 1,
+        overflow: "hidden",
+        gridTemplateColumns: insideContainer
+          ? isMobile
+            ? showDetail ? "0 0 0 1fr" : "0 0 1fr 0"
+            : `${treeWidth}px 1px 1fr ${selected ? 300 : 280}px`
+          : "1fr",
+        minHeight: 0,
+      }}>
 
-        {/* ── Sidebar arborescence (visible uniquement dans un conteneur) ── */}
+        {/* ── Col 1 : Sidebar arborescence ── */}
         {insideContainer && (
           <SidebarTree
             headers={headers}
             parentId={parentId}
-            width={treeWidth}
             breadcrumb={breadcrumb}
             dataVersion={dataVersion}
             canWrite={canWrite}
@@ -362,7 +371,7 @@ export default function PhysicalArchiveContent() {
           />
         )}
 
-        {/* Séparateur ajustable entre tree et milieu */}
+        {/* ── Col 2 : Séparateur ajustable ── */}
         {insideContainer && (
           <ResizeDivider
             onResize={setTreeWidth}
@@ -371,13 +380,8 @@ export default function PhysicalArchiveContent() {
           />
         )}
 
-        {/* ── Panneau central (toujours visible) ──────── */}
-        <Box sx={{
-          flex: 1, minWidth: { xs: 0, md: 250 },
-          display: isMobile && showDetail ? "none" : "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}>
+        {/* ── Col 3 : Panneau central ──────── */}
+        <Box sx={{ display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
           <Box px={2} display="flex" alignItems="center" gap={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" minHeight={42}>
             {insideContainer && (() => {
               const parent = breadcrumb[breadcrumb.length - 1];
@@ -414,14 +418,9 @@ export default function PhysicalArchiveContent() {
             )}
           </Box>
 
-          {/* Ligne parent (..) pour remonter */}
           {breadcrumb.length > 0 && (
             <Box
-              px={2}
-              py={0.75}
-              display="flex"
-              alignItems="center"
-              gap={1}
+              px={2} py={0.75} display="flex" alignItems="center" gap={1}
               sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, borderBottom: "1px solid", borderColor: "divider" }}
               onClick={() => handleBreadcrumb(breadcrumb.length - 1)}>
               <KeyboardReturnOutlinedIcon fontSize="small" sx={{ color: "text.disabled", transform: "scaleX(-1)" }} />
@@ -429,7 +428,6 @@ export default function PhysicalArchiveContent() {
             </Box>
           )}
 
-          {/* Liste des éléments */}
           <PhysicalItemsList
             loading={loading}
             items={items}
@@ -454,17 +452,14 @@ export default function PhysicalArchiveContent() {
           />
         </Box>
 
-        {/* ── Panneau droit : détail (largeur fixe, ne dépasse pas tree+milieu) ── */}
+        {/* ── Col 4 : Panneau détail ── */}
         {insideContainer && (
         <Box sx={{
           ...scrollBarSx,
-          width: { md: 280, lg: 320 },
-          maxWidth: "35%",
-          flexShrink: 0,
           overflowY: "auto",
           minHeight: 0,
           p: 2,
-          display: isMobile && !showDetail ? "none" : "flex",
+          display: "flex",
           flexDirection: "column",
           borderLeft: "1px solid",
           borderColor: "divider",
@@ -479,7 +474,7 @@ export default function PhysicalArchiveContent() {
               <Stack alignItems="center" gap={1} px={2} textAlign="center">
                 <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
                 <Typography color="text.secondary" variant="body2">
-                  Sélectionnez un élément dans l'arborescence ou la liste pour consulter ses informations
+                  Sélectionnez un élément pour consulter ses informations
                 </Typography>
               </Stack>
             </Box>

@@ -49,7 +49,6 @@ const SidebarTree = React.memo(function SidebarTree({
   onContextMenu,
   onArchiveContextMenu,
   onRenamingEnd,
-  width,
   setBreadcrumb,
   executeFetch,
 }: SidebarTreeProps) {
@@ -78,11 +77,10 @@ const SidebarTree = React.memo(function SidebarTree({
 
   return (
     <Box sx={{
-      width: width ?? 280,
-      flexShrink: 0,
-      display: { xs: "none", md: "flex" },
+      display: "flex",
       flexDirection: "column",
       overflow: "hidden",
+      minWidth: 0,
     }}>
       {/* Header style GitHub — sélecteur de conteneur + bouton créer */}
       <Box px={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" gap={0.5} minHeight={42}>
