@@ -126,11 +126,16 @@ export default function Cover({ setOpened }: CoverProps) {
         textAlign="center"
         sx={{
           px: { xs: 2, sm: 3 },
-          pb: { xs: 2, sm: 3 },
+          py: 1,
+          mb: { xs: 1, sm: 2 },
           flexShrink: 0,
           color: "white",
-          textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-          fontSize: { xs: "0.7rem", sm: "0.8rem" },
+          bgcolor: "rgba(0,0,0,0.35)",
+          borderRadius: 1,
+          mx: { xs: 2, sm: "auto" },
+          maxWidth: 600,
+          fontSize: { xs: "0.72rem", sm: "0.82rem" },
+          letterSpacing: 0.3,
         }}>
         {footerText}
       </Typography>

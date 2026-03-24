@@ -6,14 +6,14 @@ import Content from "./content/Content";
 import Navigation from "./navigation/Navigation";
 import Forms from "./forms/Forms";
 import MobileBottomNav from "./navigation/MobileBottomNav";
-import { setSnackbarFunctions } from "@/utils/openArchiveFile";
+import { setSnackbarFunctions, cancelFileLoading } from "@/utils/openArchiveFile";
 
 export default function Archives() {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   useEffect(() => {
     setSnackbarFunctions(
       enqueueSnackbar as (msg: string, opts?: Record<string, unknown>) => unknown,
-      closeSnackbar as (key: unknown) => void,
+      (key: unknown) => { closeSnackbar(key as string | number); cancelFileLoading(); },
     );
   }, [enqueueSnackbar, closeSnackbar]);
 

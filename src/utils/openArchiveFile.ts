@@ -2,10 +2,9 @@ import store from "@/redux/store";
 
 const BASE = (import.meta.env.VITE_SERVER_BASE_URL as string) ?? "";
 
-/** Verrou pour empêcher les doubles clics */
 let loading = false;
+let activeController: AbortController | null = null;
 
-/** Callback snackbar — injecté depuis un composant React */
 let _enqueue: ((msg: string, opts?: Record<string, unknown>) => unknown) | null = null;
 let _close: ((key: unknown) => void) | null = null;
 
@@ -17,9 +16,24 @@ export function setSnackbarFunctions(
   _close = close;
 }
 
+/** Annule le chargement en cours */
+export function cancelFileLoading() {
+  if (activeController) {
+    activeController.abort();
+    activeController = null;
+    loading = false;
+  }
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
 /**
  * Ouvre le fichier d'une archive via l'endpoint authentifié.
- * Affiche un snackbar de chargement. Double clic protégé.
+ * Affiche la progression + possibilité d'annuler.
  */
 export default async function openArchiveFile(archiveId: string): Promise<void> {
   if (loading) {
@@ -30,8 +44,11 @@ export default async function openArchiveFile(archiveId: string): Promise<void> 
   if (!token) return;
 
   loading = true;
+  activeController = new AbortController();
+  let snackKey: unknown = null;
 
-  const snackKey = _enqueue?.("Chargement du fichier en cours, veuillez patienter…", {
+  // Premier snackbar — début du chargement
+  snackKey = _enqueue?.("Connexion au serveur…", {
     variant: "info",
     autoHideDuration: null,
     title: "Ouverture du fichier",
@@ -40,28 +57,76 @@ export default async function openArchiveFile(archiveId: string): Promise<void> 
   try {
     const res = await fetch(`${BASE}/api/stuff/archives/file/${archiveId}`, {
       headers: { Authorization: `Bearer ${token}` },
+      signal: activeController.signal,
     });
 
-    _close?.(snackKey);
-
     if (!res.ok) {
-      _enqueue?.(
-        res.status === 403
-          ? "Vous n'avez pas les droits nécessaires pour accéder à ce fichier."
-          : "Le fichier est introuvable ou une erreur est survenue.",
-        { variant: "error" }
-      );
+      _close?.(snackKey);
+      if (res.status === 403) {
+        _enqueue?.("Vous n'avez pas les droits nécessaires pour accéder à ce fichier.", { variant: "error", title: "Accès refusé" });
+      } else if (res.status === 404) {
+        _enqueue?.("Ce fichier est introuvable. Il a peut-être été supprimé.", { variant: "error", title: "Fichier introuvable" });
+      } else {
+        _enqueue?.("Une erreur est survenue lors de la récupération du fichier.", { variant: "error" });
+      }
       return;
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  } catch {
+    // Lire le stream avec progression
+    const contentLength = Number(res.headers.get("content-length") ?? 0);
+    const reader = res.body?.getReader();
+
+    if (!reader) {
+      // Fallback si pas de stream
+      const blob = await res.blob();
+      _close?.(snackKey);
+      openBlob(blob);
+      return;
+    }
+
+    const chunks: BlobPart[] = [];
+    let received = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+
+      // Mettre à jour le snackbar avec la progression
+      const progress = contentLength > 0
+        ? `${Math.round((received / contentLength) * 100)} %`
+        : formatSize(received);
+
+      _close?.(snackKey);
+      snackKey = _enqueue?.(`Chargement en cours… ${progress}`, {
+        variant: "info",
+        autoHideDuration: null,
+        title: "Ouverture du fichier",
+      });
+    }
+
     _close?.(snackKey);
-    _enqueue?.("Le chargement du fichier a échoué. Vérifiez votre connexion.", { variant: "error" });
+
+    const blob = new Blob(chunks);
+    openBlob(blob);
+
+  } catch (err: unknown) {
+    _close?.(snackKey);
+    if ((err as Error).name === "AbortError") {
+      _enqueue?.("Le chargement du fichier a été annulé.", { variant: "warning", title: "Annulé" });
+    } else {
+      _enqueue?.("Le chargement du fichier a échoué. Vérifiez votre connexion et réessayez.", { variant: "error", title: "Erreur de chargement" });
+    }
   } finally {
     loading = false;
+    activeController = null;
   }
+}
+
+function openBlob(blob: Blob) {
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
