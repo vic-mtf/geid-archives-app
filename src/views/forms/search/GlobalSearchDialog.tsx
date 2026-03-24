@@ -245,7 +245,7 @@ export default function GlobalSearchDialog() {
       maxWidth="sm"
       fullWidth
       fullScreen={fullScreen}
-      PaperProps={{ sx: { borderRadius: 2, overflow: "hidden" } }}>
+      PaperProps={{ sx: { borderRadius: fullScreen ? 0 : 2, overflow: "hidden", height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column" } }}>
       {/* Barre de recherche */}
       <Box
         px={2}
@@ -288,7 +288,7 @@ export default function GlobalSearchDialog() {
         </Tooltip>
       </Box>
 
-      <DialogContent sx={{ p: 0, maxHeight: 520, overflow: "auto" }}>
+      <DialogContent sx={{ p: 0, flex: 1, overflow: "auto" }}>
         {/* État initial */}
         {!shouldSearch && !loading && (
           <Box

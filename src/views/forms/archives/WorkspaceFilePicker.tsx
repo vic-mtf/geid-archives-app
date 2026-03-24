@@ -140,12 +140,13 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
   const folderCount = items.filter((i) => i.isDirectory).length;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
-      <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0 }}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}
+      PaperProps={{ sx: { height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column" } }}>
+      <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0, flexShrink: 0 }}>
         Choisir un fichier de votre espace personnel
       </DialogTitle>
 
-      <DialogContent dividers sx={{ maxHeight: "60vh", overflowY: "auto", p: 0 }}>
+      <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 0 }}>
         {/* Barre de navigation */}
         <Stack
           direction="row"
