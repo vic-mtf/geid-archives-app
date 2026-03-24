@@ -85,36 +85,44 @@ function formatSize(bytes?: number): string {
 
 // ── Composant ───────────────────────────────────────────────
 
+// Catégories racines de l'espace personnel
+const ROOT_CATEGORIES: WorkspaceItem[] = [
+  { name: "documents", isDirectory: true },
+  { name: "images", isDirectory: true },
+  { name: "videos", isDirectory: true },
+];
+
 export default function WorkspaceFilePicker() {
   const [open, setOpen] = useState(false);
-  const [folder, setFolder] = useState("documents");
+  const [folder, setFolder] = useState<string | null>(null); // null = racine
   const [folderHistory, setFolderHistory] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState<WorkspaceItem | null>(null);
 
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  const dataParam = JSON.stringify({ path: folder });
+  const isRoot = folder === null;
+  const dataParam = folder ? JSON.stringify({ path: folder }) : "";
   const [{ data, loading }] = useAxios<WorkspaceItem[]>(
     { url: `/api/stuff/workspace/${encodeURIComponent(dataParam)}`, headers },
-    { manual: !open }
+    { manual: !open || isRoot }
   );
 
   const items = useMemo(() => {
+    if (isRoot) return ROOT_CATEGORIES;
     if (!Array.isArray(data)) return [];
-    // Dossiers en premier, puis fichiers triés par nom
     return [...data].sort((a, b) => {
       if (a.isDirectory && !b.isDirectory) return -1;
       if (!a.isDirectory && b.isDirectory) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [data]);
+  }, [data, isRoot]);
 
   useEffect(() => {
     const root = document.getElementById("root");
     const handler = () => {
       setOpen(true);
-      setFolder("documents");
+      setFolder(null);
       setFolderHistory([]);
       setSelectedFile(null);
     };
@@ -128,8 +136,8 @@ export default function WorkspaceFilePicker() {
   }, []);
 
   const openFolder = useCallback((name: string) => {
-    setFolderHistory((prev) => [...prev, folder]);
-    setFolder((prev) => `${prev}/${name}`);
+    setFolderHistory((prev) => [...prev, folder ?? ""]);
+    setFolder((prev) => prev ? `${prev}/${name}` : name);
     setSelectedFile(null);
   }, [folder]);
 
@@ -137,7 +145,7 @@ export default function WorkspaceFilePicker() {
     setFolderHistory((prev) => {
       const copy = [...prev];
       const parent = copy.pop();
-      if (parent !== undefined) setFolder(parent);
+      setFolder(parent === "" ? null : parent ?? null);
       return copy;
     });
     setSelectedFile(null);
@@ -155,7 +163,7 @@ export default function WorkspaceFilePicker() {
   }, [selectedFile]);
 
   // Breadcrumb
-  const breadcrumbParts = folder.split("/");
+  const breadcrumbParts = isRoot ? ["Espace personnel"] : ["Espace personnel", ...folder!.split("/")];
   const fileCount = items.filter((i) => !i.isDirectory).length;
   const folderCount = items.filter((i) => i.isDirectory).length;
 
