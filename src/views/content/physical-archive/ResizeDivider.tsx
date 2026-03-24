@@ -60,8 +60,8 @@ const ResizeDivider = React.memo(function ResizeDivider({
     };
   }, [isDragging, applyPosition]);
 
-  // Grosse ligne = curseur dans la zone ET maintenu
-  const thick = isDragging && isHover;
+  // Grosse ligne = bouton maintenu (tout le drag)
+  const thick = isDragging;
 
   return (
     <Box

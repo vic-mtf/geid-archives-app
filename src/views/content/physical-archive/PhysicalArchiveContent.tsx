@@ -474,33 +474,16 @@ export default function PhysicalArchiveContent() {
               Retour
             </Button>
           )}
-          {!selected ? (() => {
-            // Par défaut, afficher les détails du conteneur actif
-            const activeContainer = breadcrumb.length > 0
-              ? (apiCache?.["/api/stuff/archives/physical/containers"]?.data as Array<Record<string, unknown>> | undefined)
-                  ?.find((c) => c._id === breadcrumb[0].id)
-              : undefined;
-            if (activeContainer) {
-              return (
-                <DetailPanel
-                  level="container"
-                  item={activeContainer as unknown as Container}
-                  onDelete={(id, label) => setDeleteTarget({ level: "container", id, label })}
-                  headers={headers}
-                />
-              );
-            }
-            return (
-              <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
-                <Stack alignItems="center" gap={1}>
-                  <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
-                  <Typography color="text.secondary" variant="body2">
-                    Sélectionnez un élément pour afficher ses détails
-                  </Typography>
-                </Stack>
-              </Box>
-            );
-          })() : (
+          {!selected ? (
+            <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
+              <Stack alignItems="center" gap={1} px={2} textAlign="center">
+                <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+                <Typography color="text.secondary" variant="body2">
+                  Sélectionnez un élément dans l'arborescence ou la liste pour consulter ses informations
+                </Typography>
+              </Stack>
+            </Box>
+          ) : (
             <DetailPanel
               level={selected.level}
               item={selected.item}
