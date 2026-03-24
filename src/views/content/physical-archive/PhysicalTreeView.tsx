@@ -112,6 +112,8 @@ export interface PhysicalTreeViewProps {
   onArchiveContextMenu?: (e: React.MouseEvent, archiveId: string, label: string) => void;
   /** L'utilisateur peut modifier (renommer, etc.) */
   canWrite?: boolean;
+  /** Afficher uniquement ce conteneur (si défini) */
+  activeContainerId?: string;
   /** Renommer un noeud — appelé avec (id, level, newValue) */
   onRename?: (id: string, level: Level, newValue: string) => Promise<void>;
   /** ID du noeud à forcer en mode édition (depuis le menu contextuel) */
@@ -122,7 +124,7 @@ export interface PhysicalTreeViewProps {
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, onArchiveContextMenu, canWrite, onRename, renamingId, onRenamingEnd }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, onArchiveContextMenu, canWrite, onRename, renamingId, onRenamingEnd, activeContainerId }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -432,7 +434,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
             },
           }}
         >
-          {renderTree(nodes)}
+          {renderTree(activeContainerId ? nodes.filter((n) => n.id === activeContainerId) : nodes)}
         </TreeView>
       )}
     </Box>

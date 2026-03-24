@@ -1,16 +1,24 @@
 import React from "react";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  MenuItem,
+  Select,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 import { UPDATE_ENDPOINTS, RENAME_FIELD } from "@/constants/physical";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "@/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/redux/store";
 import { incrementVersion, invalidateCache as invalidateCacheAction } from "@/redux/data";
 import { levelConfig } from "./levelConfig";
 import PhysicalTreeView from "./PhysicalTreeView";
 import type { BreadcrumbItem } from "./BreadcrumbBar";
 import type { ContextMenuState } from "./PhysicalContextMenu";
+import useAxios from "@/hooks/useAxios";
 
 interface SidebarTreeProps {
   headers: Record<string, string>;
@@ -47,6 +55,27 @@ const SidebarTree = React.memo(function SidebarTree({
 }: SidebarTreeProps) {
   const dispatch = useDispatch<AppDispatch>();
 
+  // Charger la liste des conteneurs pour le sélecteur
+  const apiCache = useSelector((store: RootState) => (store.data as unknown as Record<string, unknown>).apiCache as Record<string, { data: unknown }> | undefined);
+  const containersUrl = "/api/stuff/archives/physical/containers";
+  const cachedContainers = apiCache?.[containersUrl]?.data as Array<{ _id: string; name: string }> | undefined;
+
+  const [{ data: fetchedContainers }] = useAxios<Array<{ _id: string; name: string }>>(
+    { url: containersUrl, headers },
+    { manual: !!cachedContainers }
+  );
+  const containers = cachedContainers ?? fetchedContainers ?? [];
+
+  // Conteneur actif = premier élément du breadcrumb
+  const activeContainerId = breadcrumb.length > 0 ? breadcrumb[0].id : "";
+
+  const handleContainerChange = (containerId: string) => {
+    const container = containers.find((c) => c._id === containerId);
+    if (container) {
+      onNavigateFromTree([{ id: container._id, label: container.name, level: "container" }]);
+    }
+  };
+
   return (
     <Box sx={{
       width: width ?? 280,
@@ -55,13 +84,33 @@ const SidebarTree = React.memo(function SidebarTree({
       flexDirection: "column",
       overflow: "hidden",
     }}>
-      <Box px={1.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" minHeight={42}>
-        <Box display="flex" alignItems="center" gap={0.5} flex={1}>
-          <WarehouseOutlinedIcon sx={{ fontSize: 16, color: levelConfig.container.color }} />
-          <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-            Conteneurs
-          </Typography>
-        </Box>
+      {/* Header style GitHub — sélecteur de conteneur + bouton créer */}
+      <Box px={1} py={0.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" gap={0.5}>
+        <WarehouseOutlinedIcon sx={{ fontSize: 16, color: levelConfig.container.color, flexShrink: 0 }} />
+        <Select
+          value={activeContainerId}
+          onChange={(e) => handleContainerChange(e.target.value)}
+          size="small"
+          variant="outlined"
+          displayEmpty
+          renderValue={(val) => {
+            if (!val) return <Typography variant="caption" color="text.secondary">Conteneur…</Typography>;
+            const c = containers.find((c) => c._id === val);
+            return <Typography variant="caption" fontWeight={600} noWrap>{c?.name ?? val}</Typography>;
+          }}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            "& .MuiSelect-select": { py: 0.5, px: 1, fontSize: "0.8rem" },
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
+          }}
+        >
+          {containers.map((c) => (
+            <MenuItem key={c._id} value={c._id} sx={{ fontSize: "0.8rem" }}>
+              {c.name}
+            </MenuItem>
+          ))}
+        </Select>
         {canWrite && (
           <Tooltip title="Nouveau conteneur">
             <IconButton size="small" onClick={() => onSetFormOpen("container")}>
@@ -70,10 +119,13 @@ const SidebarTree = React.memo(function SidebarTree({
           </Tooltip>
         )}
       </Box>
+
+      {/* Tree — affiche uniquement le conteneur actif */}
       <PhysicalTreeView
         headers={headers}
         selectedId={parentId ?? null}
         expandedIds={breadcrumb.map((b) => b.id)}
+        activeContainerId={activeContainerId || undefined}
         onSelect={onNavigateFromTree}
         dataVersion={dataVersion}
         canWrite={canWrite}
