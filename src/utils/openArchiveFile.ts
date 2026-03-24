@@ -75,11 +75,24 @@ function addToCache(archiveId: string, blob: Blob): string {
 
 export default async function openArchiveFile(archiveId: string, fileName?: string): Promise<void> {
   if (loading) return;
+  const displayName = fileName || "Fichier";
 
-  // Vérifier le cache — si déjà téléchargé, ouvrir directement
+  // Cache — si déjà téléchargé, ouvrir directement
   const cachedUrl = getCached(archiveId);
   if (cachedUrl) {
     window.open(cachedUrl, "_blank");
+    return;
+  }
+
+  // Pas de réseau → message clair
+  if (!navigator.onLine) {
+    _onProgress?.({
+      ...INITIAL_STATE,
+      open: true,
+      fileName: displayName,
+      error: "Vous êtes hors ligne. Connectez-vous à internet pour accéder à ce fichier.",
+    });
+    setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
     return;
   }
 
@@ -88,7 +101,6 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
 
   loading = true;
   activeController = new AbortController();
-  const displayName = fileName || "Fichier";
 
   _onProgress?.({ ...INITIAL_STATE, open: true, fileName: displayName });
 
@@ -143,11 +155,14 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     if ((err as Error).name === "AbortError") {
       // Géré dans cancelFileLoading
     } else {
+      const errorMsg = !navigator.onLine
+        ? "La connexion a été perdue pendant le chargement. Le fichier n'a pas pu être récupéré."
+        : "Le chargement a échoué. Vérifiez votre connexion et réessayez.";
       _onProgress?.({
         ...INITIAL_STATE,
         open: true,
         fileName: displayName,
-        error: "Le chargement a échoué. Vérifiez votre connexion et réessayez.",
+        error: errorMsg,
       });
       setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
     }

@@ -4,6 +4,7 @@ import { RouterProvider } from "react-router-dom";
 import BoxGradient from "./components/BoxGradient";
 import router from "./router/router";
 import Cover from "./views/cover/Cover";
+import NetworkStatus from "./components/NetworkStatus";
 import type { RootState } from "./redux/store";
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
 
   return (
     <BoxGradient>
+      <NetworkStatus />
       {connected && opened ? (
         <RouterProvider router={router} />
       ) : (
