@@ -22,6 +22,7 @@ import InfoOutlinedIcon             from "@mui/icons-material/InfoOutlined";
 import NavigateNextRoundedIcon      from "@mui/icons-material/NavigateNextRounded";
 
 import useAxios      from "@/hooks/useAxios";
+import { useSnackbar } from "notistack";
 import useToken      from "@/hooks/useToken";
 import { type PhysicalLevel, UPDATE_ENDPOINTS, RENAME_FIELD } from "@/constants/physical";
 import { useLocation } from "react-router-dom";
@@ -40,8 +41,10 @@ import SidebarTree   from "./SidebarTree";
 import { levelConfig } from "./levelConfig";
 import DetailPanel       from "./DetailPanel";
 import PhysicalContextMenu, { type ContextMenuState } from "./PhysicalContextMenu";
+import ArchiveContextMenu, { type ArchiveMenuState } from "./ArchiveContextMenu";
 import PhysicalItemsList from "./PhysicalItemsList";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import openArchiveFile from "@/utils/openArchiveFile";
 import useDeletePhysical from "./useDeletePhysical";
 
 // ── Types locaux ───────────────────────────────────────────
@@ -54,6 +57,7 @@ export default function PhysicalArchiveContent() {
   const Authorization = useToken();
   const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const dispatch = useDispatch<AppDispatch>();
+  const { enqueueSnackbar } = useSnackbar();
   const dataVersion = useSelector((store: RootState) => store.data.dataVersion);
   const theme = useTheme();
   const location = useLocation();
@@ -66,8 +70,10 @@ export default function PhysicalArchiveContent() {
   const [formLevel, setFormLevel] = useState<Level>("container");
   const [formParentLevel, setFormParentLevel] = useState<Level | undefined>(undefined);
 
-  // Menu contextuel (clic droit)
+  // Menu contextuel (clic droit) — éléments physiques
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  // Menu contextuel — archives numériques
+  const [archiveMenu, setArchiveMenu] = useState<ArchiveMenuState | null>(null);
 
   // ID de l'élément en cours de renommage (déclenché depuis le menu contextuel)
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -298,6 +304,9 @@ export default function PhysicalArchiveContent() {
             }}
             onNavigateFromTree={handleNavigateFromTree}
             onContextMenu={(state) => setContextMenu(state)}
+            onArchiveContextMenu={(e, archiveId, label) => {
+              setArchiveMenu({ mouseX: e.clientX, mouseY: e.clientY, archiveId, archiveLabel: label });
+            }}
             onRenamingEnd={() => setRenamingId(null)}
             setBreadcrumb={setBreadcrumb}
             executeFetch={executeFetch}
@@ -455,6 +464,27 @@ export default function PhysicalArchiveContent() {
           if (raw) setSelected({ level, item: raw as Container });
         }}
         onRename={(id) => setRenamingId(id)}
+      />
+
+      {/* Menu contextuel archives numériques */}
+      <ArchiveContextMenu
+        state={archiveMenu}
+        onClose={() => setArchiveMenu(null)}
+        canWrite={canWrite}
+        onOpen={(archiveId) => openArchiveFile(archiveId)}
+        onUnlink={async (archiveId, label) => {
+          try {
+            await executeFetch({
+              url: `/api/stuff/archives/${archiveId}`,
+              method: "PUT",
+              data: { record: null, document: null },
+            });
+            dispatch(incrementVersion());
+            enqueueSnackbar(`L'archive « ${label} » a été dissociée du dossier physique.`, { variant: "success" });
+          } catch {
+            enqueueSnackbar("La dissociation a échoué. Vérifiez vos droits et réessayez.", { variant: "error" });
+          }
+        }}
       />
 
       {/* Dialogue de confirmation de suppression */}

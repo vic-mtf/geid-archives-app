@@ -22,6 +22,7 @@ interface SidebarTreeProps {
   onSetFormOpen: (level: PhysicalLevel, parentId?: string, parentLevel?: PhysicalLevel) => void;
   onNavigateFromTree: (path: Array<{ id: string; label: string; level: PhysicalLevel }>) => void;
   onContextMenu: (state: ContextMenuState) => void;
+  onArchiveContextMenu: (e: React.MouseEvent, archiveId: string, label: string) => void;
   onRenamingEnd: () => void;
   setBreadcrumb: React.Dispatch<React.SetStateAction<BreadcrumbItem[]>>;
   executeFetch: (config: { url: string; method?: string; data?: Record<string, unknown> }) => Promise<{ data: unknown }>;
@@ -37,6 +38,7 @@ const SidebarTree = React.memo(function SidebarTree({
   onSetFormOpen,
   onNavigateFromTree,
   onContextMenu,
+  onArchiveContextMenu,
   onRenamingEnd,
   setBreadcrumb,
   executeFetch,
@@ -88,6 +90,7 @@ const SidebarTree = React.memo(function SidebarTree({
         }}
         renamingId={renamingId}
         onRenamingEnd={onRenamingEnd}
+        onArchiveContextMenu={onArchiveContextMenu}
       />
     </Box>
   );

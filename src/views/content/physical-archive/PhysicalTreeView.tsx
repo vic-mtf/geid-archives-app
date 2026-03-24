@@ -105,8 +105,10 @@ export interface PhysicalTreeViewProps {
   expandedIds?: string[];
   /** Compteur de version — quand il change, l'arbre recharge ses racines */
   dataVersion?: number;
-  /** Menu contextuel (clic droit) sur un noeud */
+  /** Menu contextuel (clic droit) sur un noeud physique */
   onContextMenu?: (e: React.MouseEvent, id: string, label: string, level: Level) => void;
+  /** Menu contextuel (clic droit) sur une archive numérique dans le tree */
+  onArchiveContextMenu?: (e: React.MouseEvent, archiveId: string, label: string) => void;
   /** L'utilisateur peut modifier (renommer, etc.) */
   canWrite?: boolean;
   /** Renommer un noeud — appelé avec (id, level, newValue) */
@@ -119,7 +121,7 @@ export interface PhysicalTreeViewProps {
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, canWrite, onRename, renamingId, onRenamingEnd }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, onArchiveContextMenu, canWrite, onRename, renamingId, onRenamingEnd }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -227,6 +229,11 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
                 gap={0.5}
                 py={0.25}
                 onClick={(e) => { e.stopPropagation(); openArchiveFile(node.id); }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onArchiveContextMenu?.(e, node.id, node.label);
+                }}
                 sx={{ cursor: "pointer" }}
               >
                 <Typography variant="body2" noWrap sx={{ fontSize: "0.8rem", opacity: 0.85 }}>
