@@ -17,7 +17,7 @@ interface BreadcrumbBarProps {
   onNavigateFromSearch: (path: Array<{ id: string; label: string; level: string }>) => void;
 }
 
-export default function BreadcrumbBar({ breadcrumb, headers, onBreadcrumbClick, onNavigateFromSearch }: BreadcrumbBarProps) {
+const BreadcrumbBar = React.memo(function BreadcrumbBar({ breadcrumb, headers, onBreadcrumbClick, onNavigateFromSearch }: BreadcrumbBarProps) {
   return (
     <Box
       px={{ xs: 1, sm: 2 }}
@@ -53,4 +53,6 @@ export default function BreadcrumbBar({ breadcrumb, headers, onBreadcrumbClick, 
       </Box>
     </Box>
   );
-}
+});
+
+export default BreadcrumbBar;

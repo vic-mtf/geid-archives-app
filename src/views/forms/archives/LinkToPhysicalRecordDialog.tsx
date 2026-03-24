@@ -15,6 +15,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Stack,
   CircularProgress, Breadcrumbs, Link, Skeleton,
+  useMediaQuery, useTheme,
 } from "@mui/material";
 import NavigateNextIcon    from "@mui/icons-material/NavigateNext";
 import LinkIcon            from "@mui/icons-material/Link";
@@ -35,6 +36,8 @@ import { ContainerCard, ShelfCard, FloorCard, BinderCard, RecordCard } from "@/v
 // ── Composant principal ──────────────────────────────────────
 
 export default function LinkToPhysicalRecordDialog() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const Authorization = useToken();
   const dispatch      = useDispatch<AppDispatch>();
   const { enqueueSnackbar } = useSnackbar();
@@ -217,6 +220,7 @@ export default function LinkToPhysicalRecordDialog() {
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={fullScreen}
       PaperProps={{ sx: { height: "80vh", maxHeight: 620, display: "flex", flexDirection: "column" } }}>
 
       {/* ── En-tête ── */}

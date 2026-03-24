@@ -6,7 +6,7 @@
  *   - Récupérer depuis l'espace personnel (ouvre ArchivesForm avec sélecteur)
  */
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -16,13 +16,17 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined";
 
 const EVENT_NAME = "__open_archive_source_picker";
 
-export default function ArchiveSourcePicker() {
+const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function ArchiveSourcePicker() {
   }, []);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
         Ajouter une archive
       </DialogTitle>
@@ -87,4 +91,6 @@ export default function ArchiveSourcePicker() {
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+export default ArchiveSourcePicker;

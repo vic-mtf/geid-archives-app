@@ -5,26 +5,22 @@
  * pour naviguer directement vers la section concernée.
  */
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   Alert,
   Box,
   Card,
-  CardActionArea,
   CardContent,
   Chip,
   Divider,
   Grid,
-  LinearProgress,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Skeleton,
   Stack,
-  Tooltip,
   Typography,
-  useTheme,
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
@@ -33,14 +29,11 @@ import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded"
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import CheckCircleOutlineIcon    from "@mui/icons-material/CheckCircleOutline";
 import HourglassTopOutlinedIcon  from "@mui/icons-material/HourglassTopOutlined";
-import LayersOutlinedIcon        from "@mui/icons-material/LayersOutlined";
 import WarningAmberRoundedIcon   from "@mui/icons-material/WarningAmberRounded";
-import FolderOpenOutlinedIcon    from "@mui/icons-material/FolderOpenOutlined";
 import ArchiveRoundedIcon        from "@mui/icons-material/ArchiveRounded";
 import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
 
-import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
@@ -54,6 +47,10 @@ import formatDate from "@/utils/formatTime";
 import scrollBarSx from "@/utils/scrollBarSx";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
+
+import StatCard from "./StatCard";
+import { EmptyPlaceholder } from "./StatCard";
+import DashboardBottomRow from "./DashboardBottomRow";
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -73,7 +70,6 @@ export default function DashboardContent() {
   const dispatch      = useDispatch<AppDispatch>();
   const dataVersion   = useSelector((store: RootState) => store.data.dataVersion);
   const navigateTo    = useNavigateSetState();
-  const theme         = useTheme();
   const { canWrite } = useArchivePermissions();
 
   // ── Préférences utilisateur du dashboard ────────────────────
@@ -100,7 +96,6 @@ export default function DashboardContent() {
   );
 
   // ── API avec cache (stale-while-revalidate) ─────────────────
-  // Premier chargement visible, les suivants instantanés depuis le cache
 
   const { data: globalStats, loading: statsLoading } = useApiCache<{
     users: { total: number; active: number; inactive: number; withArchiveAccess: number; admins: number; writers: number; readers: number };
@@ -187,7 +182,6 @@ export default function DashboardContent() {
   const totalCount  = fullList.length;
   const anyLoading  = archivesLoading;
 
-
   // ── Données PieChart ────────────────────────────────────────
   const pieData = useMemo(() => [
     { id: 0, value: statusCounts.ACTIVE,      label: "Actives",         color: "#4caf50" },
@@ -248,7 +242,6 @@ export default function DashboardContent() {
           </Grid>
         ))}
       </Grid>
-
       }
 
       {/* ── Rangée 2 : Activité + Répartition — même hauteur ── */}
@@ -297,7 +290,6 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
         </Grid>
-
         }
 
         {/* Répartition par statut — PieChart */}
@@ -314,7 +306,6 @@ export default function DashboardContent() {
                 <EmptyPlaceholder label="Aucune archive" />
               ) : (
                 <Box flex={1} display="flex" flexDirection="column">
-                  {/* Chart */}
                   <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
                     <PieChart
                       series={[{
@@ -327,7 +318,6 @@ export default function DashboardContent() {
                       height={240}
                     />
                   </Box>
-                  {/* Légende détaillée */}
                   <Stack spacing={0.75}>
                     {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"] as const).map((key) => {
                       const count = statusCounts[key] ?? 0;
@@ -352,246 +342,21 @@ export default function DashboardContent() {
       </Grid>
 
       {/* ── Rangée 3 : DUA + Classeurs + Inventaire + Users ─ */}
-      <Grid container spacing={2}>
-
-        {/* DUA alertes */}
-        {(duaExpired.length > 0 || duaSoon.length > 0) && (
-          <Grid item xs={12} sm={6} md={3}>
-            <Card variant="outlined" sx={{ height: "100%", borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                  <AlarmRoundedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
-                  <Typography variant="body2" fontWeight="bold">Alertes de conservation</Typography>
-                </Stack>
-                <Divider sx={{ mb: 1 }} />
-                {duaExpired.length > 0 && (
-                  <Box mb={1}>
-                    <Typography variant="caption" color="error.main" fontWeight="bold" display="block" mb={0.5}>
-                      Expirées ({duaExpired.length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {duaExpired.slice(0, 3).map((doc) => (
-                        <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
-                          <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                )}
-                {duaSoon.length > 0 && (
-                  <Box>
-                    <Typography variant="caption" color="warning.main" fontWeight="bold" display="block" mb={0.5}>
-                      Bientôt ({duaSoon.length})
-                    </Typography>
-                    <List dense disablePadding>
-                      {duaSoon.slice(0, 3).map((doc) => (
-                        <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
-                          <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
-                        </ListItemButton>
-                      ))}
-                    </List>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Capacité des classeurs */}
-        {!bindersLoading && binderList.length > 0 && (
-          <Grid item xs={12} sm={6} md={3}>
-            <Card variant="outlined" sx={{ height: "100%" }}>
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                  <FolderOpenOutlinedIcon fontSize="small" color="action" />
-                  <Typography variant="body2" fontWeight="bold">Classeurs</Typography>
-                </Stack>
-                <Divider sx={{ mb: 1 }} />
-                <Stack spacing={0.75}>
-                  {[...binderList]
-                    .sort((a, b) => ((b.currentCount ?? 0) / b.maxCapacity) - ((a.currentCount ?? 0) / a.maxCapacity))
-                    .slice(0, 5)
-                    .map((binder) => {
-                      const pct = Math.min(100, Math.round(((binder.currentCount ?? 0) / binder.maxCapacity) * 100));
-                      return (
-                        <Box key={binder._id}>
-                          <Box display="flex" justifyContent="space-between" mb={0.25}>
-                            <Tooltip title={binder.name} placement="top">
-                              <Typography noWrap sx={{ maxWidth: { xs: 100, sm: 130, md: 160 } }} variant="caption">{binder.name}</Typography>
-                            </Tooltip>
-                            <Typography variant="caption" color={pct >= 90 ? "error.main" : "text.secondary"}>
-                              {binder.currentCount ?? 0}/{binder.maxCapacity}
-                            </Typography>
-                          </Box>
-                          <LinearProgress variant="determinate" value={pct}
-                            color={pct >= 90 ? "error" : pct >= 70 ? "warning" : "primary"}
-                            sx={{ height: 5, borderRadius: 1 }} />
-                        </Box>
-                      );
-                    })}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Inventaire physique */}
-        <Grid item xs={12} sm={6} md={3}>
-          <Card variant="outlined" sx={{ height: "100%" }}>
-            <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("physicalArchive")}>
-              <CardContent>
-                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                  <LayersOutlinedIcon fontSize="small" color="action" />
-                  <Typography variant="body2" fontWeight="bold">Inventaire physique</Typography>
-                </Stack>
-                <Divider sx={{ mb: 1 }} />
-                {containersLoading || bindersLoading || recordsLoading ? (
-                  <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={18} />)}</Stack>
-                ) : (
-                  <Stack spacing={0.75}>
-                    {[
-                      { label: "Conteneurs", value: containerList.length, color: theme.palette.primary.main },
-                      { label: "Classeurs", value: binderList.length, color: theme.palette.warning.main },
-                      { label: "Dossiers", value: recordList.length, color: theme.palette.info.main },
-                      { label: "Archives liées", value: archiveList.filter(a => (a as Record<string, unknown>).record).length, color: theme.palette.success.main },
-                    ].map(({ label, value, color }) => (
-                      <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-                          <Typography variant="caption" color="text.secondary">{label}</Typography>
-                        </Stack>
-                        <Typography variant="caption" fontWeight="bold">{value}</Typography>
-                      </Stack>
-                    ))}
-                  </Stack>
-                )}
-                <Box mt={1.5} display="flex" justifyContent="flex-end">
-                  <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                    Gérer <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
-                  </Typography>
-                </Box>
-              </CardContent>
-            </CardActionArea>
-          </Card>
-        </Grid>
-
-        {/* Utilisateurs */}
-        {canWrite && (
-          <Grid item xs={12} sm={6} md={3}>
-            <Card variant="outlined" sx={{ height: "100%" }}>
-              <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("userManagement")}>
-                <CardContent>
-                  <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                    <PeopleOutlineRoundedIcon fontSize="small" color="action" />
-                    <Typography variant="body2" fontWeight="bold">Utilisateurs</Typography>
-                  </Stack>
-                  <Divider sx={{ mb: 1 }} />
-                  {statsLoading ? (
-                    <Stack spacing={0.75}>{[1, 2, 3, 4].map((i) => <Skeleton key={i} variant="rounded" height={18} />)}</Stack>
-                  ) : globalStats ? (
-                    <Stack spacing={0.75}>
-                      {[
-                        { label: "Total", value: globalStats.users.total, color: theme.palette.primary.main },
-                        { label: "Actifs", value: globalStats.users.active, color: theme.palette.success.main },
-                        { label: "Inactifs", value: globalStats.users.inactive, color: theme.palette.error.main },
-                        { label: "Accès archives", value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
-                        { label: "Admins", value: globalStats.users.admins, color: theme.palette.warning.main },
-                      ].map(({ label, value, color }) => (
-                        <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
-                          <Stack direction="row" alignItems="center" spacing={1}>
-                            <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: color, flexShrink: 0 }} />
-                            <Typography variant="caption" color="text.secondary">{label}</Typography>
-                          </Stack>
-                          <Typography variant="caption" fontWeight="bold">{value}</Typography>
-                        </Stack>
-                      ))}
-                    </Stack>
-                  ) : null}
-                  <Box mt={1.5} display="flex" justifyContent="flex-end">
-                    <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                      Gérer <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Accès rapide — quand il manque des cartes */}
-        {!(duaExpired.length > 0 || duaSoon.length > 0) && (
-          <Grid item xs={12} sm={6} md={canWrite ? 3 : 6}>
-            <Card variant="outlined" sx={{ height: "100%" }}>
-              <CardContent>
-                <Typography variant="body2" fontWeight="bold" mb={1}>Accès rapide</Typography>
-                <Divider sx={{ mb: 1 }} />
-                <Stack spacing={0.75}>
-                  {[
-                    { label: "Archives numériques", desc: "Soumettre, valider, modifier", tab: "archiveManager" },
-                    { label: "Archivage physique", desc: "Conteneurs, classeurs, dossiers", tab: "physicalArchive" },
-                    { label: "Documentation", desc: "Manuel utilisateur", tab: "help" },
-                  ].map(({ label, tab, desc }) => (
-                    <Box key={tab} onClick={() => goTo(tab)}
-                      sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1, py: 0.75, borderRadius: 1, cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, border: "1px solid", borderColor: "divider" }}>
-                      <Box>
-                        <Typography variant="caption" fontWeight={500}>{label}</Typography>
-                        <Typography variant="caption" color="text.secondary" display="block">{desc}</Typography>
-                      </Box>
-                      <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} color="action" />
-                    </Box>
-                  ))}
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-      </Grid>
-    </Box>
-  );
-}
-// ── Composants internes ────────────────────────────────────────
-
-interface StatCardProps {
-  label:     string;
-  value:     number;
-  loading:   boolean;
-  icon:      React.ReactNode;
-  color:     string;
-  onClick:   () => void;
-  highlight?: boolean;
-}
-
-function StatCard({ label, value, loading, icon, color, onClick, highlight }: StatCardProps) {
-  return (
-    <Card
-      variant="outlined"
-      sx={{
-        borderColor: highlight ? "warning.main" : undefined,
-        transition: "box-shadow 0.2s",
-        "&:hover": { boxShadow: 3 },
-      }}>
-      <CardActionArea onClick={onClick}>
-        <CardContent sx={{ pb: "12px !important" }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={0.75}>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {label}
-            </Typography>
-            <Box sx={{ color }}>{icon}</Box>
-          </Stack>
-          <Typography variant="h5" fontWeight="bold" color={color} sx={{ minHeight: 32, display: "flex", alignItems: "center" }}>
-            {loading ? <Skeleton width={48} height={32} /> : value}
-          </Typography>
-        </CardContent>
-      </CardActionArea>
-    </Card>
-  );
-}
-
-function EmptyPlaceholder({ label }: { label: string }) {
-  return (
-    <Box display="flex" justifyContent="center" alignItems="center" p={3}>
-      <Typography color="text.secondary" variant="body2">{label}</Typography>
+      <DashboardBottomRow
+        duaExpired={duaExpired}
+        duaSoon={duaSoon}
+        binderList={binderList}
+        bindersLoading={bindersLoading}
+        containerList={containerList}
+        containersLoading={containersLoading}
+        recordList={recordList}
+        recordsLoading={recordsLoading}
+        archiveList={archiveList}
+        canWrite={canWrite}
+        statsLoading={statsLoading}
+        globalStats={globalStats ?? null}
+        goTo={goTo}
+      />
     </Box>
   );
 }

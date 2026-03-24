@@ -3,6 +3,7 @@
  * pour les entites physiques (conteneur, etagere, niveau, etc.)
  */
 
+import React from "react";
 import {
   Button,
   Dialog,
@@ -20,7 +21,7 @@ interface DeleteConfirmDialogProps {
   onConfirm: () => void;
 }
 
-export default function DeleteConfirmDialog({
+const DeleteConfirmDialog = React.memo(function DeleteConfirmDialog({
   open,
   label,
   deleting,
@@ -50,4 +51,6 @@ export default function DeleteConfirmDialog({
       </DialogActions>
     </Dialog>
   );
-}
+});
+
+export default DeleteConfirmDialog;

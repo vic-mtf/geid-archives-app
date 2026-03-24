@@ -29,6 +29,8 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -114,6 +116,8 @@ interface SearchResponse {
 // ── Composant ─────────────────────────────────────────────
 
 export default function GlobalSearchDialog() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -238,6 +242,7 @@ export default function GlobalSearchDialog() {
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={fullScreen}
       PaperProps={{ sx: { borderRadius: 2, overflow: "hidden" } }}>
       {/* Barre de recherche */}
       <Box

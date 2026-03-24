@@ -27,7 +27,7 @@ interface SidebarTreeProps {
   executeFetch: (config: { url: string; method?: string; data?: Record<string, unknown> }) => Promise<{ data: unknown }>;
 }
 
-export default function SidebarTree({
+const SidebarTree = React.memo(function SidebarTree({
   headers,
   parentId,
   breadcrumb,
@@ -91,4 +91,6 @@ export default function SidebarTree({
       />
     </Box>
   );
-}
+});
+
+export default SidebarTree;

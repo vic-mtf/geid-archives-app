@@ -49,7 +49,7 @@ interface PhysicalItemsListProps {
 
 // ── Composant ────────────────────────────────────────────
 
-export default function PhysicalItemsList({
+const PhysicalItemsList = React.memo(function PhysicalItemsList({
   loading,
   items,
   currentLevel,
@@ -158,4 +158,6 @@ export default function PhysicalItemsList({
       })}
     </Box>
   );
-}
+});
+
+export default PhysicalItemsList;

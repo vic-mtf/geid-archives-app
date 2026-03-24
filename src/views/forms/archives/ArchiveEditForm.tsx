@@ -11,6 +11,8 @@ import {
   InputAdornment,
   Tooltip,
   IconButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useForm } from "react-hook-form";
@@ -33,6 +35,8 @@ const schema = yup.object({
 });
 
 export default function ArchiveEditForm() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [doc, setDoc] = useState<ArchiveDocument | null>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
@@ -108,7 +112,7 @@ export default function ArchiveEditForm() {
   };
 
   return (
-    <Dialog open={Boolean(doc)} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={Boolean(doc)} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
         Modifier l'archive
         {doc?.designation && (

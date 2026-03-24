@@ -27,6 +27,8 @@ import {
   Alert,
   CircularProgress,
   FormLabel,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
@@ -74,6 +76,8 @@ function formatRemaining(expiresAt: Date): string {
 }
 
 export default function DuaConfigDialog() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
   const [doc, setDoc] = useState<DuaDoc | null>(null);
   const [value, setValue] = useState<number | "">("");
@@ -131,7 +135,7 @@ export default function DuaConfigDialog() {
   const canSave = !!value && Number(value) > 0 && !loading;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <AccessTimeOutlinedIcon color="info" />
         Paramètres DUA

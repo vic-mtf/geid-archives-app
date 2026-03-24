@@ -3,6 +3,7 @@
  * hiérarchie physique (conteneur, étagère, étage, classeur, dossier).
  */
 
+import React from "react";
 import {
   Typography, Box, Stack, Paper, Chip,
   LinearProgress, Tooltip,
@@ -28,7 +29,7 @@ export const cardSx = {
 
 // ── ContainerCard ────────────────────────────────────────────
 
-export function ContainerCard({ item, onClick }: { item: Item; onClick: () => void }) {
+export const ContainerCard = React.memo(function ContainerCard({ item, onClick }: { item: Item; onClick: () => void }) {
   return (
     <Paper variant="outlined" onClick={onClick} sx={cardSx}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -47,11 +48,11 @@ export function ContainerCard({ item, onClick }: { item: Item; onClick: () => vo
       </Stack>
     </Paper>
   );
-}
+});
 
 // ── ShelfCard ────────────────────────────────────────────────
 
-export function ShelfCard({ item, onClick }: { item: Item; onClick: () => void }) {
+export const ShelfCard = React.memo(function ShelfCard({ item, onClick }: { item: Item; onClick: () => void }) {
   return (
     <Paper variant="outlined" onClick={onClick} sx={cardSx}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -70,11 +71,11 @@ export function ShelfCard({ item, onClick }: { item: Item; onClick: () => void }
       </Stack>
     </Paper>
   );
-}
+});
 
 // ── FloorCard ────────────────────────────────────────────────
 
-export function FloorCard({ item, onClick }: { item: Item; onClick: () => void }) {
+export const FloorCard = React.memo(function FloorCard({ item, onClick }: { item: Item; onClick: () => void }) {
   const unit = (item.administrativeUnit as Record<string, unknown> | undefined)?.name as string | undefined;
   return (
     <Paper variant="outlined" onClick={onClick} sx={cardSx}>
@@ -97,11 +98,11 @@ export function FloorCard({ item, onClick }: { item: Item; onClick: () => void }
       </Stack>
     </Paper>
   );
-}
+});
 
 // ── BinderCard ───────────────────────────────────────────────
 
-export function BinderCard({ item, onClick }: { item: Item; onClick: () => void }) {
+export const BinderCard = React.memo(function BinderCard({ item, onClick }: { item: Item; onClick: () => void }) {
   const current  = (item.currentCount as number) ?? 0;
   const capacity = (item.maxCapacity  as number) ?? 1;
   const pct      = Math.min((current / capacity) * 100, 100);
@@ -145,11 +146,11 @@ export function BinderCard({ item, onClick }: { item: Item; onClick: () => void 
       </Paper>
     </Tooltip>
   );
-}
+});
 
 // ── RecordCard ───────────────────────────────────────────────
 
-export function RecordCard({ item, selected, onClick, onDrillDown }: { item: Item; selected: boolean; onClick: () => void; onDrillDown?: () => void }) {
+export const RecordCard = React.memo(function RecordCard({ item, selected, onClick, onDrillDown }: { item: Item; selected: boolean; onClick: () => void; onDrillDown?: () => void }) {
   return (
     <Paper
       variant="outlined"
@@ -193,4 +194,4 @@ export function RecordCard({ item, selected, onClick, onDrillDown }: { item: Ite
       </Stack>
     </Paper>
   );
-}
+});

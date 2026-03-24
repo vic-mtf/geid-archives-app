@@ -7,6 +7,8 @@ import {
   Box as MuiBox,
   Divider,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import _logo_geid from "@/assets/geid_logo_blue_without_title.webp";
 import SwingAnimation from "@/components/SwingAnimation";
@@ -24,6 +26,8 @@ interface CoverProps {
 export default function Cover({ setOpened }: CoverProps) {
   const connected = useSelector((store: RootState) => store.user.connected);
   const dispatch = useDispatch<AppDispatch>();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleFinish = useCallback(() => {
     if (connected) setOpened(true);
@@ -59,37 +63,42 @@ export default function Cover({ setOpened }: CoverProps) {
         left: 0,
         right: 0,
         bottom: 0,
+        p: { xs: 2, sm: 3, md: 4 },
       }}>
       <Stack
-        display='flex'
-        justifyContent='center'
-        alignItems='center'
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         flex={1}
-        spacing={1}>
+        spacing={{ xs: 1.5, sm: 2 }}>
         <SwingAnimation delay={2} onFinish={handleFinish}>
           <CardMedia
-            component='img'
+            component="img"
             src={_archives_logo}
             draggable={false}
-            sx={{ height: 100, width: 100 }}
+            sx={{
+              height: { xs: 64, sm: 80, md: 100 },
+              width: { xs: 64, sm: 80, md: 100 },
+            }}
           />
         </SwingAnimation>
         <MuiBox
-          display='flex'
-          justifyContent='center'
-          alignItems='center'
-          flexDirection='column'
-          position='relative'>
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          flexDirection="column"
+          position="relative"
+          width="100%">
           <Stack
-            spacing={1}
+            spacing={{ xs: 0.5, sm: 1 }}
             direction={{ xs: "column", sm: "row" }}
             maxWidth={500}
-            width='100%'
-            my={1}
+            width="100%"
+            my={{ xs: 0.5, sm: 1 }}
             divider={
               <Divider
                 flexItem
-                orientation='vertical'
+                orientation="vertical"
                 sx={{
                   bgcolor: "text.primary",
                   borderWidth: 1,
@@ -97,17 +106,32 @@ export default function Cover({ setOpened }: CoverProps) {
                 }}
               />
             }
-            display='flex'
-            justifyContent='center'
-            alignItems='center'>
-            <CardMedia component='img' src={_logo_geid} sx={{ width: { xs: 80, sm: 120 } }} />
-            <Typography noWrap variant='h4' color='text.primary'>
+            display="flex"
+            justifyContent="center"
+            alignItems="center">
+            <CardMedia
+              component="img"
+              src={_logo_geid}
+              sx={{ width: { xs: 60, sm: 90, md: 120 } }}
+            />
+            <Typography
+              noWrap
+              color="text.primary"
+              sx={{
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2.125rem" },
+                fontWeight: 400,
+              }}>
               Archives
             </Typography>
           </Stack>
         </MuiBox>
       </Stack>
-      <Typography variant='caption' paragraph color='text.primary'>
+      <Typography
+        variant={isMobile ? "caption" : "body2"}
+        paragraph
+        color="text.secondary"
+        textAlign="center"
+        sx={{ px: { xs: 1, sm: 2 }, maxWidth: 500 }}>
         {footerText}
       </Typography>
     </Box>
@@ -115,5 +139,5 @@ export default function Cover({ setOpened }: CoverProps) {
 }
 
 const footerText =
-  "Direction Archives et Nouvelles Technologie de l'Information et de la Communication ©2022";
+  "Direction Archives et Nouvelles Technologies de l'Information et de la Communication © 2024";
 const SIGN_IN_CHANNEL = new BroadcastChannel(channels.signIn);

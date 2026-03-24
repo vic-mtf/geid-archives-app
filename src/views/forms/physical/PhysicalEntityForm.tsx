@@ -24,6 +24,8 @@ import {
   Typography,
   Tooltip,
   IconButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useForm, Controller } from "react-hook-form";
@@ -296,6 +298,8 @@ export default function PhysicalEntityForm({
   onClose,
   onSuccess,
 }: PhysicalEntityFormProps) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const config = levels[level];
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -395,7 +399,7 @@ export default function PhysicalEntityForm({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <span>{config.title}</span>

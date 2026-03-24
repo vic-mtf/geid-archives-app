@@ -5,7 +5,7 @@
  * et la taille du fichier. Navigation par dossiers avec retour arrière.
  */
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Avatar,
   Box,
@@ -94,7 +94,7 @@ const ROOT_CATEGORIES: WorkspaceItem[] = [
   { name: "videos", isDirectory: true },
 ];
 
-export default function WorkspaceFilePicker() {
+const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -301,4 +301,6 @@ export default function WorkspaceFilePicker() {
       </DialogActions>
     </Dialog>
   );
-}
+});
+
+export default WorkspaceFilePicker;

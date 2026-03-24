@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { Button, DialogTitle, Dialog } from "@mui/material";
+import { Button, DialogTitle, Dialog, useMediaQuery, useTheme } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -9,6 +9,8 @@ import FormContent from "./FormContent";
 import { FieldValues } from "react-hook-form";
 
 export default function ValidateForm() {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [doc, setDoc] = useState<string | null>(null);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
@@ -88,6 +90,7 @@ export default function ValidateForm() {
   return (
     <Dialog
       open={Boolean(doc)}
+      fullScreen={fullScreen}
       PaperProps={{
         sx: { overflow: "hidden" },
         component: "div",
