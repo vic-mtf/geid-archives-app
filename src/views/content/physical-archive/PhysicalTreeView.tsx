@@ -25,7 +25,7 @@ import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
 import openArchiveFile from "@/utils/openArchiveFile";
-import { DraggableArchive, DroppableDocument } from "./DndWrappers";
+import { DraggableArchive } from "./DndWrappers";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -252,8 +252,6 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         );
       }
 
-      // Document = droppable pour recevoir des archives
-      const isDocNode = node.level === "document";
       const treeItemEl = (
         <TreeItem
           key={node.id}
@@ -302,18 +300,21 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         </TreeItem>
       );
 
-      if (isDocNode) {
-        return (
-          <DroppableDocument key={node.id} documentId={node.id} documentLabel={node.label}>
-            {treeItemEl}
-          </DroppableDocument>
-        );
-      }
       return treeItemEl;
     });
 
   // Charger les racines au montage
   React.useEffect(() => { loadRoots(); }, [loadRoots]);
+
+  // Auto-charger les enfants du conteneur actif quand il change
+  React.useEffect(() => {
+    if (!activeContainerId) return;
+    const container = nodes.find((n) => n.id === activeContainerId);
+    if (container && !container.loaded) {
+      loadChildren(container);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeContainerId, nodes.length]);
 
   // Recharger l'arbre quand les données changent (suppression, création, etc.)
   React.useEffect(() => {
@@ -434,7 +435,17 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
             },
           }}
         >
-          {renderTree(activeContainerId ? nodes.filter((n) => n.id === activeContainerId) : nodes)}
+          {(() => {
+            if (!activeContainerId) return renderTree(nodes);
+            // Afficher directement les enfants du conteneur actif (pas la racine)
+            const container = nodes.find((n) => n.id === activeContainerId);
+            if (!container) return renderTree(nodes);
+            if (!container.loaded || !container.children?.length) {
+              // Pas encore chargé — afficher un placeholder pour déclencher le load
+              return renderTree([container]);
+            }
+            return renderTree(container.children, [{ id: container.id, label: container.label, level: container.level }]);
+          })()}
         </TreeView>
       )}
     </Box>
