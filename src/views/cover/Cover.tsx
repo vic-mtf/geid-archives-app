@@ -125,14 +125,7 @@ export default function Cover({ setOpened }: CoverProps) {
         variant="caption"
         color="text.primary"
         textAlign="center"
-        sx={{
-          position: "absolute",
-          bottom: { xs: 12, sm: 16, md: 24 },
-          left: 0,
-          right: 0,
-          px: { xs: 2, sm: 3 },
-          opacity: 0.7,
-        }}>
+        sx={{ px: { xs: 2, sm: 3 }, pb: { xs: 1, sm: 2 }, opacity: 0.7, flexShrink: 0 }}>
         {footerText}
       </Typography>
     </Box>
