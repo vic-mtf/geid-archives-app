@@ -69,11 +69,6 @@ export default function PhysicalArchiveContent() {
 
   // Largeur du tree (ajustable par drag)
   const [treeWidth, setTreeWidth] = useState(280);
-  const MIN_TREE = 180;
-  const MAX_TREE = 450;
-  const handleTreeResize = useCallback((delta: number) => {
-    setTreeWidth((prev) => Math.min(MAX_TREE, Math.max(MIN_TREE, prev + delta)));
-  }, []);
 
   // Formulaire de création
   const [formOpen, setFormOpen] = useState(false);
@@ -356,7 +351,13 @@ export default function PhysicalArchiveContent() {
         )}
 
         {/* Séparateur ajustable entre tree et milieu */}
-        {insideContainer && <ResizeDivider onResize={handleTreeResize} />}
+        {insideContainer && (
+          <ResizeDivider
+            onResize={setTreeWidth}
+            minLeft={180}
+            minRight={250}
+          />
+        )}
 
         {/* ── Panneau central (toujours visible) ──────── */}
         <Box sx={{
