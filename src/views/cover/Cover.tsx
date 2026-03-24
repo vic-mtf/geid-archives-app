@@ -123,10 +123,16 @@ export default function Cover({ setOpened }: CoverProps) {
       </Stack>
       <Typography
         variant="caption"
-        paragraph
         color="text.primary"
         textAlign="center"
-        sx={{ px: { xs: 2, sm: 3 }, opacity: 0.7 }}>
+        sx={{
+          position: "absolute",
+          bottom: { xs: 12, sm: 16, md: 24 },
+          left: 0,
+          right: 0,
+          px: { xs: 2, sm: 3 },
+          opacity: 0.7,
+        }}>
         {footerText}
       </Typography>
     </Box>
