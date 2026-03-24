@@ -5,19 +5,14 @@ const BASE = (import.meta.env.VITE_SERVER_BASE_URL as string) ?? "";
 let loading = false;
 let activeController: AbortController | null = null;
 
-// Callbacks injectés depuis React
-let _enqueue: ((msg: string, opts?: Record<string, unknown>) => unknown) | null = null;
-let _close: ((key: unknown) => void) | null = null;
-
-// Callback de mise à jour de la progression (pour le composant React)
 let _onProgress: ((state: FileLoadingState) => void) | null = null;
 
 export interface FileLoadingState {
   open: boolean;
   fileName: string;
-  progress: number; // 0-100, -1 si taille inconnue
-  received: number; // octets reçus
-  total: number;    // octets totaux (0 si inconnu)
+  progress: number;
+  received: number;
+  total: number;
   error: string | null;
   cancelled: boolean;
 }
@@ -25,14 +20,6 @@ export interface FileLoadingState {
 const INITIAL_STATE: FileLoadingState = {
   open: false, fileName: "", progress: 0, received: 0, total: 0, error: null, cancelled: false,
 };
-
-export function setSnackbarFunctions(
-  enqueue: typeof _enqueue,
-  close: typeof _close,
-) {
-  _enqueue = enqueue;
-  _close = close;
-}
 
 export function setProgressCallback(cb: typeof _onProgress) {
   _onProgress = cb;
@@ -48,19 +35,54 @@ export function cancelFileLoading() {
   }
 }
 
-function formatSize(bytes: number): string {
+export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} o`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
-export { formatSize };
+// ── Cache mémoire — évite de re-télécharger un fichier déjà ouvert ──────────
 
-/**
- * Ouvre le fichier d'une archive via l'endpoint authentifié.
- */
+const fileCache = new Map<string, { blob: Blob; url: string }>();
+const MAX_CACHE = 20; // max 20 fichiers en cache
+
+function getCached(archiveId: string): string | null {
+  const entry = fileCache.get(archiveId);
+  if (!entry) return null;
+  // Vérifier que le blob URL est encore valide en testant sa taille
+  if (entry.blob.size > 0) return entry.url;
+  // URL révoquée — supprimer du cache
+  fileCache.delete(archiveId);
+  return null;
+}
+
+function addToCache(archiveId: string, blob: Blob): string {
+  // Nettoyer le cache si trop plein (supprimer les plus anciens)
+  if (fileCache.size >= MAX_CACHE) {
+    const oldest = fileCache.keys().next().value;
+    if (oldest) {
+      const old = fileCache.get(oldest);
+      if (old) URL.revokeObjectURL(old.url);
+      fileCache.delete(oldest);
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  fileCache.set(archiveId, { blob, url });
+  return url;
+}
+
+// ── Fonction principale ─────────────────────────────────────────────────────
+
 export default async function openArchiveFile(archiveId: string, fileName?: string): Promise<void> {
   if (loading) return;
+
+  // Vérifier le cache — si déjà téléchargé, ouvrir directement
+  const cachedUrl = getCached(archiveId);
+  if (cachedUrl) {
+    window.open(cachedUrl, "_blank");
+    return;
+  }
+
   const token = (store.getState().user as { token?: string }).token;
   if (!token) return;
 
@@ -94,7 +116,8 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     if (!reader) {
       const rawBlob = await res.blob();
       _onProgress?.({ ...INITIAL_STATE });
-      openBlob(new Blob([rawBlob], { type: contentType }));
+      const blob = new Blob([rawBlob], { type: contentType });
+      window.open(addToCache(archiveId, blob), "_blank");
       return;
     }
 
@@ -113,11 +136,12 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     }
 
     _onProgress?.({ ...INITIAL_STATE });
-    openBlob(new Blob(chunks, { type: contentType }));
+    const blob = new Blob(chunks, { type: contentType });
+    window.open(addToCache(archiveId, blob), "_blank");
 
   } catch (err: unknown) {
     if ((err as Error).name === "AbortError") {
-      // Déjà géré dans cancelFileLoading
+      // Géré dans cancelFileLoading
     } else {
       _onProgress?.({
         ...INITIAL_STATE,
@@ -131,10 +155,4 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     loading = false;
     activeController = null;
   }
-}
-
-function openBlob(blob: Blob) {
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank");
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
