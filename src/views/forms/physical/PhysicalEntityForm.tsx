@@ -304,7 +304,7 @@ export default function PhysicalEntityForm({
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(config.schema),
     mode: "onTouched",
   });
@@ -330,6 +330,13 @@ export default function PhysicalEntityForm({
     ?? parentData?.internalNumber as string | undefined
     ?? (parentData?.number !== undefined ? `Niveau ${parentData.number}` : undefined)
     ?? "";
+
+  // Pré-remplir la nature du dossier avec celle du classeur parent
+  const binderNature = level === "record" && parentData?.nature as string | undefined;
+  if (binderNature && open) {
+    // setValue déclenché à chaque render quand parentData arrive — acceptable car idempotent
+    setValue("nature", binderNature, { shouldValidate: false });
+  }
 
   const handleClose = () => {
     reset();
@@ -463,8 +470,12 @@ export default function PhysicalEntityForm({
                   multiline={field.multiline}
                   rows={field.rows}
                   fullWidth
+                  disabled={field.name === "nature" && !!binderNature}
+                  InputLabelProps={field.name === "nature" && binderNature ? { shrink: true } : undefined}
                   error={!!errors[field.name]}
-                  helperText={(errors[field.name]?.message as string) ?? field.helperText}
+                  helperText={field.name === "nature" && binderNature
+                    ? "Rempli automatiquement depuis le classeur"
+                    : (errors[field.name]?.message as string) ?? field.helperText}
                 />
               )
             )}
