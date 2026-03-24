@@ -25,6 +25,7 @@ import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
 import openArchiveFile from "@/utils/openArchiveFile";
+import { DraggableArchive, DroppableDocument } from "./DndWrappers";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -214,12 +215,12 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     nodeList.map((node) => {
       const nodePath: PathItem[] = [...parentPath, { id: node.id, label: node.label, level: node.level }];
 
-      // Archive numérique = feuille simple, clic = ouvrir le fichier
+      // Archive numérique = feuille draggable, clic = ouvrir le fichier
       if (node.isArchive) {
         const fi = getFileIcon(node.fileUrl ?? node.label);
         return (
+          <DraggableArchive key={node.id} archiveId={node.id} archiveLabel={node.label} disabled={!canWrite}>
           <TreeItem
-            key={node.id}
             nodeId={node.id}
             icon={React.cloneElement(fi.icon, { sx: { fontSize: 16, color: fi.color } })}
             label={
@@ -234,7 +235,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
                   e.stopPropagation();
                   onArchiveContextMenu?.(e, node.id, node.label);
                 }}
-                sx={{ cursor: "pointer" }}
+                sx={{ cursor: canWrite ? "grab" : "pointer" }}
               >
                 <Typography variant="body2" noWrap sx={{ fontSize: "0.8rem", opacity: 0.85 }}>
                   {node.label}
@@ -245,10 +246,13 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
               "& > .MuiTreeItem-content .MuiTreeItem-iconContainer": { width: 20 },
             }}
           />
+          </DraggableArchive>
         );
       }
 
-      return (
+      // Document = droppable pour recevoir des archives
+      const isDocNode = node.level === "document";
+      const treeItemEl = (
         <TreeItem
           key={node.id}
           nodeId={node.id}
@@ -295,6 +299,15 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
           {node.children && renderTree(node.children, nodePath)}
         </TreeItem>
       );
+
+      if (isDocNode) {
+        return (
+          <DroppableDocument key={node.id} documentId={node.id} documentLabel={node.label}>
+            {treeItemEl}
+          </DroppableDocument>
+        );
+      }
+      return treeItemEl;
     });
 
   // Charger les racines au montage

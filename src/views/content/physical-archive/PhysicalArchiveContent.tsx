@@ -45,6 +45,8 @@ import ArchiveContextMenu, { type ArchiveMenuState } from "./ArchiveContextMenu"
 import PhysicalItemsList from "./PhysicalItemsList";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import ResizeDivider from "./ResizeDivider";
+import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import useArchiveDnd from "./useArchiveDnd";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useDeletePhysical from "./useDeletePhysical";
 
@@ -112,6 +114,10 @@ export default function PhysicalArchiveContent() {
   const [levelData, setLevelData] = useState<unknown[]>([]);
   const [levelLoading, setLevelLoading] = useState(false);
   const [, executeFetch] = useAxios({ headers }, { manual: true });
+
+  // Drag & drop d'archives entre documents
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const { handleDragEnd } = useArchiveDnd({ headers, canWrite, executeFetch });
 
   // URL à charger selon le niveau courant et le parent
   const currentUrl = useMemo(() => {
@@ -309,6 +315,7 @@ export default function PhysicalArchiveContent() {
   const insideContainer = breadcrumb.length > 0;
 
   return (
+    <DndContext sensors={dndSensors} onDragEnd={handleDragEnd}>
     <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
       {/* ── Barre de navigation (fil d'Ariane) ────────────────── */}
       <BreadcrumbBar
@@ -549,5 +556,6 @@ export default function PhysicalArchiveContent() {
         onConfirm={handleDeleteConfirm}
       />
     </Box>
+    </DndContext>
   );
 }

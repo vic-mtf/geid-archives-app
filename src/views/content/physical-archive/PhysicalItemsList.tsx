@@ -18,6 +18,7 @@ import type { PhysicalLevel } from "@/constants/physical";
 import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
 import openArchiveFile from "@/utils/openArchiveFile";
+import { DraggableArchive, DroppableDocument } from "./DndWrappers";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -112,7 +113,9 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
       itemContent={(index) => {
         const item = items[index];
         const isSelected = selectedId === item.id;
-        return (
+        const isDoc = !item.isArchive && currentLevel === "document";
+
+        const row = (
           <Box
             data-highlight-id={item.id}
             px={2}
@@ -184,6 +187,23 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             )}
           </Box>
         );
+
+        // Wrap avec DnD : archives = draggable, documents = droppable
+        if (item.isArchive) {
+          return (
+            <DraggableArchive archiveId={item.id} archiveLabel={item.label} disabled={!canWrite}>
+              {row}
+            </DraggableArchive>
+          );
+        }
+        if (isDoc) {
+          return (
+            <DroppableDocument documentId={item.id} documentLabel={item.label}>
+              {row}
+            </DroppableDocument>
+          );
+        }
+        return row;
       }}
     />
   );
