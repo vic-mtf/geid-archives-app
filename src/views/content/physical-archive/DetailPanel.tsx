@@ -9,8 +9,6 @@
 import React, { useMemo } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Divider,
@@ -258,28 +256,26 @@ export default function DetailPanel({ level, item, onDelete, headers }: DetailPa
   }, [item]);
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Stack direction="row" alignItems="center" gap={1} mb={2}>
-          <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
-            {LEVEL_LABELS[level]}
-          </Typography>
-          <Chip label={LEVEL_LABELS[level]} size="small" variant="outlined" />
-          <Tooltip title="Supprimer cet élément" placement="top">
-            <IconButton size="small" color="error" onClick={() => onDelete(item._id, itemLabel)}>
-              <DeleteOutlineRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-        <Divider sx={{ mb: 2 }} />
+    <Box>
+      <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+        <Typography variant="body1" fontWeight="bold" sx={{ flex: 1 }}>
+          {LEVEL_LABELS[level]}
+        </Typography>
+        <Chip label={LEVEL_LABELS[level]} size="small" variant="outlined" />
+        <Tooltip title="Supprimer cet élément" placement="top">
+          <IconButton size="small" color="error" onClick={() => onDelete(item._id, itemLabel)}>
+            <DeleteOutlineRoundedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+      <Divider sx={{ mb: 1.5 }} />
 
-        {level === "container" && <ContainerDetail item={item as Container} />}
-        {level === "shelf" && <ShelfDetail item={item as Shelf} />}
-        {level === "floor" && <FloorDetail item={item as Floor} />}
-        {level === "binder" && <BinderDetail item={item as Binder} />}
-        {level === "record" && <RecordDetail item={item as PhysicalRecord} headers={headers} />}
-        {level === "document" && <DocumentDetail item={item as PhysicalDocument} headers={headers} />}
-      </CardContent>
-    </Card>
+      {level === "container" && <ContainerDetail item={item as Container} />}
+      {level === "shelf" && <ShelfDetail item={item as Shelf} />}
+      {level === "floor" && <FloorDetail item={item as Floor} />}
+      {level === "binder" && <BinderDetail item={item as Binder} />}
+      {level === "record" && <RecordDetail item={item as PhysicalRecord} headers={headers} />}
+      {level === "document" && <DocumentDetail item={item as PhysicalDocument} headers={headers} />}
+    </Box>
   );
 }
