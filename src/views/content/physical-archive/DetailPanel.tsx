@@ -175,7 +175,7 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
         <CircularProgress size={20} />
       ) : linkedArchives.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
-          Aucune archive numérique n&apos;est rattachée à ce dossier physique.
+          Aucune archive numérique n&apos;est rattachée à ce dossier.
         </Typography>
       ) : (
         <Stack spacing={0.5}>

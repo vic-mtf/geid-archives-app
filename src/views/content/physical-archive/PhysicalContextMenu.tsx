@@ -32,7 +32,7 @@ const CHILD_LABELS: Record<PhysicalLevel, string | null> = {
   floor:     "un classeur",
   binder:    "un dossier",
   record:    "un document",
-  document:  "un sous-document",
+  document:  "un document",
 };
 
 export interface ContextMenuState {

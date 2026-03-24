@@ -1,5 +1,5 @@
 /**
- * LinkToPhysicalRecordDialog — Rattachement d'une archive à un dossier physique.
+ * LinkToPhysicalRecordDialog — Rattachement d'une archive à un dossier.
  *
  * UX : navigation en cascade dans la hiérarchie physique (5 niveaux).
  * L'utilisateur clique sur un élément pour descendre dans la hiérarchie,
@@ -384,7 +384,7 @@ export default function LinkToPhysicalRecordDialog() {
         url: `/api/stuff/archives/${doc._id ?? doc.id}`,
         data,
       });
-      const typeLabel = linkTargetType === "document" ? "document" : "dossier physique";
+      const typeLabel = linkTargetType === "document" ? "document" : "dossier";
       enqueueSnackbar(
         `L'archive numérique est maintenant rattachée au ${typeLabel} « ${linkTargetLabel} ».`,
         { variant: "success", title: "Rattachement effectué avec succès" }
@@ -454,7 +454,7 @@ export default function LinkToPhysicalRecordDialog() {
             sx={{ bgcolor: "info.50", borderRadius: 1, px: 1.5, py: 0.75 }}>
             <InfoOutlinedIcon fontSize="small" color="info" />
             <Typography variant="caption" color="info.dark">
-              Ce document est déjà rattaché à un dossier physique. Vous pouvez le modifier ou le détacher.
+              Ce document est déjà rattaché à un dossier. Vous pouvez le modifier ou le détacher.
             </Typography>
           </Stack>
         )}

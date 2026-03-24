@@ -189,7 +189,7 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
   },
 
   record: {
-    title: "Nouveau dossier physique",
+    title: "Nouveau dossier",
     url: "/api/stuff/archives/physical/records",
     fields: [
       {
@@ -322,8 +322,10 @@ export default function PhysicalEntityForm({
     { manual: !parentUrl }
   );
   const parentName = parentData?.name as string | undefined
-    ?? (parentData?.number !== undefined ? `Étage ${parentData.number}` : undefined)
-    ?? parentId;
+    ?? parentData?.title as string | undefined
+    ?? parentData?.internalNumber as string | undefined
+    ?? (parentData?.number !== undefined ? `Niveau ${parentData.number}` : undefined)
+    ?? "";
 
   const handleClose = () => {
     reset();
@@ -340,9 +342,9 @@ export default function PhysicalEntityForm({
     const levelNames: Record<PhysicalLevel, string> = {
       container: "conteneur",
       shelf:     "étagère",
-      floor:     "travée",
-      binder:    "dossier physique",
-      record:    "fiche physique",
+      floor:     "niveau",
+      binder:    "classeur",
+      record:    "dossier",
       document:  "document",
     };
     const levelName = levelNames[level] ?? "élément";
@@ -367,12 +369,13 @@ export default function PhysicalEntityForm({
     }
   };
 
-  // Label du niveau PARENT (pas du niveau courant)
+  // Label du niveau PARENT — avec article contracté correct
   const parentLevelLabel: Partial<Record<PhysicalLevel, string>> = {
-    shelf:  "le conteneur",
-    floor:  "l'étagère",
-    binder: "l'étage",
-    record: "le classeur",
+    shelf:    "au conteneur",
+    floor:    "à l'étagère",
+    binder:   "au niveau",
+    record:   "au classeur",
+    document: "au dossier",
   };
 
   // Sections du guide par niveau
@@ -388,7 +391,7 @@ export default function PhysicalEntityForm({
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <span>{level === "document" && parentLevel === "document" ? "Nouveau sous-document" : config.title}</span>
+          <span>{config.title}</span>
           <Tooltip title="Voir le guide utilisateur pour ce type d'élément" placement="top">
             <IconButton
               size="small"
@@ -407,7 +410,7 @@ export default function PhysicalEntityForm({
         </Stack>
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché à {parentLevelLabel[level] ?? "l'élément parent"} : <strong>{parentName}</strong>
+            Rattaché {parentLevelLabel[level] ?? "à l'élément parent"}{parentName ? <> : <strong>{parentName}</strong></> : null}
           </Typography>
         )}
       </DialogTitle>
