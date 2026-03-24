@@ -10,12 +10,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import ArticleOutlinedIcon    from "@mui/icons-material/ArticleOutlined";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 
 import scrollBarSx from "@/utils/scrollBarSx";
 import type { PhysicalLevel } from "@/constants/physical";
 import InlineEditableLabel from "./InlineEditableLabel";
+import getFileIcon from "@/utils/getFileIcon";
+import openArchiveFile from "@/utils/openArchiveFile";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -24,7 +25,8 @@ export interface DisplayItem {
   label: string;
   sub?: string;
   meta?: string;
-  itemType?: "document" | "archive";
+  isArchive?: boolean;
+  fileUrl?: string;
 }
 
 interface LevelConfig {
@@ -119,30 +121,43 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
               borderBottom: "1px solid",
               borderColor: "divider",
             }}
-            onClick={() => onSelect(item.id, item.label, item.itemType)}
-            onContextMenu={(e) => onContextMenu(e, item.id, item.label)}>
-            {/* Icone */}
-            <Box sx={{
-              color: item.itemType === "archive" ? "#43A047" : levelConfig[currentLevel].color,
-              display: "flex", flexShrink: 0
-            }}>
-              {item.itemType === "archive"
-                ? <ArticleOutlinedIcon fontSize="small" />
-                : React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })
+            onClick={() => {
+              if (item.isArchive) {
+                openArchiveFile(item.id, item.label);
+              } else {
+                onSelect(item.id, item.label);
               }
-            </Box>
-            {/* Nom (renommable) + sous-titre */}
+            }}
+            onContextMenu={(e) => onContextMenu(e, item.id, item.label)}>
+            {/* Icone — typée pour les archives, niveau pour les éléments physiques */}
+            {item.isArchive ? (() => {
+              const fi = getFileIcon(item.fileUrl ?? item.label);
+              return (
+                <Box sx={{ color: fi.color, display: "flex", flexShrink: 0 }}>
+                  {React.cloneElement(fi.icon, { fontSize: "small" })}
+                </Box>
+              );
+            })() : (
+              <Box sx={{ color: levelConfig[currentLevel].color, display: "flex", flexShrink: 0 }}>
+                {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { fontSize: "small" })}
+              </Box>
+            )}
+            {/* Nom + sous-titre */}
             <Box flex={1} minWidth={0}>
-              <InlineEditableLabel
-                value={item.label}
-                editable={canWrite && item.itemType !== "archive"}
-                forceEdit={renamingId === item.id}
-                onEditEnd={onRenamingEnd}
-                onSave={(newValue) => onRename(item.id, newValue)}
-                variant="body2"
-                fontWeight={500}
-                noWrap
-              />
+              {item.isArchive ? (
+                <Typography variant="body2" fontWeight={500} noWrap>{item.label}</Typography>
+              ) : (
+                <InlineEditableLabel
+                  value={item.label}
+                  editable={canWrite}
+                  forceEdit={renamingId === item.id}
+                  onEditEnd={onRenamingEnd}
+                  onSave={(newValue) => onRename(item.id, newValue)}
+                  variant="body2"
+                  fontWeight={500}
+                  noWrap
+                />
+              )}
               {item.sub && (
                 <Typography variant="caption" color="text.secondary" noWrap>
                   {item.sub}
@@ -150,7 +165,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
               )}
             </Box>
             {/* Fleche navigation (pas pour les archives) */}
-            {item.itemType !== "archive" && (
+            {!item.isArchive && (
               <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
             )}
           </Box>

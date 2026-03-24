@@ -195,9 +195,24 @@ export default function PhysicalArchiveContent() {
     () => setSelected(null), setLevelData, executeFetch,
   );
 
+  // ── Archives liées au document courant (quand on est dans un document) ──
+  const isInsideDocument = currentLevel === "document" && parentLevel === "document";
+  const [docArchives, setDocArchives] = useState<Array<{ _id: string; designation?: string; fileUrl?: string; classNumber?: string; createdAt?: string }>>([]);
+
+  useEffect(() => {
+    if (!isInsideDocument || !parentId) { setDocArchives([]); return; }
+    executeFetch({ url: `/api/stuff/archives/physical/documents/${parentId}/archives` })
+      .then((res) => {
+        const data = res.data as { archives?: typeof docArchives };
+        setDocArchives(data?.archives ?? []);
+      })
+      .catch(() => setDocArchives([]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInsideDocument, parentId, dataVersion]);
+
   // ── Items courants ──────────────────────────────────────
 
-  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string }[]>(() => {
+  const items = useMemo<{ id: string; label: string; sub?: string; meta?: string; isArchive?: boolean; fileUrl?: string }[]>(() => {
     const data = levelData as Record<string, unknown>[];
     switch (currentLevel) {
       case "container":
@@ -210,17 +225,27 @@ export default function PhysicalArchiveContent() {
         return data.map((b) => ({ id: b._id as string, label: b.name as string, sub: `Nature : ${b.nature}`, meta: `${b.currentCount ?? 0} / ${b.maxCapacity} dossiers` }));
       case "record":
         return data.map((r) => ({ id: r._id as string, label: r.internalNumber as string, sub: r.subject as string, meta: r.nature as string }));
-      case "document":
-        return data.map((d) => ({
+      case "document": {
+        const docs = data.map((d) => ({
           id: d._id as string,
           label: d.title as string,
           sub: (d.nature as string) ?? (d.description as string),
           meta: d.documentDate ? new Date(d.documentDate as string).toLocaleDateString("fr-FR") : undefined,
         }));
+        const archives = docArchives.map((a) => ({
+          id: a._id,
+          label: a.designation ?? "Archive",
+          sub: a.classNumber ? `N° ${a.classNumber}` : undefined,
+          meta: a.createdAt ? new Date(a.createdAt).toLocaleDateString("fr-FR") : undefined,
+          isArchive: true,
+          fileUrl: a.fileUrl,
+        }));
+        return [...docs, ...archives];
+      }
       default:
         return [];
     }
-  }, [currentLevel, levelData]);
+  }, [currentLevel, levelData, docArchives]);
 
   const getItemRaw = useCallback(
     (id: string) => (levelData as Array<{ _id: string }>).find((i) => i._id === id),
