@@ -18,8 +18,8 @@ import ViewStreamOutlinedIcon     from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon          from "@mui/icons-material/StyleOutlined";
 import FolderOutlinedIcon         from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon          from "@mui/icons-material/TopicOutlined";
-import ExpandMoreRoundedIcon      from "@mui/icons-material/ExpandMoreRounded";
-import ChevronRightRoundedIcon    from "@mui/icons-material/ChevronRightRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
@@ -198,9 +198,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
               alignItems="center"
               gap={0.75}
               py={0.25}
-              onClick={() => {
-                loadChildren(node);
-                setExpanded((prev) => prev.includes(node.id) ? prev : [...prev, node.id]);
+              onClick={(e) => {
+                e.stopPropagation();
                 onSelect?.(nodePath);
               }}
               onContextMenu={(e) => {
@@ -331,8 +330,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         </Box>
       ) : (
         <TreeView
-          defaultCollapseIcon={<ExpandMoreRoundedIcon sx={{ fontSize: 20, color: "text.secondary" }} />}
-          defaultExpandIcon={<ChevronRightRoundedIcon sx={{ fontSize: 20, color: "text.secondary" }} />}
+          defaultCollapseIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 20, color: "text.primary" }} />}
+          defaultExpandIcon={<KeyboardArrowRightRoundedIcon sx={{ fontSize: 20, color: "text.disabled" }} />}
           expanded={expanded}
           onNodeToggle={(_e: React.SyntheticEvent, nodeIds: string[]) => {
             // Chevron cliqué → toggle direct
