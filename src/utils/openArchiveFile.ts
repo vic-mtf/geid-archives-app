@@ -88,12 +88,13 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     }
 
     const contentLength = Number(res.headers.get("content-length") ?? 0);
+    const contentType = res.headers.get("content-type") || "application/octet-stream";
     const reader = res.body?.getReader();
 
     if (!reader) {
-      const blob = await res.blob();
+      const rawBlob = await res.blob();
       _onProgress?.({ ...INITIAL_STATE });
-      openBlob(blob);
+      openBlob(new Blob([rawBlob], { type: contentType }));
       return;
     }
 
@@ -112,7 +113,7 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
     }
 
     _onProgress?.({ ...INITIAL_STATE });
-    openBlob(new Blob(chunks));
+    openBlob(new Blob(chunks, { type: contentType }));
 
   } catch (err: unknown) {
     if ((err as Error).name === "AbortError") {
