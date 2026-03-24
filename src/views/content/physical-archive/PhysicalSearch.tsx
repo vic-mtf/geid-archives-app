@@ -6,7 +6,7 @@
  * Cache les résultats en local pour les requêtes déjà effectuées.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { setCacheEntry } from "@/redux/data";
@@ -35,6 +35,7 @@ import FolderOutlinedIcon     from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon      from "@mui/icons-material/TopicOutlined";
 import ArticleOutlinedIcon    from "@mui/icons-material/ArticleOutlined";
 import useAxios from "@/hooks/useAxios";
+import getFileIcon from "@/utils/getFileIcon";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -232,17 +233,20 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
                 <Chip label={items.length} size="small" sx={{ height: 18, fontSize: "0.65rem" }} />
               </Box>
               <List dense disablePadding>
-                {items.map((item) => (
+                {items.map((item) => {
+                  const archFi = item._level === "archive" ? getFileIcon((item.fileUrl as string) ?? item._label) : null;
+                  return (
                   <ListItemButton key={item._id} onMouseDown={() => handleSelect(item)} sx={{ py: 0.5 }}>
-                    <ListItemIcon sx={{ minWidth: 28 }}>
-                      {LEVEL_ICON[item._level]}
+                    <ListItemIcon sx={{ minWidth: 28, ...(archFi ? { color: archFi.color } : {}) }}>
+                      {archFi ? React.cloneElement(archFi.icon, { sx: { fontSize: 18 } }) : LEVEL_ICON[item._level]}
                     </ListItemIcon>
                     <ListItemText
                       primary={item._label}
                       primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: 500 }}
                     />
                   </ListItemButton>
-                ))}
+                  );
+                })}
               </List>
             </Box>
           ))}

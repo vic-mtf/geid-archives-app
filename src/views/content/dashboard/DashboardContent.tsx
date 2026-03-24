@@ -5,7 +5,7 @@
  * pour naviguer directement vers la section concernée.
  */
 
-import { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import {
   Alert,
   Box,
@@ -26,7 +26,7 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
 import MenuBookRoundedIcon       from "@mui/icons-material/MenuBookRounded";
 import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import getFileIcon from "@/utils/getFileIcon";
 import CheckCircleOutlineIcon    from "@mui/icons-material/CheckCircleOutline";
 import HourglassTopOutlinedIcon  from "@mui/icons-material/HourglassTopOutlined";
 import WarningAmberRoundedIcon   from "@mui/icons-material/WarningAmberRounded";
@@ -264,10 +264,11 @@ export default function DashboardContent() {
                 <List dense disablePadding sx={{ flex: 1, overflow: "auto", ...scrollBarSx }}>
                   {recentArchives.map((doc) => {
                     const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
+                    const fi = getFileIcon((doc.fileUrl as string) ?? (doc.designation as string));
                     return (
                       <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.5 }} onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", archiveId: doc._id })}>
-                        <ListItemIcon sx={{ minWidth: 28 }}>
-                          <InsertDriveFileOutlinedIcon fontSize="small" sx={{ color: STATUS_COLOR[norm] ? `${STATUS_COLOR[norm]}.main` : "text.disabled" }} />
+                        <ListItemIcon sx={{ minWidth: 28, color: fi.color }}>
+                          {React.cloneElement(fi.icon, { fontSize: "small" })}
                         </ListItemIcon>
                         <ListItemText
                           primary={doc.designation ?? "—"}

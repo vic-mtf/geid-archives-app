@@ -6,7 +6,7 @@
  * Inclut les archives numériques liées pour les dossiers et documents.
  */
 
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Box,
   Card,
@@ -38,6 +38,7 @@ import InfoOutlinedIcon            from "@mui/icons-material/InfoOutlined";
 import LocationOnOutlinedIcon      from "@mui/icons-material/LocationOnOutlined";
 
 import useAxios from "@/hooks/useAxios";
+import getFileIcon from "@/utils/getFileIcon";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
 import type { PhysicalLevel } from "@/constants/physical";
@@ -144,7 +145,7 @@ function BinderDetail({ item }: { item: Binder }) {
 function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record<string, string> }) {
   const [{ data: archivesData, loading: archLoading }] = useAxios<{
     record: string; count: number;
-    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean }>;
+    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; fileUrl?: string }>;
   }>({ url: `/api/stuff/archives/physical/records/${item._id}/archives`, headers });
 
   const linkedArchives = archivesData?.archives ?? [];
@@ -181,9 +182,10 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
         <Stack spacing={0.5}>
           {linkedArchives.map((arc) => {
             const norm = normalizeStatus(arc.status, arc.validated);
+            const fi = getFileIcon(arc.fileUrl ?? arc.designation);
             return (
               <Box key={arc._id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 0.75, borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
-                <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
+                {React.cloneElement(fi.icon, { fontSize: "small", sx: { color: fi.color, mt: 0.25, flexShrink: 0 } })}
                 <Box flex={1} minWidth={0}>
                   <Typography variant="body2" noWrap fontWeight={500}>{arc.designation ?? arc.folder ?? arc._id}</Typography>
                   {arc.classNumber && <Typography variant="caption" color="text.secondary" noWrap>N° {arc.classNumber}</Typography>}
@@ -201,7 +203,7 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
 function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Record<string, string> }) {
   const [{ data: archivesData, loading: archLoading }] = useAxios<{
     document: string; count: number;
-    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean }>;
+    archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; fileUrl?: string }>;
   }>({ url: `/api/stuff/archives/physical/documents/${item._id}/archives`, headers });
 
   const linkedArchives = archivesData?.archives ?? [];
@@ -229,9 +231,10 @@ function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Re
         <Stack spacing={0.5}>
           {linkedArchives.map((arc) => {
             const norm = normalizeStatus(arc.status, arc.validated);
+            const fi = getFileIcon(arc.fileUrl ?? arc.designation);
             return (
               <Box key={arc._id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 0.75, borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
-                <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.25, flexShrink: 0 }} />
+                {React.cloneElement(fi.icon, { fontSize: "small", sx: { color: fi.color, mt: 0.25, flexShrink: 0 } })}
                 <Box flex={1} minWidth={0}>
                   <Typography variant="body2" noWrap fontWeight={500}>{arc.designation ?? arc.folder ?? arc._id}</Typography>
                   {arc.classNumber && <Typography variant="caption" color="text.secondary" noWrap>N° {arc.classNumber}</Typography>}

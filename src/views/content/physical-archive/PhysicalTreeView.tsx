@@ -23,6 +23,7 @@ import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRigh
 import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
+import getFileIcon from "@/utils/getFileIcon";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -36,6 +37,9 @@ interface TreeNode {
   level: Level;
   children?: TreeNode[];
   loaded?: boolean;
+  /** Pour les archives numériques affichées comme feuilles */
+  isArchive?: boolean;
+  fileUrl?: string;
 }
 
 // ── Config icônes par niveau ─────────────────────────────────
@@ -142,9 +146,9 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
     }
   }, [initialized, fetchData]);
 
-  // Charger les enfants d'un noeud
+  // Charger les enfants d'un noeud (+ archives liées pour les documents)
   const loadChildren = useCallback(async (node: TreeNode) => {
-    if (node.loaded) return;
+    if (node.loaded || node.isArchive) return;
     const nextLevel = CHILD_LEVEL[node.level];
     if (!nextLevel) return;
 
@@ -160,8 +164,26 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         loaded: false,
       }));
 
+      // Charger les archives liées pour les documents
+      if (node.level === "document") {
+        try {
+          const archRes = await fetchData({ url: `${BASE}/documents/${node.id}/archives` });
+          const archData = archRes.data as { archives?: Array<Record<string, unknown>> };
+          const archives = archData?.archives ?? [];
+          for (const arc of archives) {
+            children.push({
+              id: arc._id as string,
+              label: (arc.designation as string) ?? "Archive",
+              level: "document",
+              isArchive: true,
+              fileUrl: arc.fileUrl as string | undefined,
+              loaded: true,
+            });
+          }
+        } catch { /* pas d'archives liées */ }
+      }
+
       setNodes((prev) => updateNode(prev, node.id, { children, loaded: true }));
-      // Auto-ouvrir le noeud quand les enfants sont chargés
       setExpanded((prev) => prev.includes(node.id) ? prev : [...prev, node.id]);
     } catch {
       setNodes((prev) => updateNode(prev, node.id, { children: [], loaded: true }));
@@ -208,11 +230,14 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
                 onContextMenu?.(e, node.id, node.label, node.level);
               }}
             >
-              {LEVEL_ICON[node.level]}
+              {node.isArchive
+                ? React.cloneElement(getFileIcon(node.fileUrl ?? node.label).icon, { sx: { fontSize: 18, color: getFileIcon(node.fileUrl ?? node.label).color } })
+                : LEVEL_ICON[node.level]
+              }
               <InlineEditableLabel
                 value={node.label}
-                editable={canWrite ?? false}
-                forceEdit={renamingId === node.id}
+                editable={!node.isArchive && (canWrite ?? false)}
+                forceEdit={!node.isArchive && renamingId === node.id}
                 onEditEnd={onRenamingEnd}
                 onSave={async (newValue) => {
                   await onRename?.(node.id, node.level, newValue);
@@ -231,8 +256,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
               : {},
           }}
         >
-          {!node.loaded ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
-          {node.children && renderTree(node.children, nodePath)}
+          {!node.loaded && !node.isArchive ? <TreeItem nodeId={`${node.id}-placeholder`} label="" /> : null}
+          {node.children && !node.isArchive && renderTree(node.children, nodePath)}
         </TreeItem>
       );
     });

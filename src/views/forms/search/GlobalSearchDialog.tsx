@@ -11,7 +11,7 @@
  *   - Documents physiques  → inclus dans la même réponse
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Box,
   Chip,
@@ -43,6 +43,7 @@ import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 import formatDate from "@/utils/formatTime";
 import deepNavigate from "@/utils/deepNavigate";
+import getFileIcon from "@/utils/getFileIcon";
 
 // ── Mise en gras du texte trouvé ────────────────────────────
 
@@ -93,6 +94,7 @@ interface ArchiveResult {
   status?: string;
   validated?: boolean;
   createdAt?: string;
+  fileUrl?: string;
 }
 
 interface RecordResult {
@@ -349,10 +351,11 @@ export default function GlobalSearchDialog() {
                 <List disablePadding dense>
                   {archives.map((arc) => {
                     const norm = normalizeStatus(arc.status, arc.validated);
+                    const fi = getFileIcon(arc.fileUrl ?? arc.designation);
                     return (
                       <ListItemButton key={arc._id} sx={{ px: 2, py: 0.75 }} onClick={() => handleArchiveClick(arc._id)}>
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                          <ArticleOutlinedIcon fontSize="small" color="action" />
+                        <ListItemIcon sx={{ minWidth: 32, color: fi.color }}>
+                          {React.cloneElement(fi.icon, { fontSize: "small" })}
                         </ListItemIcon>
                         <ListItemText
                           primary={highlightMatch(arc.designation ?? arc.folder ?? "", debouncedQuery)}

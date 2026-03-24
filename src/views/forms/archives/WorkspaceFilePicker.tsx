@@ -27,20 +27,12 @@ import {
 } from "@mui/material";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
-import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
-import VideoFileOutlinedIcon from "@mui/icons-material/VideoFileOutlined";
-import AudioFileOutlinedIcon from "@mui/icons-material/AudioFileOutlined";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
-import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import useAxios from "@/hooks/useAxios";
 import getFileExtension from "@/utils/getFileExtention";
-import fileExtensionBase from "@/utils/fileExtensionBase";
+import getFileIcon from "@/utils/getFileIcon";
 
 const EVENT_NAME = "__open_workspace_file_picker";
 
@@ -52,31 +44,7 @@ interface WorkspaceItem {
   [key: string]: unknown;
 }
 
-// ── Icône et couleur selon l'extension ──────────────────────
-
-function getFileIcon(name: string) {
-  const ext = getFileExtension(name)?.toLowerCase() ?? "";
-
-  if (ext === "pdf")
-    return { icon: <PictureAsPdfOutlinedIcon />, color: "#E53935", bg: "#FFEBEE" };
-
-  const entry = fileExtensionBase.find(({ exts }) => exts.includes(ext));
-
-  if (entry?.docType === "word")
-    return { icon: <DescriptionOutlinedIcon />, color: "#1565C0", bg: "#E3F2FD" };
-  if (entry?.docType === "excel")
-    return { icon: <TableChartOutlinedIcon />, color: "#2E7D32", bg: "#E8F5E9" };
-  if (entry?.docType === "power point")
-    return { icon: <SlideshowOutlinedIcon />, color: "#E65100", bg: "#FFF3E0" };
-  if (entry?.type === "image")
-    return { icon: <ImageOutlinedIcon />, color: "#7B1FA2", bg: "#F3E5F5" };
-  if (entry?.type === "video")
-    return { icon: <VideoFileOutlinedIcon />, color: "#C62828", bg: "#FFEBEE" };
-  if (entry?.type === "audio")
-    return { icon: <AudioFileOutlinedIcon />, color: "#F57C00", bg: "#FFF3E0" };
-
-  return { icon: <InsertDriveFileOutlinedIcon />, color: "#78909C", bg: "#ECEFF1" };
-}
+// ── Icône et couleur depuis @/utils/getFileIcon ─────────────
 
 function formatSize(bytes?: number): string {
   if (!bytes || bytes <= 0) return "";
