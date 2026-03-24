@@ -53,8 +53,6 @@ const SidebarTree = React.memo(function SidebarTree({
       flexShrink: 0,
       display: { xs: "none", md: "flex" },
       flexDirection: "column",
-      borderRight: "1px solid",
-      borderColor: "divider",
       overflow: "hidden",
     }}>
       <Box px={1.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" minHeight={42}>

@@ -396,6 +396,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         overflow: "auto",
         ...scrollBarSx,
         py: 0.5,
+        px: 0.75,
       }}>
       {nodes.length === 0 && initialized ? (
         <Box display="flex" justifyContent="center" alignItems="center" py={4}>

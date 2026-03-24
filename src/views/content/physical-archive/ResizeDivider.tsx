@@ -1,20 +1,16 @@
 /**
- * ResizeDivider — Séparateur vertical ajustable inspiré de BeforeAfterSlider.
+ * ResizeDivider — Séparateur vertical ajustable.
  *
- * Une ligne fine avec un handle rond au centre. Le drag utilise des
- * event listeners globaux pour un suivi fluide. Position en pourcentage.
+ * Ligne fine (1px) qui change de couleur au survol et s'agrandit au maintien.
+ * Pas de zone de touche invisible — juste la ligne naturelle.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
-import DragIndicatorRoundedIcon from "@mui/icons-material/DragIndicatorRounded";
 
 interface ResizeDividerProps {
-  /** Largeur min du panneau gauche en px */
   minLeft?: number;
-  /** Largeur min du panneau droit en px */
   minRight?: number;
-  /** Callback avec la nouvelle position du panneau gauche en px */
   onResize: (leftWidth: number) => void;
 }
 
@@ -24,6 +20,7 @@ const ResizeDivider = React.memo(function ResizeDivider({
   onResize,
 }: ResizeDividerProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHover, setIsHover] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const applyPosition = useCallback((clientX: number) => {
@@ -43,15 +40,12 @@ const ResizeDivider = React.memo(function ResizeDivider({
 
   useEffect(() => {
     if (!isDragging) return;
-
     const onMove = (e: MouseEvent) => applyPosition(e.clientX);
     const onUp = () => setIsDragging(false);
-
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
-
     return () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
@@ -60,67 +54,23 @@ const ResizeDivider = React.memo(function ResizeDivider({
     };
   }, [isDragging, applyPosition]);
 
+  const active = isDragging || isHover;
+
   return (
     <Box
       ref={containerRef}
       onMouseDown={onMouseDown}
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => { if (!isDragging) setIsHover(false); }}
       sx={{
-        position: "relative",
-        width: 0,
+        width: isDragging ? 4 : active ? 3 : 1,
         flexShrink: 0,
-        display: { xs: "none", md: "block" },
-        zIndex: 2,
-      }}
-    >
-      {/* Ligne verticale fine */}
-      <Box sx={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: -1,
-        width: 2,
-        bgcolor: isDragging ? "primary.main" : "divider",
-        transition: isDragging ? "none" : "background-color 0.15s",
-      }} />
-
-      {/* Handle rond au centre */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: 24,
-          height: 24,
-          borderRadius: "50%",
-          bgcolor: isDragging ? "primary.main" : "background.paper",
-          border: "2px solid",
-          borderColor: isDragging ? "primary.main" : "divider",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "col-resize",
-          boxShadow: 1,
-          transition: isDragging ? "none" : "all 0.15s",
-          "&:hover": {
-            borderColor: "primary.main",
-            bgcolor: "primary.50",
-          },
-        }}
-      >
-        <DragIndicatorRoundedIcon sx={{ fontSize: 14, color: isDragging ? "white" : "text.disabled" }} />
-      </Box>
-
-      {/* Zone de clic élargie invisible */}
-      <Box sx={{
-        position: "absolute",
-        top: 0,
-        bottom: 0,
-        left: -8,
-        width: 16,
         cursor: "col-resize",
-      }} />
-    </Box>
+        bgcolor: isDragging ? "primary.main" : active ? "primary.light" : "divider",
+        transition: isDragging ? "none" : "width 0.15s, background-color 0.15s",
+        display: { xs: "none", md: "block" },
+      }}
+    />
   );
 });
 
