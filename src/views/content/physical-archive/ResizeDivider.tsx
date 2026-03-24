@@ -57,25 +57,13 @@ const ResizeDivider = React.memo(function ResizeDivider({
       ref={containerRef}
       onMouseDown={onMouseDown}
       sx={{
-        width: 4,
+        width: isDragging ? 3 : 1,
         flexShrink: 0,
         cursor: "col-resize",
-        display: { xs: "none", md: "flex" },
-        alignItems: "center",
-        justifyContent: "center",
-        // Ligne intérieure centrée — seule la couleur change, pas la taille
-        "&::before": {
-          content: '""',
-          display: "block",
-          width: isDragging ? 3 : 1,
-          height: "100%",
-          bgcolor: isDragging ? "primary.main" : "divider",
-          borderRadius: 0.5,
-          transition: isDragging ? "none" : "background-color 0.2s",
-        },
-        "&:hover::before": {
-          bgcolor: "primary.main",
-        },
+        display: { xs: "none", md: "block" },
+        bgcolor: isDragging ? "primary.main" : "divider",
+        transition: isDragging ? "none" : "background-color 0.2s",
+        "&:hover": { bgcolor: "primary.main" },
       }}
     />
   );
