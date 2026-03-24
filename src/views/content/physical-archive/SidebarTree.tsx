@@ -85,7 +85,7 @@ const SidebarTree = React.memo(function SidebarTree({
       overflow: "hidden",
     }}>
       {/* Header style GitHub — sélecteur de conteneur + bouton créer */}
-      <Box px={1} py={0.5} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" gap={0.5}>
+      <Box px={1} borderBottom={1} borderColor="divider" bgcolor="action.hover" display="flex" alignItems="center" gap={0.5} minHeight={42}>
         <WarehouseOutlinedIcon sx={{ fontSize: 16, color: levelConfig.container.color, flexShrink: 0 }} />
         <Select
           value={activeContainerId}
