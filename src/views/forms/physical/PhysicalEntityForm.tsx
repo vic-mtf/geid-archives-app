@@ -334,10 +334,13 @@ export default function PhysicalEntityForm({
 
   const onSubmit = async (data: FieldValues) => {
     let body = config.buildBody(data, parentId);
-    // Sous-document : remplacer record par parent quand le parent est un document
+    // Document dans un document : envoyer parent + record du document parent
     if (level === "document" && parentLevel === "document" && parentId) {
+      const parentRecord = parentData?.record as string
+        ?? (parentData?.record as { _id?: string })?._id
+        ?? undefined;
       const { record: _unused, ...rest } = body as Record<string, unknown>;
-      body = { ...rest, parent: parentId };
+      body = { ...rest, parent: parentId, record: parentRecord };
     }
     const levelNames: Record<PhysicalLevel, string> = {
       container: "conteneur",
@@ -377,6 +380,10 @@ export default function PhysicalEntityForm({
     record:   "au classeur",
     document: "au dossier",
   };
+  // Si on crée un document dans un document, le parent est un document, pas un dossier
+  const resolvedParentLabel = (level === "document" && parentLevel === "document")
+    ? "au document"
+    : parentLevelLabel[level];
 
   // Sections du guide par niveau
   const guideSection: Partial<Record<PhysicalLevel, string>> = {
@@ -410,7 +417,7 @@ export default function PhysicalEntityForm({
         </Stack>
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché {parentLevelLabel[level] ?? "à l'élément parent"}{parentName ? <> : <strong>{parentName}</strong></> : null}
+            Rattaché {resolvedParentLabel ?? "à l'élément parent"}{parentName ? <> : <strong>{parentName}</strong></> : null}
           </Typography>
         )}
       </DialogTitle>
