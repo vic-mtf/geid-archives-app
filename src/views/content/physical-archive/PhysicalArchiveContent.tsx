@@ -92,6 +92,9 @@ export default function PhysicalArchiveContent() {
   // Menu contextuel (clic droit)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
+  // ID de l'élément en cours de renommage (déclenché depuis le menu contextuel)
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+
   // Dialogue de suppression
   const [deleteTarget, setDeleteTarget] = useState<{
     level: Level;
@@ -516,6 +519,8 @@ export default function PhysicalArchiveContent() {
               dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
               dispatch(incrementVersion());
             }}
+            renamingId={renamingId}
+            onRenamingEnd={() => setRenamingId(null)}
           />
         </Box>
         )}
@@ -642,6 +647,8 @@ export default function PhysicalArchiveContent() {
                       <InlineEditableLabel
                         value={item.label}
                         editable={canWrite && item.itemType !== "archive"}
+                        forceEdit={renamingId === item.id}
+                        onEditEnd={() => setRenamingId(null)}
                         onSave={async (newValue) => {
                           const field = RENAME_FIELD[currentLevel];
                           await executeFetch({ url: `${UPDATE_ENDPOINTS[currentLevel]}/${item.id}`, method: "PUT", data: { [field]: newValue } });
@@ -736,6 +743,7 @@ export default function PhysicalArchiveContent() {
           const raw = getItemRaw(id);
           if (raw) setSelected({ level, item: raw as Container });
         }}
+        onRename={(id) => setRenamingId(id)}
       />
 
       {/* Dialogue de confirmation de suppression */}

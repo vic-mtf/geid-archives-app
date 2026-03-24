@@ -106,11 +106,15 @@ export interface PhysicalTreeViewProps {
   canWrite?: boolean;
   /** Renommer un noeud — appelé avec (id, level, newValue) */
   onRename?: (id: string, level: Level, newValue: string) => Promise<void>;
+  /** ID du noeud à forcer en mode édition (depuis le menu contextuel) */
+  renamingId?: string | null;
+  /** Appelé quand le mode édition se termine */
+  onRenamingEnd?: () => void;
 }
 
 // ── Composant ────────────────────────────────────────────────
 
-export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, canWrite, onRename }: PhysicalTreeViewProps) {
+export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, canWrite, onRename, renamingId, onRenamingEnd }: PhysicalTreeViewProps) {
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -209,6 +213,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
               <InlineEditableLabel
                 value={node.label}
                 editable={canWrite ?? false}
+                forceEdit={renamingId === node.id}
+                onEditEnd={onRenamingEnd}
                 onSave={async (newValue) => {
                   await onRename?.(node.id, node.level, newValue);
                   setNodes((prev) => updateNode(prev, node.id, { label: newValue }));

@@ -8,7 +8,7 @@
  *   - Échap → annule
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { CircularProgress, InputBase, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 
@@ -20,6 +20,10 @@ interface InlineEditableLabelProps {
   fontWeight?: number;
   noWrap?: boolean;
   sx?: SxProps<Theme>;
+  /** Passer true pour déclencher le mode édition depuis l'extérieur */
+  forceEdit?: boolean;
+  /** Appelé quand le mode édition se termine (save ou cancel) */
+  onEditEnd?: () => void;
 }
 
 export default function InlineEditableLabel({
@@ -30,6 +34,8 @@ export default function InlineEditableLabel({
   fontWeight,
   noWrap,
   sx,
+  forceEdit,
+  onEditEnd,
 }: InlineEditableLabelProps) {
   const [editing, setEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value);
@@ -40,17 +46,24 @@ export default function InlineEditableLabel({
     if (!editable) return;
     setTempValue(value);
     setEditing(true);
-    // Focus après le rendu
     setTimeout(() => {
       inputRef.current?.focus();
       inputRef.current?.select();
     }, 0);
   }, [editable, value]);
 
+  // Déclenche l'édition depuis l'extérieur (menu contextuel)
+  useEffect(() => {
+    if (forceEdit && editable && !editing) {
+      startEdit();
+    }
+  }, [forceEdit, editable, editing, startEdit]);
+
   const cancel = useCallback(() => {
     setEditing(false);
     setTempValue(value);
-  }, [value]);
+    onEditEnd?.();
+  }, [value, onEditEnd]);
 
   const save = useCallback(async () => {
     const trimmed = tempValue.trim();
@@ -62,6 +75,7 @@ export default function InlineEditableLabel({
     try {
       await onSave(trimmed);
       setEditing(false);
+      onEditEnd?.();
     } catch {
       cancel();
     } finally {

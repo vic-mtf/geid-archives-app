@@ -20,6 +20,7 @@ import AddRoundedIcon             from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon   from "@mui/icons-material/DeleteOutlineRounded";
 import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
 import ContentCopyOutlinedIcon    from "@mui/icons-material/ContentCopyOutlined";
+import EditOutlinedIcon           from "@mui/icons-material/EditOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 
 // ── Types ────────────────────────────────────────────────────
@@ -58,6 +59,7 @@ export interface PhysicalContextMenuProps {
   onAdd: (level: PhysicalLevel, parentId: string) => void;
   onDelete: (id: string, label: string, level: PhysicalLevel) => void;
   onViewDetail: (id: string, level: PhysicalLevel) => void;
+  onRename: (id: string, level: PhysicalLevel, currentLabel: string) => void;
 }
 
 // ── Composant ────────────────────────────────────────────────
@@ -69,6 +71,7 @@ export default function PhysicalContextMenu({
   onAdd,
   onDelete,
   onViewDetail,
+  onRename,
 }: PhysicalContextMenuProps) {
   if (!state) return null;
 
@@ -98,6 +101,13 @@ export default function PhysicalContextMenu({
 
       {/* Actions d'écriture — masquées si pas de droits */}
       {canWrite && <Divider />}
+
+      {canWrite && (
+        <MenuItem onClick={() => { onRename(state.itemId, state.level, state.itemLabel); onClose(); }}>
+          <ListItemIcon><EditOutlinedIcon fontSize="small" /></ListItemIcon>
+          <ListItemText>Renommer</ListItemText>
+        </MenuItem>
+      )}
 
       {canWrite && childLabel && (
         <MenuItem onClick={() => { onAdd(state.level, state.itemId); onClose(); }}>
