@@ -20,12 +20,67 @@ import {
   Typography,
 } from "@mui/material";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import VideoFileOutlinedIcon from "@mui/icons-material/VideoFileOutlined";
+import AudioFileOutlinedIcon from "@mui/icons-material/AudioFileOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import SlideshowOutlinedIcon from "@mui/icons-material/SlideshowOutlined";
 import { useSnackbar } from "notistack";
+import getFileExtension from "@/utils/getFileExtention";
+import fileExtensionBase from "@/utils/fileExtensionBase";
+
+function getFileIcon(name: string) {
+  const ext = getFileExtension(name)?.toLowerCase() ?? "";
+  if (ext === "pdf")
+    return { icon: <PictureAsPdfOutlinedIcon />, color: "#E53935", bg: "#FFEBEE" };
+  const entry = fileExtensionBase.find(({ exts }) => exts.includes(ext));
+  if (entry?.docType === "word")
+    return { icon: <DescriptionOutlinedIcon />, color: "#1565C0", bg: "#E3F2FD" };
+  if (entry?.docType === "excel")
+    return { icon: <TableChartOutlinedIcon />, color: "#2E7D32", bg: "#E8F5E9" };
+  if (entry?.docType === "power point")
+    return { icon: <SlideshowOutlinedIcon />, color: "#E65100", bg: "#FFF3E0" };
+  if (entry?.type === "image")
+    return { icon: <ImageOutlinedIcon />, color: "#7B1FA2", bg: "#F3E5F5" };
+  if (entry?.type === "video")
+    return { icon: <VideoFileOutlinedIcon />, color: "#C62828", bg: "#FFEBEE" };
+  if (entry?.type === "audio")
+    return { icon: <AudioFileOutlinedIcon />, color: "#F57C00", bg: "#FFF3E0" };
+  return { icon: <InsertDriveFileOutlinedIcon />, color: "#78909C", bg: "#ECEFF1" };
+}
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { incrementVersion } from "@/redux/data";
 import Typology from "./Typology";
+
+function FilePreview({ file }: { file: File }) {
+  const fi = getFileIcon(file.name);
+  const ext = getFileExtension(file.name)?.toUpperCase() ?? "";
+  const size = file.size < 1024 * 1024
+    ? `${(file.size / 1024).toFixed(0)} Ko`
+    : `${(file.size / (1024 * 1024)).toFixed(1)} Mo`;
+  return (
+    <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
+      <Box sx={{
+        width: 40, height: 40, borderRadius: 1.5, bgcolor: fi.bg,
+        display: "flex", alignItems: "center", justifyContent: "center", color: fi.color, flexShrink: 0,
+      }}>
+        {fi.icon}
+      </Box>
+      <Stack alignItems="flex-start" spacing={0}>
+        <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 280 }}>
+          {file.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {ext && `${ext} · `}{size}
+        </Typography>
+      </Stack>
+    </Stack>
+  );
+}
 
 const EVENT_NAME = "__open_archive_create";
 
@@ -159,13 +214,7 @@ export default function ArchiveCreateDialog() {
               onChange={handleFileInput}
             />
             {file ? (
-              <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
-                <InsertDriveFileOutlinedIcon color="success" />
-                <Typography variant="body2" fontWeight={500}>{file.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  ({(file.size / 1024).toFixed(0)} Ko)
-                </Typography>
-              </Stack>
+              <FilePreview file={file} />
             ) : (
               <Stack alignItems="center" spacing={0.5}>
                 <UploadFileRoundedIcon sx={{ color: "text.disabled", fontSize: 36 }} />
