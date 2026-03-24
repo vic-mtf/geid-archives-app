@@ -1,12 +1,11 @@
 /**
- * NetworkStatus — Indicateur de connexion réseau.
+ * NetworkStatus — Indicateur de connexion réseau via Alert MUI.
  *
- * Affiche une barre en bas de l'écran quand la connexion est absente.
- * Ne bloque pas la navigation ni le header.
+ * Affiche une Alert en bas de l'écran, ne bloque pas la navigation.
  */
 
 import React, { useEffect, useState } from "react";
-import { Box, Slide, Stack, Typography } from "@mui/material";
+import { Alert, Collapse } from "@mui/material";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import SignalWifiStatusbar4BarRoundedIcon from "@mui/icons-material/SignalWifiStatusbar4BarRounded";
 
@@ -40,40 +39,30 @@ const NetworkStatus = React.memo(function NetworkStatus() {
   if (online && !showReconnected) return null;
 
   return (
-    <Slide direction="up" in={!online || showReconnected} mountOnEnter unmountOnExit>
-      <Box
-        sx={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1300,
-          bgcolor: online ? "#2e7d32" : "#d32f2f",
-          color: "white",
-          py: 0.75,
-          px: 2,
-          pointerEvents: "none",
-        }}
+    <Collapse in={!online || showReconnected} sx={{
+      position: "fixed",
+      bottom: 16,
+      left: 16,
+      right: 16,
+      zIndex: 1300,
+      pointerEvents: "none",
+      "& .MuiAlert-root": { pointerEvents: "auto" },
+    }}>
+      <Alert
+        severity={online ? "success" : "warning"}
+        variant="filled"
+        icon={online
+          ? <SignalWifiStatusbar4BarRoundedIcon fontSize="inherit" />
+          : <WifiOffRoundedIcon fontSize="inherit" />
+        }
+        sx={{ borderRadius: 2, boxShadow: 4 }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
-          {online ? (
-            <>
-              <SignalWifiStatusbar4BarRoundedIcon sx={{ fontSize: 16 }} />
-              <Typography variant="caption" fontWeight={500}>
-                La connexion a été rétablie
-              </Typography>
-            </>
-          ) : (
-            <>
-              <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
-              <Typography variant="caption" fontWeight={500}>
-                Pas de connexion internet
-              </Typography>
-            </>
-          )}
-        </Stack>
-      </Box>
-    </Slide>
+        {online
+          ? "La connexion a été rétablie"
+          : "Pas de connexion internet. Certaines fonctionnalités ne sont pas disponibles."
+        }
+      </Alert>
+    </Collapse>
   );
 });
 
