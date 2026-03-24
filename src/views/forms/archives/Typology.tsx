@@ -16,7 +16,7 @@ import React from "react";
 
 interface DocType {
   name: string;
-  subtypes?: Array<{ name: string }>;
+  subtypes?: Array<string | { name: string }>;
 }
 
 // L'API peut renvoyer soit string[], soit DocType[]
@@ -51,7 +51,7 @@ export default function Typology({
     type: null,
     subType: null,
     types: docTypes.map(toName).filter(Boolean),
-    subTypes: typeof docTypes[0] !== "string" ? (docTypes[0] as DocType)?.subtypes?.map(({ name }) => name) ?? [] : [],
+    subTypes: typeof docTypes[0] !== "string" ? (docTypes[0] as DocType)?.subtypes?.map((s) => typeof s === "string" ? s : s.name) ?? [] : [],
   });
 
   const typeEmptyError = useMemo(
@@ -67,7 +67,7 @@ export default function Typology({
 
   const handleType = (_event: React.SyntheticEvent, selectedType: string | null) => {
     const found = docTypes.find((d) => toName(d) === selectedType);
-    const subTypes = typeof found !== "string" ? (found as DocType)?.subtypes?.map(({ name }) => name) ?? [] : [];
+    const subTypes = typeof found !== "string" ? (found as DocType)?.subtypes?.map((s) => typeof s === "string" ? s : s.name) ?? [] : [];
     setValues({ ...values, type: selectedType, subType: null, subTypes });
   };
 
