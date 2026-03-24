@@ -16,18 +16,24 @@ interface ResizeDividerProps {
 
 const ResizeDivider = React.memo(function ResizeDivider({
   minLeft = 180,
-  minRight = 580,
+  minRight = 250,
   onResize,
 }: ResizeDividerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const applyPosition = useCallback((clientX: number) => {
-    const parent = containerRef.current?.parentElement;
+    const el = containerRef.current;
+    const parent = el?.parentElement;
     if (!parent) return;
     const rect = parent.getBoundingClientRect();
     const raw = clientX - rect.left;
-    const clamped = Math.max(minLeft, Math.min(rect.width - minRight, raw));
+    // Calculer l'espace pris par tout ce qui est après le divider (milieu min + détail réel)
+    const dividerWidth = 8;
+    const lastChild = parent.lastElementChild as HTMLElement | null;
+    const detailWidth = lastChild && lastChild !== el ? lastChild.getBoundingClientRect().width : 0;
+    const maxLeft = rect.width - dividerWidth - minRight - detailWidth;
+    const clamped = Math.max(minLeft, Math.min(maxLeft, raw));
     onResize(clamped);
   }, [minLeft, minRight, onResize]);
 

@@ -367,7 +367,7 @@ export default function PhysicalArchiveContent() {
           <ResizeDivider
             onResize={setTreeWidth}
             minLeft={180}
-            minRight={580}
+            minRight={250}
           />
         )}
 
