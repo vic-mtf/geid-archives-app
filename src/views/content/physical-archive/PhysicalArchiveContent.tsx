@@ -45,8 +45,9 @@ import ArchiveContextMenu, { type ArchiveMenuState } from "./ArchiveContextMenu"
 import PhysicalItemsList from "./PhysicalItemsList";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import ResizeDivider from "./ResizeDivider";
-import { DndContext, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import useArchiveDnd from "./useArchiveDnd";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragStartEvent } from "@dnd-kit/core";
+import useArchiveDnd, { type ArchiveDragData } from "./useArchiveDnd";
+import getFileIcon from "@/utils/getFileIcon";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useDeletePhysical from "./useDeletePhysical";
 
@@ -113,6 +114,17 @@ export default function PhysicalArchiveContent() {
   // Drag & drop d'archives entre documents
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const { handleDragEnd } = useArchiveDnd({ headers, canWrite, executeFetch });
+  const [activeDrag, setActiveDrag] = useState<{ label: string; fileUrl?: string } | null>(null);
+  const handleDragStart = useCallback((e: DragStartEvent) => {
+    const data = e.active.data.current as ArchiveDragData | undefined;
+    if (data?.type === "archive") {
+      setActiveDrag({ label: data.archiveLabel, fileUrl: undefined });
+    }
+  }, []);
+  const handleDragEndWrapped = useCallback((e: Parameters<typeof handleDragEnd>[0]) => {
+    setActiveDrag(null);
+    handleDragEnd(e);
+  }, [handleDragEnd]);
 
   // URL à charger selon le niveau courant et le parent
   const currentUrl = useMemo(() => {
@@ -310,7 +322,7 @@ export default function PhysicalArchiveContent() {
   const insideContainer = breadcrumb.length > 0;
 
   return (
-    <DndContext sensors={dndSensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={dndSensors} onDragStart={handleDragStart} onDragEnd={handleDragEndWrapped}>
     <Box display="flex" flex={1} overflow="hidden" height="100%" flexDirection="column">
       {/* ── Barre de navigation (fil d'Ariane) ────────────────── */}
       <BreadcrumbBar
@@ -557,6 +569,27 @@ export default function PhysicalArchiveContent() {
         onConfirm={handleDeleteConfirm}
       />
     </Box>
+    <DragOverlay dropAnimation={null}>
+      {activeDrag && (() => {
+        const fi = getFileIcon(activeDrag.fileUrl ?? activeDrag.label);
+        return (
+          <Box sx={{
+            display: "flex", alignItems: "center", gap: 1,
+            px: 1.5, py: 0.75, borderRadius: 1.5,
+            bgcolor: "background.paper",
+            boxShadow: 4, border: "1px solid", borderColor: "primary.main",
+            maxWidth: 260,
+          }}>
+            <Box sx={{ color: fi.color, display: "flex", flexShrink: 0 }}>
+              {React.cloneElement(fi.icon, { fontSize: "small" })}
+            </Box>
+            <Typography variant="body2" fontWeight={500} noWrap>
+              {activeDrag.label}
+            </Typography>
+          </Box>
+        );
+      })()}
+    </DragOverlay>
     </DndContext>
   );
 }
