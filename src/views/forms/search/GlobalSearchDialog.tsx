@@ -42,6 +42,40 @@ import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecyc
 import formatDate from "@/utils/formatTime";
 import deepNavigate from "@/utils/deepNavigate";
 
+// ── Mise en gras du texte trouvé ────────────────────────────
+
+function stripAccents(str: string) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Retourne un fragment JSX avec les occurrences en gras */
+function highlightMatch(text: string | undefined | null, query: string) {
+  if (!text || !query || query.length < 2) return text ?? "";
+  const normalizedText = stripAccents(text);
+  const normalizedQuery = stripAccents(query);
+  const regex = new RegExp(`(${normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  // Trouver les positions de match dans la version normalisée
+  const parts: Array<{ text: string; bold: boolean }> = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(normalizedText)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ text: text.slice(lastIndex, match.index), bold: false });
+    }
+    parts.push({ text: text.slice(match.index, match.index + match[0].length), bold: true });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    parts.push({ text: text.slice(lastIndex), bold: false });
+  }
+  if (parts.length === 0) return text;
+  return (
+    <>
+      {parts.map((p, i) => p.bold ? <strong key={i}>{p.text}</strong> : <span key={i}>{p.text}</span>)}
+    </>
+  );
+}
+
 // ── Événement déclencheur ──────────────────────────────────
 const OPEN_EVENT = "__global_search_open";
 
@@ -316,13 +350,16 @@ export default function GlobalSearchDialog() {
                           <ArticleOutlinedIcon fontSize="small" color="action" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={arc.designation ?? arc.folder ?? arc._id}
+                          primary={highlightMatch(arc.designation ?? arc.folder ?? "", debouncedQuery)}
                           secondary={
                             <span>
                               {arc.classNumber && <span>N°&nbsp;{arc.classNumber} · </span>}
                               {arc.description
-                                ? arc.description.slice(0, 80) + (arc.description.length > 80 ? "…" : "")
-                                : arc.folder ?? ""}
+                                ? highlightMatch(
+                                    arc.description.slice(0, 100) + (arc.description.length > 100 ? "…" : ""),
+                                    debouncedQuery
+                                  )
+                                : arc.folder ? highlightMatch(arc.folder, debouncedQuery) : ""}
                             </span>
                           }
                           primaryTypographyProps={{ noWrap: true, variant: "body2", fontWeight: 500 }}
@@ -363,11 +400,11 @@ export default function GlobalSearchDialog() {
                           : <FolderOpenOutlinedIcon fontSize="small" color="action" />}
                       </ListItemIcon>
                       <ListItemText
-                        primary={rec.subject ?? rec.internalNumber}
+                        primary={highlightMatch(rec.subject ?? rec.internalNumber, debouncedQuery)}
                         secondary={
                           <span>
-                            {rec.internalNumber}
-                            {rec.category && <span> · {rec.category}</span>}
+                            {highlightMatch(rec.internalNumber, debouncedQuery)}
+                            {rec.category && <span> · {highlightMatch(rec.category, debouncedQuery)}</span>}
                             {rec.editionDate && <span> · {formatDate(rec.editionDate)}</span>}
                           </span>
                         }
