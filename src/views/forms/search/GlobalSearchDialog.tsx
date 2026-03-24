@@ -93,6 +93,15 @@ export default function GlobalSearchDialog() {
   const token = useToken(); // "Bearer <token>" ou null
   const headers = { Authorization: token ?? "" };
 
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setQuery("");
+    setDebouncedQuery("");
+    setResults(null);
+    setSearchError(false);
+    cancelRef.current = true;
+  }, []);
+
   // ── Deep navigate handlers ────────────────────────────────
   const [, executePath] = useAxios({ headers }, { manual: true });
 
@@ -100,7 +109,7 @@ export default function GlobalSearchDialog() {
   const handleArchiveClick = useCallback((archiveId: string) => {
     handleClose();
     deepNavigate(navigateTo, { tab: "archiveManager", archiveId });
-  }, [navigateTo]);
+  }, [navigateTo, handleClose]);
 
   /** Clic sur un record → charger le chemin complet puis naviguer vers Physique */
   const handleRecordClick = useCallback(async (recordId: string) => {
@@ -113,7 +122,7 @@ export default function GlobalSearchDialog() {
       // Fallback — juste aller vers l'onglet
       deepNavigate(navigateTo, { tab: "physicalArchive" });
     }
-  }, [navigateTo, executePath]);
+  }, [navigateTo, executePath, handleClose]);
 
   const [, execute] = useAxios<SearchResponse>(
     { headers: { Authorization: token ?? "" } },
@@ -183,15 +192,6 @@ export default function GlobalSearchDialog() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery]);
-
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    setQuery("");
-    setDebouncedQuery("");
-    setResults(null);
-    setSearchError(false);
-    cancelRef.current = true;
-  }, []);
 
   const archives = results?.archives ?? [];
   const records  = results?.records  ?? [];
