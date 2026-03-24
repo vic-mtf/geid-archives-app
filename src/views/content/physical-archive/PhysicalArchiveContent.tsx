@@ -563,7 +563,7 @@ export default function PhysicalArchiveContent() {
             <Box flex={1} />
             {canWrite && (
               <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
-                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormParentLevel(breadcrumb.length > 1 ? breadcrumb[breadcrumb.length - 2]?.level : undefined); setFormOpen(true); }}>
+                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormParentLevel(breadcrumb.length > 0 ? breadcrumb[breadcrumb.length - 1]?.level : undefined); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>

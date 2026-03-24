@@ -417,7 +417,7 @@ export default function PhysicalEntityForm({
         </Stack>
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché {resolvedParentLabel ?? "à l'élément parent"}{parentName ? <> : <strong>{parentName}</strong></> : null}
+            Rattaché {resolvedParentLabel ?? "à l'élément parent"}{parentName && <> : <strong>{parentName}</strong></>}
           </Typography>
         )}
       </DialogTitle>
