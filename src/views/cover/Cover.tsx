@@ -122,21 +122,10 @@ export default function Cover({ setOpened }: CoverProps) {
         </MuiBox>
       </Stack>
       <Typography
-        variant="body2"
-        textAlign="center"
-        sx={{
-          px: { xs: 2, sm: 3 },
-          py: 1,
-          mb: { xs: 1, sm: 2 },
-          flexShrink: 0,
-          color: "white",
-          bgcolor: "rgba(0,0,0,0.35)",
-          borderRadius: 1,
-          mx: { xs: 2, sm: "auto" },
-          maxWidth: 600,
-          fontSize: { xs: "0.72rem", sm: "0.82rem" },
-          letterSpacing: 0.3,
-        }}>
+        variant="caption"
+        paragraph
+        color="text.primary"
+        textAlign="center">
         {footerText}
       </Typography>
     </Box>
