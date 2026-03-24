@@ -1,14 +1,14 @@
 import { useCallback, useEffect } from "react";
-import Box from "@/components/Box";
 import _archives_logo from "@/assets/crdoy0js-removebg-preview.webp";
 import {
   CardMedia,
   Stack,
-  Box as MuiBox,
+  Box,
   Divider,
   Typography,
 } from "@mui/material";
 import _logo_geid from "@/assets/geid_logo_blue_without_title.webp";
+import BoxGradient from "@/components/BoxGradient";
 import SwingAnimation from "@/components/SwingAnimation";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -48,24 +48,19 @@ export default function Cover({ setOpened }: CoverProps) {
   }, [dispatch, setOpened]);
 
   return (
-    <Box
+    <BoxGradient
       sx={{
-        justifyContent: "center",
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
         alignItems: "center",
+        justifyContent: "center",
         userSelect: "none",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        p: { xs: 2, sm: 3, md: 4 },
+        overflow: "hidden",
       }}>
-      <Stack
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        flex={1}
-        spacing={{ xs: 1.5, sm: 2 }}>
+      {/* Contenu central — logo + titre */}
+      <Stack alignItems="center" spacing={{ xs: 1.5, sm: 2 }}>
         <SwingAnimation delay={2} onFinish={handleFinish}>
           <CardMedia
             component="img"
@@ -77,58 +72,55 @@ export default function Cover({ setOpened }: CoverProps) {
             }}
           />
         </SwingAnimation>
-        <MuiBox
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          flexDirection="column"
-          position="relative"
-          width="100%">
-          <Stack
-            spacing={{ xs: 0.5, sm: 1 }}
-            direction={{ xs: "column", sm: "row" }}
-            maxWidth={500}
-            width="100%"
-            my={{ xs: 0.5, sm: 1 }}
-            divider={
-              <Divider
-                flexItem
-                orientation="vertical"
-                sx={{
-                  bgcolor: "text.primary",
-                  borderWidth: 1,
-                  display: { xs: "none", sm: "block" },
-                }}
-              />
-            }
-            display="flex"
-            justifyContent="center"
-            alignItems="center">
-            <CardMedia
-              component="img"
-              src={_logo_geid}
-              sx={{ width: { xs: 60, sm: 90, md: 120 } }}
-            />
-            <Typography
-              noWrap
-              color="text.primary"
+        <Stack
+          spacing={{ xs: 0.5, sm: 1 }}
+          direction={{ xs: "column", sm: "row" }}
+          divider={
+            <Divider
+              flexItem
+              orientation="vertical"
               sx={{
-                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2.125rem" },
-                fontWeight: 400,
-              }}>
-              Archives
-            </Typography>
-          </Stack>
-        </MuiBox>
+                bgcolor: "text.primary",
+                borderWidth: 1,
+                display: { xs: "none", sm: "block" },
+              }}
+            />
+          }
+          alignItems="center"
+          justifyContent="center">
+          <CardMedia
+            component="img"
+            src={_logo_geid}
+            sx={{ width: { xs: 60, sm: 90, md: 120 } }}
+          />
+          <Typography
+            noWrap
+            color="text.primary"
+            sx={{
+              fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2.125rem" },
+              fontWeight: 400,
+            }}>
+            Archives
+          </Typography>
+        </Stack>
       </Stack>
-      <Typography
-        variant="caption"
-        paragraph
-        color="text.primary"
-        textAlign="center">
-        {footerText}
-      </Typography>
-    </Box>
+
+      {/* Footer — toujours visible en bas */}
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          py: { xs: 1.5, sm: 2 },
+          px: 2,
+        }}>
+        <Typography variant="caption" color="text.primary">
+          {footerText}
+        </Typography>
+      </Box>
+    </BoxGradient>
   );
 }
 
