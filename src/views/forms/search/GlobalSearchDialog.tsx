@@ -260,7 +260,7 @@ export default function GlobalSearchDialog() {
           autoFocus
           fullWidth
           variant="standard"
-          placeholder="Rechercher une archive, un document physique… (Ctrl+K)"
+          placeholder="Rechercher une archive, un document…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           InputProps={{
@@ -272,16 +272,17 @@ export default function GlobalSearchDialog() {
               </InputAdornment>
             ) : query ? (
               <InputAdornment position="end">
-                <Tooltip title="Effacer">
-                  <IconButton size="small" onClick={() => setQuery("")}>
-                    <CloseRoundedIcon fontSize="small" />
+                <Tooltip title="Effacer la recherche">
+                  <IconButton size="small" onClick={() => setQuery("")} sx={{ bgcolor: "action.hover", borderRadius: 1, px: 0.75 }}>
+                    <CloseRoundedIcon sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
               </InputAdornment>
             ) : null,
           }}
         />
-        <Tooltip title="Fermer (Échap)">
+        <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+        <Tooltip title="Fermer">
           <IconButton size="small" onClick={handleClose}>
             <CloseRoundedIcon fontSize="small" />
           </IconButton>
