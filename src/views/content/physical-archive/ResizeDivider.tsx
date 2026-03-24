@@ -1,8 +1,8 @@
 /**
  * ResizeDivider — Séparateur vertical ajustable.
  *
- * Conteneur fixe 8px. Ligne ::before fine par défaut, grosse au drag.
- * Utilise des classes CSS pour éviter les re-renders pendant le drag.
+ * Conteneur fixe étroit. Apparence d'un simple divider.
+ * Au drag : s'épaissit et change de couleur via classe CSS directe.
  */
 
 import React, { useCallback, useRef } from "react";
@@ -29,7 +29,7 @@ const ResizeDivider = React.memo(function ResizeDivider({
     if (!parent) return;
     const rect = parent.getBoundingClientRect();
     const raw = clientX - rect.left;
-    const dividerWidth = 8;
+    const dividerWidth = 1;
     const lastChild = parent.lastElementChild as HTMLElement | null;
     const detailWidth = lastChild && lastChild !== el ? lastChild.getBoundingClientRect().width : 0;
     const maxLeft = rect.width - dividerWidth - minRight - detailWidth;
@@ -42,7 +42,6 @@ const ResizeDivider = React.memo(function ResizeDivider({
     const el = containerRef.current;
     if (!el) return;
 
-    // Ajouter la classe "dragging" directement sur le DOM — pas de re-render
     el.classList.add("dragging");
     applyPosition(e.clientX);
 
@@ -66,28 +65,19 @@ const ResizeDivider = React.memo(function ResizeDivider({
       ref={containerRef}
       onMouseDown={onMouseDown}
       sx={{
-        width: 8,
+        // Largeur = un simple trait de 1px, comme un Divider MUI
+        width: 1,
         flexShrink: 0,
+        bgcolor: "divider",
         cursor: "col-resize",
-        display: { xs: "none", md: "flex" },
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "transparent",
-        // Ligne fine par défaut
-        "&::before": {
-          content: '""',
-          display: "block",
-          width: 1,
-          height: "100%",
-          bgcolor: "divider",
-          transition: "width 0.1s, background-color 0.15s",
-        },
-        // Hover → couleur bleue
-        "&:hover::before": {
+        display: { xs: "none", md: "block" },
+        transition: "width 0.1s, background-color 0.15s",
+        // Hover → bleue
+        "&:hover": {
           bgcolor: "primary.main",
         },
-        // Drag → grosse + bleue (classe ajoutée via DOM, pas de re-render)
-        "&.dragging::before": {
+        // Drag → épaisse + bleue
+        "&.dragging": {
           width: 3,
           bgcolor: "primary.main",
           transition: "none",
