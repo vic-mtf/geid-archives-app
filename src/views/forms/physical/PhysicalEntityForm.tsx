@@ -47,7 +47,12 @@ const parentEndpoint: Partial<Record<PhysicalLevel, string>> = {
   floor:    "/api/stuff/archives/physical/shelves",
   binder:   "/api/stuff/archives/physical/floors",
   record:   "/api/stuff/archives/physical/binders",
-  document: "/api/stuff/archives/physical/records",
+  document: "/api/stuff/archives/physical/records",  // par défaut, document est enfant d'un record
+};
+
+// Endpoint du parent quand le parent est un document (sous-document)
+const parentEndpointOverride: Partial<Record<PhysicalLevel, string>> = {
+  document: "/api/stuff/archives/physical/documents",
 };
 
 interface FieldDef {
@@ -277,6 +282,8 @@ export interface PhysicalEntityFormProps {
   open: boolean;
   level: PhysicalLevel;
   parentId?: string;
+  /** Niveau du parent (pour les sous-documents : parentLevel="document") */
+  parentLevel?: PhysicalLevel;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -285,6 +292,7 @@ export default function PhysicalEntityForm({
   open,
   level,
   parentId,
+  parentLevel,
   onClose,
   onSuccess,
 }: PhysicalEntityFormProps) {
@@ -303,8 +311,11 @@ export default function PhysicalEntityForm({
   );
 
   // Résolution du nom lisible du parent
-  const parentUrl = parentId && parentEndpoint[level]
-    ? `${parentEndpoint[level]}/${parentId}`
+  const resolvedParentEndpoint = (level === "document" && parentLevel === "document")
+    ? parentEndpointOverride.document
+    : parentEndpoint[level];
+  const parentUrl = parentId && resolvedParentEndpoint
+    ? `${resolvedParentEndpoint}/${parentId}`
     : null;
   const [{ data: parentData }] = useAxios<Record<string, unknown>>(
     { url: parentUrl!, headers: { Authorization: `Bearer ${token}` } },
@@ -320,7 +331,12 @@ export default function PhysicalEntityForm({
   };
 
   const onSubmit = async (data: FieldValues) => {
-    const body = config.buildBody(data, parentId);
+    let body = config.buildBody(data, parentId);
+    // Sous-document : remplacer record par parent quand le parent est un document
+    if (level === "document" && parentLevel === "document" && parentId) {
+      const { record: _unused, ...rest } = body as Record<string, unknown>;
+      body = { ...rest, parent: parentId };
+    }
     const levelNames: Record<PhysicalLevel, string> = {
       container: "conteneur",
       shelf:     "étagère",
@@ -372,7 +388,7 @@ export default function PhysicalEntityForm({
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <span>{config.title}</span>
+          <span>{level === "document" && parentLevel === "document" ? "Nouveau sous-document" : config.title}</span>
           <Tooltip title="Voir le guide utilisateur pour ce type d'élément" placement="top">
             <IconButton
               size="small"

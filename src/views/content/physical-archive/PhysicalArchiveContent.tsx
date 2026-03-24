@@ -88,6 +88,7 @@ export default function PhysicalArchiveContent() {
   const [formOpen, setFormOpen] = useState(false);
   const [formParentId, setFormParentId] = useState<string | undefined>(undefined);
   const [formLevel, setFormLevel] = useState<Level>("container");
+  const [formParentLevel, setFormParentLevel] = useState<Level | undefined>(undefined);
 
   // Menu contextuel (clic droit)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -495,7 +496,7 @@ export default function PhysicalArchiveContent() {
             </Box>
             {canWrite && (
               <Tooltip title="Nouveau conteneur">
-                <IconButton size="small" onClick={() => { setFormLevel("container"); setFormParentId(undefined); setFormOpen(true); }}>
+                <IconButton size="small" onClick={() => { setFormLevel("container"); setFormParentId(undefined); setFormParentLevel(undefined); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
@@ -562,7 +563,7 @@ export default function PhysicalArchiveContent() {
             <Box flex={1} />
             {canWrite && (
               <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
-                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormOpen(true); }}>
+                <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormParentLevel(breadcrumb.length > 1 ? breadcrumb[breadcrumb.length - 2]?.level : undefined); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
@@ -716,6 +717,7 @@ export default function PhysicalArchiveContent() {
         open={formOpen}
         level={formLevel as PhysicalLevel}
         parentId={formParentId}
+        parentLevel={formParentLevel as PhysicalLevel | undefined}
         onClose={() => setFormOpen(false)}
         onSuccess={() => {
           setFormOpen(false);
@@ -736,6 +738,7 @@ export default function PhysicalArchiveContent() {
           };
           setFormLevel(nextLevels[level]);
           setFormParentId(pid);
+          setFormParentLevel(level);
           setFormOpen(true);
         }}
         onDelete={(id, label, level) => setDeleteTarget({ level, id, label })}
