@@ -320,9 +320,8 @@ export default function LinkToPhysicalRecordDialog() {
                   <RecordCard
                     key={item._id}
                     item={item}
-                    selected={selected.record?._id === item._id && !selected.document}
-                    onClick={() => handleSelectTarget(item, "record")}
-                    onDrillDown={() => handleDrillDown(item, "record")}
+                    selected={false}
+                    onClick={() => handleDrillDown(item, "record")}
                   />
                 );
                 // document level
@@ -370,7 +369,7 @@ export default function LinkToPhysicalRecordDialog() {
           <Button
             variant="contained"
             onClick={handleLink}
-            disabled={!linkTarget || linking}
+            disabled={!linkTargetType || linking}
             startIcon={linking ? <CircularProgress size={14} color="inherit" /> : <LinkIcon />}>
             Rattacher
           </Button>
