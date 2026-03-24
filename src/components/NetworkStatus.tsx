@@ -1,8 +1,8 @@
 /**
  * NetworkStatus — Indicateur de connexion réseau.
  *
- * Affiche une barre persistante en haut de l'écran quand la connexion
- * est absente ou instable. Disparaît automatiquement quand le réseau revient.
+ * Affiche une barre en bas de l'écran quand la connexion est absente.
+ * Ne bloque pas la navigation ni le header.
  */
 
 import React, { useEffect, useState } from "react";
@@ -37,38 +37,37 @@ const NetworkStatus = React.memo(function NetworkStatus() {
     };
   }, [wasOffline]);
 
-  // Rien à afficher si tout va bien
   if (online && !showReconnected) return null;
 
   return (
-    <Slide direction="down" in={!online || showReconnected} mountOnEnter unmountOnExit>
+    <Slide direction="up" in={!online || showReconnected} mountOnEnter unmountOnExit>
       <Box
         sx={{
           position: "fixed",
-          top: 0,
+          bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 9999,
+          zIndex: 1300,
           bgcolor: online ? "#2e7d32" : "#d32f2f",
           color: "white",
           py: 0.75,
           px: 2,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          pointerEvents: "none",
         }}
       >
         <Stack direction="row" alignItems="center" justifyContent="center" spacing={1}>
           {online ? (
             <>
-              <SignalWifiStatusbar4BarRoundedIcon sx={{ fontSize: 18 }} />
-              <Typography variant="body2" fontWeight={500}>
-                La connexion a été rétablie. Vos données sont à jour.
+              <SignalWifiStatusbar4BarRoundedIcon sx={{ fontSize: 16 }} />
+              <Typography variant="caption" fontWeight={500}>
+                La connexion a été rétablie
               </Typography>
             </>
           ) : (
             <>
-              <WifiOffRoundedIcon sx={{ fontSize: 18 }} />
-              <Typography variant="body2" fontWeight={500}>
-                Pas de connexion internet. Certaines fonctionnalités ne sont pas disponibles.
+              <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
+              <Typography variant="caption" fontWeight={500}>
+                Pas de connexion internet
               </Typography>
             </>
           )}
