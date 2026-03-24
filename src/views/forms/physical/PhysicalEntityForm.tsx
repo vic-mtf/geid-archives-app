@@ -340,9 +340,10 @@ export default function PhysicalEntityForm({
     let body = config.buildBody(data, parentId);
     // Document dans un document : envoyer parent + record du document parent
     if (level === "document" && parentLevel === "document" && parentId) {
-      const parentRecord = parentData?.record as string
-        ?? (parentData?.record as { _id?: string })?._id
-        ?? undefined;
+      const rawRecord = parentData?.record;
+      const parentRecord = typeof rawRecord === "string"
+        ? rawRecord
+        : (rawRecord as { _id?: string })?._id ?? undefined;
       const { record: _unused, ...rest } = body as Record<string, unknown>;
       body = { ...rest, parent: parentId, record: parentRecord };
     }
