@@ -1,8 +1,9 @@
 /**
  * ResizeDivider — Séparateur vertical ajustable.
  *
- * Conteneur fixe 8px (invisible). Ligne intérieure via ::before.
- * Hover = couleur bleue. Drag = ligne plus épaisse.
+ * Conteneur fixe 8px. Ligne ::before 1px par défaut.
+ * Hover = couleur bleue. Curseur dedans + maintenu = ligne 3px.
+ * Pendant le drag (curseur hors zone) = ligne revient à 1px.
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -20,6 +21,7 @@ const ResizeDivider = React.memo(function ResizeDivider({
   onResize,
 }: ResizeDividerProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isHover, setIsHover] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const applyPosition = useCallback((clientX: number) => {
@@ -28,7 +30,6 @@ const ResizeDivider = React.memo(function ResizeDivider({
     if (!parent) return;
     const rect = parent.getBoundingClientRect();
     const raw = clientX - rect.left;
-    // Calculer l'espace pris par tout ce qui est après le divider (milieu min + détail réel)
     const dividerWidth = 8;
     const lastChild = parent.lastElementChild as HTMLElement | null;
     const detailWidth = lastChild && lastChild !== el ? lastChild.getBoundingClientRect().width : 0;
@@ -59,12 +60,16 @@ const ResizeDivider = React.memo(function ResizeDivider({
     };
   }, [isDragging, applyPosition]);
 
+  // Grosse ligne = curseur dans la zone ET maintenu
+  const thick = isDragging && isHover;
+
   return (
     <Box
       ref={containerRef}
       onMouseDown={onMouseDown}
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
       sx={{
-        // Taille fixe — ne change jamais
         width: 8,
         flexShrink: 0,
         cursor: "col-resize",
@@ -72,17 +77,13 @@ const ResizeDivider = React.memo(function ResizeDivider({
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "transparent",
-        // Ligne intérieure via pseudo-element
         "&::before": {
           content: '""',
           display: "block",
-          width: isDragging ? 3 : 1,
+          width: thick ? 3 : 1,
           height: "100%",
-          bgcolor: isDragging ? "primary.main" : "divider",
-          transition: isDragging ? "none" : "width 0.15s, background-color 0.15s",
-        },
-        "&:hover::before": {
-          bgcolor: "primary.main",
+          bgcolor: isHover || isDragging ? "primary.main" : "divider",
+          transition: "width 0.1s, background-color 0.15s",
         },
       }}
     />
