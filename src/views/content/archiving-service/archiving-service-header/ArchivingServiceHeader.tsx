@@ -9,8 +9,9 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 const ArchivingServiceHeader = React.memo(() => {
   const handleAdd = () => {
-    const event = new CustomEvent("_open_archives_form", { detail: { file: { name: "Nouvelle archive" } } });
-    document.getElementById("root")?.dispatchEvent(event);
+    document.getElementById("root")?.dispatchEvent(
+      new CustomEvent("__open_archive_source_picker", { detail: {} })
+    );
   };
 
   return (

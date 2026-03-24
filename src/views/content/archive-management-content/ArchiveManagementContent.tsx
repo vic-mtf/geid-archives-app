@@ -523,7 +523,7 @@ export default function ArchiveManagementContent() {
 
   const openAdd = useCallback(() => {
     document.getElementById("root")?.dispatchEvent(
-      new CustomEvent("__open_archive_create", { detail: {} })
+      new CustomEvent("__open_archive_source_picker", { detail: {} })
     );
   }, []);
 

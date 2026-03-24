@@ -6,6 +6,8 @@ import ArchiveDeleteConfirm from "./archives/ArchiveDeleteConfirm";
 import LinkToPhysicalRecordDialog from "./archives/LinkToPhysicalRecordDialog";
 import DuaConfigDialog from "./archives/DuaConfigDialog";
 import GlobalSearchDialog from "./search/GlobalSearchDialog";
+import ArchiveSourcePicker from "./archives/ArchiveSourcePicker";
+import WorkspaceFilePicker from "./archives/WorkspaceFilePicker";
 
 export default function Forms() {
   return (
@@ -18,6 +20,8 @@ export default function Forms() {
       <LinkToPhysicalRecordDialog />
       <DuaConfigDialog />
       <GlobalSearchDialog />
+      <ArchiveSourcePicker />
+      <WorkspaceFilePicker />
     </>
   );
 }
