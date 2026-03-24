@@ -1,5 +1,5 @@
 /**
- * WorkspaceFilePicker — Sélecteur de fichiers depuis l'espace de travail.
+ * WorkspaceFilePicker — Sélecteur de fichiers depuis l'espace personnel.
  *
  * Charge la liste des fichiers workspace de l'utilisateur et permet
  * d'en choisir un pour l'envoyer au service d'archivage.
@@ -103,7 +103,7 @@ export default function WorkspaceFilePicker() {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
-        Choisir un fichier de votre espace de travail
+        Choisir un fichier de votre espace personnel
       </DialogTitle>
 
       <DialogContent dividers sx={{ maxHeight: "55vh", overflowY: "auto", p: 0 }}>

@@ -3,7 +3,7 @@
  *
  * Propose deux options :
  *   - Téléverser depuis l'appareil (ouvre ArchiveCreateDialog)
- *   - Récupérer depuis l'espace de travail (ouvre ArchivesForm avec sélecteur)
+ *   - Récupérer depuis l'espace personnel (ouvre ArchivesForm avec sélecteur)
  */
 
 import { useEffect, useState, useCallback } from "react";
@@ -55,7 +55,7 @@ export default function ArchiveSourcePicker() {
       </DialogTitle>
       <DialogContent sx={{ pb: 2 }}>
         <Typography variant="body2" color="text.secondary" mb={2}>
-          Choisissez la source du document à archiver.
+          Choisissez la source de l'archive à ajouter.
         </Typography>
         <List disablePadding>
           <ListItemButton
@@ -79,8 +79,8 @@ export default function ArchiveSourcePicker() {
               <CloudSyncOutlinedIcon color="info" />
             </ListItemIcon>
             <ListItemText
-              primary="Depuis mon espace de travail"
-              secondary="Récupérer un document déjà présent dans votre espace de travail"
+              primary="Depuis mon espace personnel"
+              secondary="Récupérer un fichier déjà présent dans votre espace personnel"
             />
           </ListItemButton>
         </List>
