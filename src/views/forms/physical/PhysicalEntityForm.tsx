@@ -204,7 +204,7 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
         name: "refNumber",
         label: "N° référence *",
         required: true,
-        helperText: "Référence croisée avec votre GED ou ERP (ex : REF-DRH-042)",
+        helperText: "Référence croisée avec votre système de gestion (ex : REF-DRH-042)",
       },
       {
         name: "subject",
@@ -216,13 +216,7 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
         name: "category",
         label: "Catégorie *",
         required: true,
-        helperText: "Famille documentaire pour le filtrage et les statistiques (ex : Contrats, Marchés)",
-      },
-      {
-        name: "nature",
-        label: "Nature *",
-        required: true,
-        helperText: "Doit correspondre exactement à la nature du classeur parent (en MAJUSCULES)",
+        helperText: "Famille documentaire pour le filtrage (ex : Contrats, Marchés, Personnel)",
       },
       { name: "editionDate", label: "Date d'édition *", required: true, type: "date", helperText: "Date à laquelle le document original a été produit ou signé" },
       { name: "archivingDate", label: "Date d'archivage *", required: true, type: "date", helperText: "Date d'intégration physique aux archives (généralement aujourd'hui)" },
@@ -232,10 +226,10 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
       refNumber: yup.string().trim().required("Le N° référence est requis"),
       subject: yup.string().trim().required("L'objet est requis"),
       category: yup.string().trim().required("La catégorie est requise"),
-      nature: yup.string().trim().required("La nature est requise"),
       editionDate: yup.string().required("La date d'édition est requise"),
       archivingDate: yup.string().required("La date d'archivage est requise"),
     }),
+    // nature injectée automatiquement depuis le classeur parent dans onSubmit
     buildBody: (data, parentId) => ({ ...data, binder: parentId }),
   },
 
@@ -304,7 +298,7 @@ export default function PhysicalEntityForm({
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(config.schema),
     mode: "onTouched",
   });
@@ -331,12 +325,8 @@ export default function PhysicalEntityForm({
     ?? (parentData?.number !== undefined ? `Niveau ${parentData.number}` : undefined)
     ?? "";
 
-  // Pré-remplir la nature du dossier avec celle du classeur parent
-  const binderNature = level === "record" && parentData?.nature as string | undefined;
-  if (binderNature && open) {
-    // setValue déclenché à chaque render quand parentData arrive — acceptable car idempotent
-    setValue("nature", binderNature, { shouldValidate: false });
-  }
+  // Nature du classeur parent — injectée automatiquement dans le body pour les dossiers
+  const binderNature = level === "record" ? (parentData?.nature as string | undefined) : undefined;
 
   const handleClose = () => {
     reset();
@@ -353,6 +343,10 @@ export default function PhysicalEntityForm({
         : (rawRecord as { _id?: string })?._id ?? undefined;
       const { record: _unused, ...rest } = body as Record<string, unknown>;
       body = { ...rest, parent: parentId, record: parentRecord };
+    }
+    // Dossier : injecter la nature du classeur parent automatiquement
+    if (level === "record" && binderNature) {
+      body = { ...body, nature: binderNature };
     }
     const levelNames: Record<PhysicalLevel, string> = {
       container: "conteneur",
@@ -470,12 +464,8 @@ export default function PhysicalEntityForm({
                   multiline={field.multiline}
                   rows={field.rows}
                   fullWidth
-                  disabled={field.name === "nature" && !!binderNature}
-                  InputLabelProps={field.name === "nature" && binderNature ? { shrink: true } : undefined}
                   error={!!errors[field.name]}
-                  helperText={field.name === "nature" && binderNature
-                    ? "Rempli automatiquement depuis le classeur"
-                    : (errors[field.name]?.message as string) ?? field.helperText}
+                  helperText={(errors[field.name]?.message as string) ?? field.helperText}
                 />
               )
             )}
