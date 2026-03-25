@@ -93,11 +93,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
   return (
     <MuiBox
       sx={{
-        width: { md: 180, lg: 200 },
-        flexShrink: 0,
-        borderRight: 1,
-        borderColor: "divider",
-        display: { xs: "none", md: "flex" },
+        display: "flex",
         flexDirection: "column",
         overflow: "hidden",
       }}

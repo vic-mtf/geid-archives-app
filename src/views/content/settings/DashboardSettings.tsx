@@ -177,8 +177,8 @@ export default function DashboardSettings() {
     <Box height="100%" overflow="auto" sx={{ ...scrollBarSx }}>
       {/* Header avec boutons */}
       <Box px={2.5} py={1.5} display="flex" alignItems="center" justifyContent="space-between"
-        borderBottom={1} borderColor="divider" bgcolor="action.hover"
-        sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+        borderBottom={1} borderColor="divider"
+        sx={{ position: "sticky", top: 0, zIndex: 1, bgcolor: "background.paper" }}>
         <Typography variant="body1" fontWeight="bold">{t("nav.dashboard")}</Typography>
         <Box display="flex" gap={1}>
           <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset}>

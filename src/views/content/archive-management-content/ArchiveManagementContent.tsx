@@ -21,6 +21,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { updateData, incrementVersion } from "@/redux/data";
 import { Box as MuiBox, Drawer, useMediaQuery, useTheme } from "@mui/material";
+import ResizeDivider from "@/views/content/physical-archive/ResizeDivider";
 import { DataGrid, GridRowSelectionModel, GridRowParams, useGridApiRef } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios              from "@/hooks/useAxios";
@@ -55,6 +56,7 @@ export default function ArchiveManagementContent() {
   const theme    = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
+  const [sidebarWidth, setSidebarWidth] = useState(200);
 
   const dataVersion      = useSelector((store: RootState) => store.data.dataVersion);
   const selectedElements = useSelector(
@@ -377,10 +379,18 @@ export default function ArchiveManagementContent() {
   // ── Render ────────────────────────────────────────────────────
 
   return (
-    <MuiBox display="flex" flex={1} height="100%" overflow="hidden">
+    <MuiBox sx={{
+      display: "grid",
+      flex: 1,
+      height: "100%",
+      overflow: "hidden",
+      gridTemplateColumns: isMobile
+        ? "1fr"
+        : `${sidebarWidth}px 1px 1fr ${detailOpen && focusedDoc ? 320 : 280}px`,
+    }}>
 
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}
-      <ArchiveSidebar
+      {!isMobile && <ArchiveSidebar
         canWrite={canWrite}
         statusNav={getStatusNav()}
         statusFilter={statusFilter}
@@ -397,10 +407,13 @@ export default function ArchiveManagementContent() {
         onOpenAdd={openAdd}
         onExportCSV={exportCSV}
         onSelectArchive={handleSelectArchive}
-      />
+      />}
+
+      {/* ── Divider ajustable ──────────────────────────────────── */}
+      {!isMobile && <ResizeDivider onResize={setSidebarWidth} minLeft={160} minRight={250} />}
 
       {/* ── Colonne centrale ──────────────────────────────────── */}
-      <MuiBox display="flex" flexDirection="column" flex={1} overflow="hidden" minWidth={0}>
+      <MuiBox display="flex" flexDirection="column" overflow="hidden" minWidth={0}>
 
         {/* Chips de filtre — mobile uniquement */}
         <MobileFilterChips
@@ -460,14 +473,12 @@ export default function ArchiveManagementContent() {
       {!isMobile && (
         <MuiBox
           sx={{
-            width: { md: 280, lg: 320, xl: 380 },
-            flexShrink: 0,
             borderLeft: 1,
             borderColor: "divider",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            height: "100%",
+            minWidth: 0,
           }}
         >
           {detailOpen && focusedDoc ? (
