@@ -16,11 +16,7 @@ import {
   Button,
   Chip,
   Divider,
-  FormControl,
   FormControlLabel,
-  InputLabel,
-  MenuItem,
-  Select,
   Skeleton,
   Slider,
   Stack,
@@ -92,9 +88,11 @@ export default function DashboardSettings() {
   const initialPrefs = useRef<DashboardPrefs | null>(null);
   const [loading, setLoading] = useState(!cachedPrefs);
   const [saving, setSaving] = useState(false);
+  const [saveCount, setSaveCount] = useState(0); // Force recalcul hasChanges après save
 
-  // Comparaison champ par champ (pas de JSON.stringify)
+  // Comparaison champ par champ
   const hasChanges = useMemo(() => {
+    void saveCount; // dépendance pour forcer recalcul
     if (!prefs || !initialPrefs.current) return false;
     const a = prefs;
     const b = initialPrefs.current;
@@ -108,7 +106,7 @@ export default function DashboardSettings() {
     if (a.visibleWidgets.length !== b.visibleWidgets.length) return true;
     if (a.visibleWidgets.some((w) => !b.visibleWidgets.includes(w))) return true;
     return false;
-  }, [prefs]);
+  }, [prefs, saveCount]);
   const [, execute] = useAxios({ headers }, { manual: true });
 
   // Charger depuis l'API si pas en cache
@@ -142,6 +140,7 @@ export default function DashboardSettings() {
       await execute({ url: PREFS_CACHE_KEY, method: "PUT", data: prefs });
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
       initialPrefs.current = structuredClone(prefs);
+      setSaveCount((c) => c + 1);
       enqueueSnackbar(t("notifications.settingsSaved"), { variant: "success" });
     } catch { enqueueSnackbar(t("notifications.errorSettingsSaveFailed"), { variant: "error" }); }
     finally { setSaving(false); }
@@ -153,6 +152,7 @@ export default function DashboardSettings() {
       const fresh = (res.data as { prefs: DashboardPrefs }).prefs;
       setPrefs(fresh);
       initialPrefs.current = structuredClone(fresh);
+      setSaveCount((c) => c + 1);
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: fresh }));
       enqueueSnackbar(t("notifications.settingsReset"), { variant: "info" });
     } catch { enqueueSnackbar(t("notifications.errorSettingsResetFailed"), { variant: "error" }); }
@@ -228,14 +228,42 @@ export default function DashboardSettings() {
             </Box>
           </Option>
 
-          {/* 5. Type de visualisation */}
+          {/* 5. Type de visualisation — cartes visuelles */}
           <Option title="Visualisation de la répartition" desc="Type de graphique pour la répartition des archives par statut.">
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Type</InputLabel>
-              <Select value={prefs.chartType} label="Type" onChange={(e) => update("chartType", e.target.value as DashboardPrefs["chartType"])}>
-                {CHART_TYPES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Box display="flex" gap={1.5} flexWrap="wrap">
+              {CHART_TYPES.map((c) => {
+                const selected = prefs.chartType === c.value;
+                return (
+                  <Box
+                    key={c.value}
+                    onClick={() => update("chartType", c.value as DashboardPrefs["chartType"])}
+                    sx={{
+                      width: 90, height: 80,
+                      borderRadius: 2,
+                      border: 2,
+                      borderColor: selected ? "primary.main" : "divider",
+                      bgcolor: selected ? "primary.50" : "transparent",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center",
+                      gap: 0.5, cursor: "pointer",
+                      transition: "all 0.15s",
+                      "&:hover": { borderColor: "primary.main", bgcolor: "action.hover" },
+                    }}
+                  >
+                    {/* Icône visuelle du type */}
+                    <Box sx={{ fontSize: 28, lineHeight: 1, color: selected ? "primary.main" : "text.secondary" }}>
+                      {c.value === "donut" && "◎"}
+                      {c.value === "pie" && "●"}
+                      {c.value === "bar" && "▥"}
+                      {c.value === "list" && "☰"}
+                    </Box>
+                    <Typography variant="caption" fontWeight={selected ? 600 : 400} color={selected ? "primary.main" : "text.secondary"}>
+                      {c.label}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Box>
           </Option>
 
           {/* 6. Temps réel */}
