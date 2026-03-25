@@ -212,7 +212,7 @@ export default function ArchiveManagementContent() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<NormalizedStatus, number> = {
-      PENDING: 0, ACTIVE: 0, SEMI_ACTIVE: 0, PERMANENT: 0, DESTROYED: 0,
+      PENDING: 0, ACTIVE: 0, SEMI_ACTIVE: 0, PROPOSED_ELIMINATION: 0, PERMANENT: 0, DESTROYED: 0,
     };
     allRows.forEach((r) =>
       counts[normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined)]++

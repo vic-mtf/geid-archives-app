@@ -15,11 +15,12 @@
 
 // ── Types ────────────────────────────────────────────────────
 
-/** Les 5 statuts normalisés du cycle de vie */
+/** Les 6 statuts normalisés du cycle de vie */
 export type NormalizedStatus =
   | "PENDING"
   | "ACTIVE"
   | "SEMI_ACTIVE"
+  | "PROPOSED_ELIMINATION"
   | "PERMANENT"
   | "DESTROYED";
 
@@ -29,11 +30,12 @@ import i18n from "@/i18n/i18n";
 
 /** Clés i18n pour chaque statut normalisé */
 const STATUS_I18N_KEY: Record<string, string> = {
-  PENDING:         "status.PENDING",
-  ACTIVE:          "status.ACTIVE",
-  SEMI_ACTIVE:     "status.SEMI_ACTIVE",
-  PERMANENT:       "status.PERMANENT",
-  DESTROYED:       "status.DESTROYED",
+  PENDING:                "status.PENDING",
+  ACTIVE:                 "status.ACTIVE",
+  SEMI_ACTIVE:            "status.SEMI_ACTIVE",
+  PROPOSED_ELIMINATION:   "status.PROPOSED_ELIMINATION",
+  PERMANENT:              "status.PERMANENT",
+  DESTROYED:              "status.DESTROYED",
   // Legacy (anciens noms encore en base de données)
   pending:         "status.PENDING",
   validated:       "status.ACTIVE",
@@ -60,11 +62,12 @@ export const STATUS_COLOR: Record<
   string,
   "default" | "warning" | "success" | "info" | "secondary" | "error"
 > = {
-  PENDING:         "warning",
-  ACTIVE:          "success",
-  SEMI_ACTIVE:     "info",
-  PERMANENT:       "secondary",
-  DESTROYED:       "error",
+  PENDING:                "warning",
+  ACTIVE:                 "success",
+  SEMI_ACTIVE:            "info",
+  PROPOSED_ELIMINATION:   "warning",
+  PERMANENT:              "secondary",
+  DESTROYED:              "error",
   // Legacy
   pending:         "warning",
   validated:       "success",
@@ -104,6 +107,7 @@ export function normalizeStatus(
     SEMI_ACTIVE: "SEMI_ACTIVE",
     archived: "SEMI_ACTIVE",
     "intermédiaire": "SEMI_ACTIVE",
+    PROPOSED_ELIMINATION: "PROPOSED_ELIMINATION",
     PERMANENT: "PERMANENT",
     historique: "PERMANENT",
     DESTROYED: "DESTROYED",
