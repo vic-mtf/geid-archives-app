@@ -444,9 +444,15 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         }
         return false;
       })() ? (
-        <Box display="flex" justifyContent="center" alignItems="center" py={4} flex={1}>
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" py={4} flex={1} gap={1}>
+          <Box sx={{ fontSize: 36, color: "text.disabled", display: "flex" }}>
+            <WarehouseOutlinedIcon fontSize="inherit" />
+          </Box>
           <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
-            {nodes.length === 0 ? "Aucun conteneur" : "Ce conteneur est vide. Commencez par ajouter une étagère."}
+            {nodes.length === 0 ? "Aucun conteneur" : "Ce conteneur est vide"}
+          </Typography>
+          <Typography variant="caption" color="text.disabled" textAlign="center" px={2}>
+            {nodes.length === 0 ? "Créez votre premier conteneur pour commencer" : "Commencez par ajouter une étagère"}
           </Typography>
         </Box>
       ) : (

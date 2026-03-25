@@ -612,7 +612,7 @@ export default function PhysicalArchiveContent() {
           <Box sx={{
             display: "flex", alignItems: "center", gap: 0.75,
             px: 1.5, py: 0.5, borderRadius: 1,
-            bgcolor: "action.active",
+            bgcolor: "action.hover",
             maxWidth: 280,
             opacity: 0.9,
           }}>
