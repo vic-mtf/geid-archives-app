@@ -257,16 +257,16 @@
     },
     "archiveEdit": {
       "title": "Modifier l'archive",
-      "designationLabel": "D\u00e9signation *",
-      "designationPlaceholder": "Ex : Rapport annuel RH 2024",
-      "designationHelper": "Titre principal du document, tel qu'il appara\u00eetra dans la liste des archives",
-      "designationHelpTooltip": "Voir le guide : Modifier une archive",
+      "designationLabel": "Désignation *",
+      "designationPlaceholder": "Titre du document",
+      "designationHelper": "Le titre tel qu'il apparaît dans la liste des archives",
+      "designationHelpTooltip": "Guide utilisateur",
       "descriptionLabel": "Description *",
-      "descriptionPlaceholder": "D\u00e9crivez le contenu et l'objet du document\u2026",
-      "descriptionHelper": "R\u00e9sum\u00e9 du contenu \u2014 utilis\u00e9 pour la recherche et l'identification du document",
-      "tagsLabel": "Mots-cl\u00e9s",
-      "tagsPlaceholder": "rapport, finance, 2024, contrat",
-      "tagsHelper": "Termes s\u00e9par\u00e9s par des virgules facilitant la recherche (ex : rapport, RH, 2024)"
+      "descriptionPlaceholder": "Description du contenu du document",
+      "descriptionHelper": "Décrivez brièvement le contenu",
+      "tagsLabel": "Mots-clés",
+      "tagsPlaceholder": "Ex : budget 2024, rapport, finance…",
+      "tagsHelper": "Séparez les mots-clés par des virgules"
     },
     "archiveSubmit": {
       "title": "Soumettre cet article au service d'archivage",
@@ -286,7 +286,7 @@
       "selectError": "S'il vous pla\u00eet s\u00e9lectionner un \u00e9l\u00e9ment."
     },
     "validate": {
-      "title": "Validation du document",
+      "title": "Valider cette archive",
       "submitLabel": "Valider le document",
       "classNumberLabel": "Num\u00e9ro de classification",
       "classNumberHelper": "Code issu du plan de classement officiel (ex : 2024-ADM-001)",
@@ -305,49 +305,49 @@
       "container": {
         "title": "Nouveau conteneur",
         "nameLabel": "Nom *",
-        "nameHelper": "Identifiant lisible du conteneur pour le localiser physiquement (ex : Armoire A \u2014 B\u00e2timent Principal)",
+        "nameHelper": "Identifiant lisible du conteneur (ex : Armoire A — Bâtiment Principal)",
         "locationLabel": "Localisation",
-        "locationHelper": "Adresse pr\u00e9cise dans les locaux (ex : Salle archives, Niveau 0, Couloir B)",
+        "locationHelper": "Adresse précise dans les locaux (ex : Salle archives, Niveau 0)",
         "descriptionLabel": "Description",
         "descriptionHelper": "Contenu pr\u00e9vu, restrictions d'acc\u00e8s ou conditions de conservation"
       },
       "shelf": {
         "title": "Nouvelle \u00e9tag\u00e8re",
         "nameLabel": "Nom *",
-        "nameHelper": "D\u00e9signation de la rang\u00e9e avec sa position (ex : \u00c9tag\u00e8re 1 \u2014 Haut)",
+        "nameHelper": "Désignation de la rangée (ex : Étagère 1 — Haut)",
         "descriptionLabel": "Description",
-        "descriptionHelper": "Description optionnelle du contenu pr\u00e9vu de cette rang\u00e9e"
+        "descriptionHelper": "Description optionnelle du contenu prévu"
       },
       "floor": {
-        "title": "Nouvel \u00e9tage",
+        "title": "Nouveau niveau",
         "numberLabel": "Num\u00e9ro *",
         "numberHelper": "Position sur l'\u00e9tag\u00e8re, commence \u00e0 1",
         "labelLabel": "Libell\u00e9",
-        "labelHelper": "Description libre de ce compartiment (ex : Dossiers actifs 2023-2024)"
+        "labelHelper": "Description libre (ex : Dossiers actifs 2023-2024)"
       },
       "binder": {
         "title": "Nouveau classeur",
         "nameLabel": "Nom *",
-        "nameHelper": "Titre du classeur permettant d'identifier rapidement son contenu",
+        "nameHelper": "Titre du classeur",
         "natureLabel": "Nature *",
-        "natureHelper": "Cat\u00e9gorie th\u00e9matique en MAJUSCULES \u2014 d\u00e9termine les dossiers autoris\u00e9s (ex : RH, FINANCE, JURIDIQUE)",
-        "maxCapacityLabel": "Capacit\u00e9 maximale *",
-        "maxCapacityHelper": "Nombre maximum de dossiers pouvant \u00eatre rang\u00e9s dans ce classeur"
+        "natureHelper": "Catégorie en MAJUSCULES (ex : RH, FINANCE, JURIDIQUE)",
+        "maxCapacityLabel": "Capacité maximale *",
+        "maxCapacityHelper": "Nombre maximum de dossiers"
       },
       "record": {
         "title": "Nouveau dossier",
         "internalNumberLabel": "N\u00b0 interne *",
-        "internalNumberHelper": "Code unique attribu\u00e9 par le service d'archives (ex : DOS-2024-0042)",
+        "internalNumberHelper": "Code unique (ex : DOS-2024-0042)",
         "refNumberLabel": "N\u00b0 r\u00e9f\u00e9rence *",
-        "refNumberHelper": "R\u00e9f\u00e9rence crois\u00e9e avec votre syst\u00e8me de gestion (ex : REF-DRH-042)",
+        "refNumberHelper": "Référence croisée (ex : REF-DRH-042)",
         "subjectLabel": "Objet *",
-        "subjectHelper": "Intitul\u00e9 pr\u00e9cis d\u00e9crivant le contenu principal du dossier",
+        "subjectHelper": "Intitulé précis du contenu du dossier",
         "categoryLabel": "Cat\u00e9gorie *",
-        "categoryHelper": "Famille documentaire pour le filtrage (ex : Contrats, March\u00e9s, Personnel)",
+        "categoryHelper": "Famille documentaire (ex : Contrats, Marchés, Personnel)",
         "editionDateLabel": "Date d'\u00e9dition *",
-        "editionDateHelper": "Date \u00e0 laquelle le document original a \u00e9t\u00e9 produit ou sign\u00e9",
+        "editionDateHelper": "Date de production ou de signature du document",
         "archivingDateLabel": "Date d'archivage *",
-        "archivingDateHelper": "Date d'int\u00e9gration physique aux archives (g\u00e9n\u00e9ralement aujourd'hui)"
+        "archivingDateHelper": "Date d'intégration aux archives (généralement aujourd'hui)"
       },
       "document": {
         "title": "Nouveau document",
@@ -356,7 +356,7 @@
         "descriptionLabel": "Description",
         "descriptionHelper": "Description du contenu du document",
         "natureLabel": "Nature",
-        "natureHelper": "Type de document en MAJUSCULES (ex : CONTRAT, PV, FACTURE)",
+        "natureHelper": "Type en MAJUSCULES (ex : CONTRAT, PV, FACTURE)",
         "documentDateLabel": "Date du document",
         "documentDateHelper": "Date figurant sur le document original"
       },
@@ -368,7 +368,7 @@
         "document": "au dossier",
         "documentInDocument": "au document"
       },
-      "attachedTo": "Rattach\u00e9 {{parentLabel}}",
+      "attachedTo": "Rattaché",
       "attachedToNamed": "Rattach\u00e9 {{parentLabel}} : <strong>{{parentName}}</strong>",
       "guideTooltip": "Voir le guide utilisateur pour ce type d'\u00e9l\u00e9ment",
       "validationErrors": {
@@ -409,6 +409,10 @@
       "folderEmpty": "Ce dossier est vide.",
       "foldersCount": "{{count}} dossiers",
       "filesCount": "{{count}} fichiers"
+    },
+    "submitDialog": {
+      "title": "Soumettre cet article au service d'archivage",
+      "sendArticle": "Envoyer l'article"
     }
   },
 
@@ -603,13 +607,6 @@
     "changeUnit": "Changer l'unité administrative",
     "roleUnit": "Rôle / Unité",
     "assign": "Assigner"
-  },
-
-  "forms": {
-    "submitDialog": {
-      "title": "Soumettre cet article au service d'archivage",
-      "sendArticle": "Envoyer l'article"
-    }
   },
 
   "detailPanel": {
