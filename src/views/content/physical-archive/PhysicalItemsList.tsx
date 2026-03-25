@@ -100,7 +100,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             Aucun {levelConfig[currentLevel].label.toLowerCase()}
           </Typography>
           <Typography color="text.disabled" variant="caption">
-            Utilisez le bouton + dans l&apos;arborescence pour en créer
+            Utilisez le bouton + pour en créer
           </Typography>
         </Box>
       </Box>
