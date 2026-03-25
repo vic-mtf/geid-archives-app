@@ -136,43 +136,63 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "archivage-physique", number: "10", title: "L'archivage physique",
-    keywords: ["archivage physique", "inventaire", "conteneur", "étagère", "classeur", "dossier", "document", "hiérarchie", "explorateur", "renommer"],
+    keywords: ["archivage physique", "inventaire", "conteneur", "étagère", "classeur", "dossier", "document", "hiérarchie", "explorateur", "renommer", "glisser", "déposer", "déplacer", "redimensionner", "sélecteur"],
     body: "L'archivage physique permet de gérer l'inventaire des supports de conservation réels. L'application modélise une hiérarchie à six niveaux correspondant à la réalité d'un centre d'archives physiques. L'interface adopte une disposition de type explorateur de fichiers avec un fil d'Ariane pour naviguer entre les niveaux, une ligne de retour (..) et un panneau de détail latéral. Les utilisateurs ayant les droits d'écriture peuvent renommer un élément en double-cliquant sur son nom ou via le menu contextuel accessible par un clic droit.",
   },
   {
     id: "hierarchie-physique", number: "10.1", title: "La hiérarchie des espaces physiques",
-    keywords: ["conteneur", "étagère", "niveau", "classeur", "dossier", "document", "hiérarchie", "arborescence", "sous-document"],
-    body: "La hiérarchie physique est organisée en six niveaux. Le Conteneur représente l'armoire, la salle ou l'unité de stockage racine. L'Étagère est un rayon ou une travée à l'intérieur du conteneur. Le Niveau correspond à un étage ou compartiment de l'étagère, rattaché à une unité administrative. Le Classeur est une unité de rangement spécialisée par nature de document avec une capacité maximale. Le Dossier est le dossier physique identifié par un code QR unique. Le Document est une subdivision du dossier qui peut contenir des archives numériques et/ou d'autres sous-documents de manière récursive.",
+    keywords: ["conteneur", "armoire", "étagère", "niveau", "compartiment", "classeur", "chemise", "boîte", "reliure", "dossier", "affaire", "document", "pièce", "hiérarchie", "arborescence", "sous-document"],
+    body: "La hiérarchie physique est organisée en six niveaux. Le Conteneur représente l'armoire, l'étagère métallique ou le local de stockage. L'Étagère est une rangée à l'intérieur du conteneur. Le Niveau est un compartiment sur l'étagère. Le Classeur est la chemise, la boîte ou la reliure qui regroupe les dossiers. Le Dossier est un ensemble de pièces relatives à une même affaire. Le Document est une pièce individuelle à l'intérieur d'un dossier, qui peut contenir des archives numériques.",
   },
   {
-    id: "rattachement", number: "10.2", title: "Rattacher une archive à un dossier ou un document",
-    keywords: ["rattacher", "lier", "associer", "archive numérique", "dossier physique", "document", "support"],
-    body: "Le rattachement permet d'associer une archive numérique à un dossier physique ou à un document spécifique à l'intérieur de ce dossier. Depuis le panneau de détail de l'archive, cliquez sur le bouton Dossier physique pour ouvrir la navigation en cascade. Parcourez la hiérarchie jusqu'au dossier ou au document souhaité. Cliquez sur l'élément pour le sélectionner, ou utilisez la flèche pour explorer son contenu. Confirmez avec le bouton Rattacher. Le détachement est aussi possible depuis le même dialogue.",
+    id: "rattachement", number: "10.2", title: "Rattacher une archive numérique à un document",
+    keywords: ["rattacher", "lier", "associer", "archive numérique", "document", "support", "détacher"],
+    body: "Le rattachement permet d'associer une archive numérique à un document précis dans la hiérarchie physique. Les archives se rattachent uniquement aux documents, car c'est le document qui représente la pièce individuelle à laquelle correspond le fichier numérique. Un dossier regroupe les documents, mais on ne rattache pas directement une archive à un dossier. Depuis le panneau de détail de l'archive, cliquez sur le bouton Dossier physique pour ouvrir la navigation en cascade. Parcourez la hiérarchie jusqu'au document souhaité. Confirmez avec le bouton Rattacher. Le détachement est aussi possible depuis le même dialogue.",
   },
   {
-    id: "documents-physiques", number: "10.3", title: "Les documents et sous-documents",
-    keywords: ["document", "sous-document", "récursif", "créer document", "contenu", "imbriqué"],
-    body: "Un dossier physique peut contenir un ou plusieurs documents. Chaque document peut lui-même contenir d'autres sous-documents et/ou des archives numériques. Cette structure récursive permet de modéliser des dossiers complexes avec plusieurs niveaux de classement internes. Pour créer un document, naviguez dans un dossier puis cliquez sur le bouton d'ajout. Le formulaire propose un titre, une description, une nature et une date. Les sous-documents se créent de la même manière en naviguant dans un document parent.",
+    id: "glisser-deposer", number: "10.3", title: "Glisser-déposer une archive entre documents",
+    keywords: ["glisser", "déposer", "drag", "drop", "déplacer", "archive", "document", "clic droit", "confirmation"],
+    body: "Vous pouvez déplacer une archive numérique d'un document vers un autre par glisser-déposer. Maintenez le clic sur l'archive, glissez-la vers un autre document, un cadre bleu confirme que le document accepte le fichier. Une fenêtre de confirmation apparaît avant le déplacement. Vous pouvez aussi utiliser le menu clic droit puis Déplacer vers un autre document.",
   },
   {
-    id: "qrcode", number: "10.4", title: "Le code QR d'un dossier physique",
+    id: "naviguer-conteneurs", number: "10.4", title: "Naviguer entre les conteneurs",
+    keywords: ["conteneur", "sélecteur", "choisir", "créer", "navigation", "liste déroulante"],
+    body: "En haut de l'arborescence, un sélecteur permet de choisir le conteneur actif. Le contenu de l'arborescence change automatiquement quand vous sélectionnez un autre conteneur. Le bouton + à côté du sélecteur permet de créer un nouveau conteneur.",
+  },
+  {
+    id: "ajuster-affichage", number: "10.5", title: "Ajuster l'affichage",
+    keywords: ["redimensionner", "largeur", "bordure", "séparation", "affichage", "arborescence", "glisser"],
+    body: "La bordure entre l'arborescence et la liste centrale peut être déplacée pour ajuster la largeur de chaque zone. Maintenez le clic sur la ligne de séparation et glissez vers la gauche ou la droite pour obtenir la disposition qui vous convient.",
+  },
+  {
+    id: "documents-physiques", number: "10.6", title: "Les documents et sous-documents",
+    keywords: ["document", "sous-document", "créer document", "contenu", "imbriqué"],
+    body: "Un dossier peut contenir un ou plusieurs documents. Chaque document peut lui-même contenir d'autres sous-documents et des archives numériques. Cette structure permet de modéliser des dossiers avec plusieurs niveaux de classement internes. Pour créer un document, naviguez dans un dossier puis cliquez sur le bouton d'ajout. Le formulaire propose un titre, une description, une nature et une date. Les sous-documents se créent de la même manière en naviguant dans un document parent.",
+  },
+  {
+    id: "qrcode", number: "10.7", title: "Le code QR d'un dossier",
     keywords: ["QR code", "code QR", "étiquette", "identification", "scan"],
-    body: "Chaque dossier physique se voit attribuer automatiquement un code QR unique (UUID) lors de sa création. Ce code peut être imprimé et collé sur la chemise physique pour permettre une identification rapide par scan. L'endpoint de recherche par QR code retrouve instantanément la fiche numérique complète du dossier avec toute sa localisation hiérarchique.",
+    body: "Chaque dossier se voit attribuer automatiquement un code QR unique lors de sa création. Ce code peut être imprimé et collé sur la chemise physique pour permettre une identification rapide par scan. La recherche par code QR retrouve instantanément la fiche numérique complète du dossier avec toute sa localisation dans la hiérarchie.",
   },
   {
-    id: "datepicker", number: "10.5", title: "Saisie des dates avec le calendrier",
-    keywords: ["date", "calendrier", "datepicker", "saisie", "format"],
-    body: "Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA (français). Vous pouvez cliquer sur l'icône calendrier pour ouvrir le sélecteur, naviguer entre les mois et les années, ou saisir directement la date au clavier. Les dates sont enregistrées au format international ISO pour garantir la cohérence des données.",
+    id: "datepicker", number: "10.8", title: "Saisie des dates avec le calendrier",
+    keywords: ["date", "calendrier", "saisie", "format"],
+    body: "Tous les champs de date dans les formulaires de l'archivage physique utilisent un sélecteur de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA. Vous pouvez cliquer sur l'icône calendrier pour ouvrir le sélecteur, naviguer entre les mois et les années, ou saisir directement la date au clavier.",
   },
   {
-    id: "arborescence", number: "10.6", title: "L'arborescence interactive",
-    keywords: ["arborescence", "arbre", "tree view", "hiérarchie", "sidebar", "navigation"],
-    body: "Sur les grands écrans, un panneau latéral gauche affiche l'arborescence complète de l'archivage physique sous forme d'arbre interactif. Chaque niveau est identifié par son icône distinctive : entrepôt pour les conteneurs, serveur pour les étagères, couches pour les niveaux, onglets pour les classeurs, dossier pour les dossiers physiques et document pour les documents. Cliquez sur un noeud pour charger ses enfants et sélectionner l'élément dans l'explorateur principal. L'arbre se charge progressivement pour rester performant même avec un grand volume de données.",
+    id: "arborescence", number: "10.9", title: "L'arborescence interactive",
+    keywords: ["arborescence", "arbre", "hiérarchie", "navigation", "panneau latéral"],
+    body: "Sur les grands écrans, un panneau latéral gauche affiche l'arborescence complète de l'archivage physique sous forme d'arbre interactif. Chaque niveau est identifié par son icône distinctive : entrepôt pour les conteneurs, serveur pour les étagères, couches pour les niveaux, onglets pour les classeurs, dossier pour les dossiers et document pour les documents. Cliquez sur un élément pour charger son contenu et le sélectionner dans l'explorateur principal. L'arbre se charge progressivement pour rester fluide même avec un grand volume de données.",
+  },
+  {
+    id: "ouvrir-fichier", number: "10.10", title: "Ouvrir un fichier",
+    keywords: ["ouvrir", "fichier", "chargement", "progression", "annuler", "hors ligne", "icône", "PDF", "Word", "Excel", "image", "vidéo"],
+    body: "Quand vous ouvrez un fichier, une barre de progression apparaît en bas de l'écran. Vous pouvez annuler le chargement avec le bouton Annuler. Un fichier déjà consulté s'ouvre instantanément la prochaine fois. Si vous n'êtes pas connecté à internet, un message vous en informe. Chaque fichier est représenté par une icône qui indique son type : les PDF apparaissent en rouge, les documents Word en bleu, les tableurs Excel en vert, les images en violet et les vidéos en rouge foncé.",
   },
   {
     id: "recherche", number: "11", title: "Rechercher dans le système",
-    keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte", "fuzzy", "accent", "approximatif", "tolérant"],
-    body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents physiques. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents physiques le sujet, la catégorie et la nature. La recherche est tolérante aux accents et aux mots partiels. Les termes correspondants sont mis en gras dans les résultats.",
+    keywords: ["recherche", "rechercher", "trouver", "Ctrl+K", "indexation", "plein texte", "accent", "approximatif", "tolérant", "loupe", "résultats"],
+    body: "GEID Archives dispose d'un moteur de recherche unifié accessible via le raccourci clavier Ctrl+K ou en cliquant sur la loupe dans la barre de navigation. La recherche s'effectue simultanément sur les archives numériques et les documents de l'archivage physique. Elle est indexée sur la désignation, la description, le numéro de classe, la référence, le dossier, les étiquettes et pour les documents le sujet, la catégorie et la nature. La recherche est tolérante aux accents et aux mots partiels. Les termes correspondants sont mis en gras dans les résultats.",
   },
   {
     id: "export", number: "12", title: "Exporter la liste des archives",
@@ -202,7 +222,7 @@ const SECTIONS: ManualSection[] = [
   {
     id: "faq", number: "15", title: "Questions fréquentes",
     keywords: ["FAQ", "questions", "problème", "fréquent", "aide", "erreur", "impossible"],
-    body: "Pourquoi mon archive reste-t-elle en attente ? Une archive reste en attente jusqu'à ce qu'un archiviste la valide. Si elle reste bloquée trop longtemps contactez votre responsable. Pourquoi ne puis-je pas supprimer une archive ? La suppression est réservée aux administrateurs. Si vous n'avez pas ce rôle vous ne verrez pas le bouton. Comment retrouver un document physique ? Utilisez la recherche globale Ctrl+K et saisissez le numéro interne ou le sujet du document. Comment configurer une DUA ? Ouvrez le panneau de détail de l'archive et cliquez sur le bouton DUA.",
+    body: "Pourquoi mon archive reste-t-elle en attente ? Une archive reste en attente jusqu'à ce qu'un archiviste la valide. Si elle reste bloquée trop longtemps contactez votre responsable. Pourquoi ne puis-je pas supprimer une archive ? La suppression est réservée aux administrateurs. Si vous n'avez pas ce rôle vous ne verrez pas le bouton. Comment retrouver un document ? Utilisez la recherche globale Ctrl+K et saisissez le numéro interne ou le sujet du document. Comment configurer une DUA ? Ouvrez le panneau de détail de l'archive et cliquez sur le bouton DUA.",
   },
 ];
 
@@ -627,8 +647,8 @@ export default function HelpContent() {
           dans le système. Le second affiche le nombre d'archives en attente de validation, une
           information particulièrement utile pour les archivistes. Les troisième et quatrième
           compteurs présentent respectivement les archives actives et les archives intermédiaires.
-          Les deux derniers compteurs concernent l'inventaire physique avec le nombre de locaux
-          et le nombre de documents physiques.
+          Les deux derniers compteurs concernent l'inventaire physique avec le nombre de conteneurs
+          et le nombre de documents.
         </Paragraph>
 
         <SubTitle>Les alertes prioritaires</SubTitle>
@@ -970,17 +990,20 @@ export default function HelpContent() {
 
         <SectionTitle id="hierarchie-physique" number="10.1">La hiérarchie des espaces physiques</SectionTitle>
         <Paragraph>
-          L'organisation physique est représentée sous forme d'une arborescence à cinq niveaux
+          L'organisation physique est représentée sous forme d'une arborescence à six niveaux
           imbriqués. Chaque niveau dépend du niveau supérieur et peut contenir un nombre illimité
-          d'éléments du niveau inférieur.
+          d'éléments du niveau inférieur. Imaginez une bibliothèque : vous entrez d'abord dans la
+          salle, vous vous dirigez vers un rayonnage, vous choisissez un compartiment, vous prenez
+          une boîte, vous ouvrez un dossier, et vous trouvez la pièce recherchée.
         </Paragraph>
 
         {[
-          { level: "Local / Emplacement", desc: "Représente le bâtiment, la salle ou l'espace de conservation. C'est le point d'entrée de la hiérarchie physique. Un local peut correspondre à une armoire forte, une salle de coffre ou un entrepôt d'archives." },
-          { level: "Étagère", desc: "Un meuble ou un rayonnage situé à l'intérieur d'un local. L'étagère regroupe plusieurs sections ou compartiments superposés." },
-          { level: "Section", desc: "Un niveau, un plateau ou un compartiment à l'intérieur d'une étagère. La section permet d'affiner la localisation physique d'un document au sein d'un meuble de rangement." },
-          { level: "Classeur", desc: "Une unité de rangement, une boîte ou un portefeuille contenant des dossiers. Le classeur peut avoir une capacité maximale définie, ce qui permet au système de surveiller son taux de remplissage." },
-          { level: "Document physique", desc: "La fiche représentant un dossier physique réel. C'est le niveau le plus fin de la hiérarchie. Chaque document physique reçoit un code QR unique et peut être associé à une ou plusieurs archives numériques." },
+          { level: "Conteneur", desc: "C'est le point d'entrée de la hiérarchie, comme une armoire, une étagère métallique ou un local de stockage. Imaginez la grande armoire dans laquelle tout est rangé." },
+          { level: "Étagère", desc: "Une rangée à l'intérieur du conteneur, comme un rayon dans une armoire. Chaque étagère regroupe plusieurs compartiments superposés." },
+          { level: "Niveau", desc: "Un compartiment sur l'étagère, comme une tablette ou un étage précis dans le rayonnage. Le niveau permet de localiser exactement où se trouve un classeur." },
+          { level: "Classeur", desc: "La chemise, la boîte ou la reliure qui regroupe les dossiers. C'est l'unité de rangement concrète que vous prenez en main. Le classeur peut avoir une capacité maximale définie, ce qui permet au système de surveiller son taux de remplissage." },
+          { level: "Dossier", desc: "Un ensemble de pièces relatives à une même affaire. Par exemple, le dossier « Marché public 2024-003 » regroupe tous les documents liés à ce marché. Chaque dossier reçoit un code QR unique pour faciliter son identification." },
+          { level: "Document", desc: "La pièce individuelle à l'intérieur d'un dossier. C'est le niveau le plus fin de la hiérarchie. Un document peut contenir des archives numériques et peut lui-même contenir des sous-documents pour modéliser des classements internes." },
         ].map(({ level, desc }) => (
           <Box key={level} mb={1.5} pl={1} borderLeft={2} borderColor="primary.main">
             <Typography variant="body2" fontWeight={700}>{level}</Typography>
@@ -988,38 +1011,140 @@ export default function HelpContent() {
           </Box>
         ))}
 
-        <SectionTitle id="rattachement" number="10.2">Rattacher une archive numérique à un document physique</SectionTitle>
+        <SectionTitle id="rattachement" number="10.2">Rattacher une archive numérique à un document</SectionTitle>
         <Paragraph>
           Le rattachement est l'opération qui crée le lien entre le monde numérique et le monde
-          physique. Concrètement, il permet d'indiquer que le fichier numérique correspond au
-          document papier rangé dans tel classeur, à telle section, sur telle étagère, dans tel
-          local. Ce lien est bidirectionnel : depuis la fiche numérique vous pouvez voir la
-          localisation physique, et depuis le document physique vous pouvez lister toutes les
+          physique. Les archives numériques se rattachent uniquement aux documents, car c'est le
+          document qui représente la pièce individuelle à laquelle correspond le fichier numérique.
+          Un dossier sert à regrouper les documents, mais on ne rattache pas directement une archive
+          à un dossier : on la rattache à un document précis à l'intérieur de ce dossier.
+        </Paragraph>
+        <Paragraph>
+          Ce lien est bidirectionnel : depuis la fiche numérique vous pouvez voir la
+          localisation physique, et depuis le document vous pouvez lister toutes les
           archives numériques rattachées.
         </Paragraph>
         <Step number={1}>Ouvrez le panneau de détail de l'archive numérique à rattacher.</Step>
         <Step number={2}>Cliquez sur le bouton Dossier physique dans la barre d'actions rapides.</Step>
-        <Step number={3}>Une fenêtre s'ouvre avec la liste des documents physiques disponibles. Recherchez le dossier concerné.</Step>
-        <Step number={4}>Sélectionnez le document physique et confirmez le rattachement.</Step>
+        <Step number={3}>Une fenêtre s'ouvre avec la hiérarchie physique. Parcourez les niveaux jusqu'au document souhaité.</Step>
+        <Step number={4}>Sélectionnez le document et confirmez avec le bouton Rattacher.</Step>
         <Step number={5}>L'archive affiche maintenant la référence physique dans son panneau de détail.</Step>
 
-        <SectionTitle id="qrcode" number="10.3">Le code QR d'un document physique</SectionTitle>
+        <InfoBox>
+          Pour détacher une archive d'un document, ouvrez le même dialogue et choisissez Détacher.
+          L'opération est instantanée et vous pourrez ensuite effectuer un nouveau rattachement si nécessaire.
+        </InfoBox>
+
+        {/* ── 10.3 Glisser-déposer ── */}
+        <SectionTitle id="glisser-deposer" number="10.3">Glisser-déposer une archive entre documents</SectionTitle>
         <Paragraph>
-          Chaque document physique se voit attribuer automatiquement un code QR unique lors de
-          sa création dans le système. Ce code identifiant contient le numéro interne du document
-          et est généré de manière à être globalement unique. Il peut être imprimé sur une
-          étiquette adhésive et collé sur la chemise ou le dossier physique correspondant.
+          Vous pouvez déplacer une archive numérique d'un document vers un autre sans passer
+          par le dialogue de rattachement, en utilisant le glisser-déposer.
+        </Paragraph>
+        <Step number={1}>Maintenez le clic sur une archive numérique dans la liste.</Step>
+        <Step number={2}>Glissez-la vers un autre document dans l'arborescence ou dans la liste.</Step>
+        <Step number={3}>Un cadre bleu apparaît autour du document cible pour indiquer qu'il accepte le fichier.</Step>
+        <Step number={4}>Relâchez le clic. Une fenêtre de confirmation apparaît avant le déplacement.</Step>
+        <Step number={5}>Confirmez pour valider le déplacement, ou annulez pour revenir en arrière.</Step>
+
+        <InfoBox>
+          Vous pouvez aussi effectuer cette opération avec le menu clic droit sur l'archive,
+          puis choisir « Déplacer vers un autre document ».
+        </InfoBox>
+
+        {/* ── 10.4 Naviguer entre les conteneurs ── */}
+        <SectionTitle id="naviguer-conteneurs" number="10.4">Naviguer entre les conteneurs</SectionTitle>
+        <Paragraph>
+          En haut de l'arborescence, un sélecteur sous forme de liste déroulante permet de
+          choisir le conteneur actif. Quand vous sélectionnez un autre conteneur, le contenu
+          de l'arborescence change automatiquement pour afficher la hiérarchie de ce conteneur.
+        </Paragraph>
+        <Step number={1}>Cliquez sur le sélecteur en haut de l'arborescence pour voir la liste des conteneurs disponibles.</Step>
+        <Step number={2}>Choisissez le conteneur que vous souhaitez consulter.</Step>
+        <Step number={3}>L'arborescence et l'explorateur se mettent à jour instantanément.</Step>
+        <Paragraph>
+          Le bouton + situé à côté du sélecteur permet de créer un nouveau conteneur si vous
+          disposez des droits d'écriture.
+        </Paragraph>
+
+        {/* ── 10.5 Ajuster l'affichage ── */}
+        <SectionTitle id="ajuster-affichage" number="10.5">Ajuster l'affichage</SectionTitle>
+        <Paragraph>
+          La bordure entre l'arborescence (panneau gauche) et la liste centrale peut être
+          déplacée pour ajuster la largeur de chaque zone selon vos préférences.
+        </Paragraph>
+        <Step number={1}>Positionnez votre curseur sur la ligne de séparation entre les deux zones. Le curseur change de forme.</Step>
+        <Step number={2}>Maintenez le clic et glissez vers la gauche ou la droite pour élargir ou réduire l'arborescence.</Step>
+        <Step number={3}>Relâchez le clic quand la disposition vous convient.</Step>
+
+        {/* ── 10.6 Documents et sous-documents ── */}
+        <SectionTitle id="documents-physiques" number="10.6">Les documents et sous-documents</SectionTitle>
+        <Paragraph>
+          Un dossier peut contenir un ou plusieurs documents. Chaque document peut lui-même
+          contenir d'autres sous-documents et des archives numériques. Cette structure permet
+          de modéliser des dossiers avec plusieurs niveaux de classement internes.
+        </Paragraph>
+        <Step number={1}>Naviguez dans un dossier pour voir ses documents.</Step>
+        <Step number={2}>Cliquez sur le bouton d'ajout pour créer un nouveau document.</Step>
+        <Step number={3}>Remplissez le formulaire : titre, description, nature et date.</Step>
+        <Step number={4}>Les sous-documents se créent de la même manière en naviguant dans un document parent.</Step>
+
+        <SectionTitle id="qrcode" number="10.7">Le code QR d'un dossier</SectionTitle>
+        <Paragraph>
+          Chaque dossier se voit attribuer automatiquement un code QR unique lors de
+          sa création dans le système. Ce code identifiant est unique et peut être imprimé sur une
+          étiquette adhésive et collé sur la chemise correspondante.
         </Paragraph>
         <Paragraph>
           Lors d'une consultation physique des archives, il suffit de scanner ce code avec un
-          appareil photo ou un lecteur de QR code pour retrouver instantanément la fiche du
-          document dans le système et y accéder à toutes les archives numériques rattachées.
+          appareil photo ou un lecteur de code QR pour retrouver instantanément la fiche du
+          dossier dans le système et accéder à tous les documents et archives numériques rattachées.
+        </Paragraph>
+
+        <SectionTitle id="datepicker" number="10.8">Saisie des dates avec le calendrier</SectionTitle>
+        <Paragraph>
+          Tous les champs de date dans les formulaires de l'archivage physique utilisent un
+          sélecteur de date avec calendrier interactif. Le format d'affichage est JJ/MM/AAAA.
+          Vous pouvez cliquer sur l'icône calendrier pour ouvrir le sélecteur, naviguer entre
+          les mois et les années, ou saisir directement la date au clavier.
+        </Paragraph>
+
+        <SectionTitle id="arborescence" number="10.9">L'arborescence interactive</SectionTitle>
+        <Paragraph>
+          Sur les grands écrans, un panneau latéral gauche affiche l'arborescence complète de
+          l'archivage physique sous forme d'arbre interactif. Chaque niveau est identifié par
+          son icône distinctive : entrepôt pour les conteneurs, serveur pour les étagères,
+          couches pour les niveaux, onglets pour les classeurs, dossier pour les dossiers et
+          document pour les documents. Cliquez sur un élément pour charger son contenu et le
+          sélectionner dans l'explorateur principal. L'arbre se charge progressivement pour
+          rester fluide même avec un grand volume de données.
+        </Paragraph>
+
+        <SectionTitle id="ouvrir-fichier" number="10.10">Ouvrir un fichier</SectionTitle>
+        <Paragraph>
+          Quand vous cliquez sur un fichier pour l'ouvrir, une barre de progression apparaît
+          en bas de l'écran pour vous indiquer l'avancement du chargement. Si le fichier est
+          volumineux, vous pouvez annuler le chargement à tout moment en cliquant sur le bouton
+          Annuler qui accompagne la barre de progression.
+        </Paragraph>
+        <Paragraph>
+          Un fichier que vous avez déjà consulté s'ouvre instantanément la prochaine fois,
+          sans attente. Si vous n'êtes pas connecté à internet au moment de l'ouverture, un
+          message vous en informe clairement.
+        </Paragraph>
+
+        <SubTitle>Les icônes des fichiers</SubTitle>
+        <Paragraph>
+          Chaque fichier est représenté par une icône colorée qui indique son type, ce qui vous
+          permet de repérer rapidement la nature du document sans l'ouvrir. Les documents PDF
+          apparaissent en rouge, les documents Word en bleu, les tableurs Excel en vert, les
+          images en violet et les vidéos en rouge foncé.
         </Paragraph>
 
         <SubTitle>Renommer un élément physique</SubTitle>
         <Paragraph>
           Les utilisateurs disposant des droits d'écriture peuvent renommer n'importe quel
-          élément de la hiérarchie physique (conteneur, étagère, section, classeur, dossier ou
+          élément de la hiérarchie physique (conteneur, étagère, niveau, classeur, dossier ou
           document). Deux méthodes sont disponibles pour effectuer cette opération.
         </Paragraph>
         <Step number={1}>
@@ -1048,7 +1173,7 @@ export default function HelpContent() {
 
         <Paragraph>
           GEID Archives dispose d'un moteur de recherche unifié qui explore simultanément toutes
-          les archives numériques et tous les documents physiques enregistrés dans le système.
+          les archives numériques et tous les documents de l'archivage physique enregistrés dans le système.
           Cette recherche globale est accessible à tout moment depuis n'importe quelle section
           de l'application.
         </Paragraph>
@@ -1065,7 +1190,7 @@ export default function HelpContent() {
         <Paragraph>
           La recherche s'effectue sur l'ensemble des champs descriptifs des documents. Pour les
           archives numériques, elle explore la désignation, la description, le numéro de classe,
-          le numéro de référence, le dossier et les étiquettes. Pour les documents physiques,
+          le numéro de référence, le dossier et les étiquettes. Pour les documents de l'archivage physique,
           elle explore le numéro interne, le numéro de référence, le sujet, la catégorie et la
           nature du document.
         </Paragraph>
@@ -1182,7 +1307,7 @@ export default function HelpContent() {
           { term: "Cycle de vie",         def: "Ensemble des états successifs traversés par une archive depuis sa création jusqu'à sa destination finale : conservation définitive ou élimination." },
           { term: "DUA",                  def: "Durée d'Utilité Administrative. Période pendant laquelle un document doit être conservé de manière obligatoire avant d'être traité selon son sort final." },
           { term: "Métadonnée",           def: "Information descriptive attachée à un document : désignation, type, référence, date, auteur, etc. Les métadonnées permettent d'identifier, de classer et de retrouver les archives." },
-          { term: "Rattachement",         def: "Lien créé entre une archive numérique et un document physique. Ce lien permet de retrouver la localisation physique d'un document numérique." },
+          { term: "Rattachement",         def: "Lien créé entre une archive numérique et un document dans la hiérarchie physique. Ce lien permet de retrouver la localisation physique d'un fichier numérique." },
           { term: "Sort final",           def: "Décision prise à l'expiration de la DUA : soit conservation définitive (versement aux archives historiques), soit élimination (destruction contrôlée)." },
           { term: "Transition",           def: "Passage d'un état à un autre dans le cycle de vie d'une archive. Chaque transition est enregistrée dans l'historique du document avec la date et l'auteur." },
           { term: "Validation",           def: "Acte par lequel un archiviste certifie qu'une archive soumise est conforme aux exigences documentaires et l'admet dans le fonds actif." },
@@ -1223,7 +1348,7 @@ export default function HelpContent() {
             a: "La durée de conservation réglementaire dépend du type de document et du secteur d'activité de votre organisation. Référez-vous au tableau de gestion documentaire de votre organisation ou consultez votre archiviste référent. En l'absence de règle spécifique, une durée minimale de cinq à dix ans est souvent appliquée à titre conservatoire.",
           },
           {
-            q: "Que se passe-t-il si je rattache une archive numérique au mauvais document physique ?",
+            q: "Que se passe-t-il si je rattache une archive numérique au mauvais document ?",
             a: "Vous pouvez à tout moment défaire un rattachement et en créer un nouveau. Ouvrez le panneau de détail de l'archive numérique, cliquez sur le bouton Dossier physique, puis choisissez Détacher. L'opération est instantanée et vous pourrez ensuite effectuer le bon rattachement.",
           },
         ].map(({ q, a }, i) => (
