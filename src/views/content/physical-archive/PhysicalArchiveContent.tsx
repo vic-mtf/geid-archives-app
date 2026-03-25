@@ -592,16 +592,16 @@ export default function PhysicalArchiveContent() {
         const fi = getFileIcon(activeDrag.fileUrl ?? activeDrag.label);
         return (
           <Box sx={{
-            display: "flex", alignItems: "center", gap: 1,
-            px: 1.5, py: 0.75, borderRadius: 1.5,
-            bgcolor: "background.paper",
-            boxShadow: 4, border: "1px solid", borderColor: "primary.main",
-            maxWidth: 260,
+            display: "flex", alignItems: "center", gap: 0.75,
+            px: 1.5, py: 0.5, borderRadius: 1,
+            bgcolor: "action.selected",
+            maxWidth: 280,
+            opacity: 0.9,
           }}>
             <Box sx={{ color: fi.color, display: "flex", flexShrink: 0 }}>
-              {React.cloneElement(fi.icon, { fontSize: "small" })}
+              {React.cloneElement(fi.icon, { sx: { fontSize: 16 } })}
             </Box>
-            <Typography variant="body2" fontWeight={500} noWrap>
+            <Typography variant="body2" noWrap sx={{ fontSize: "0.8rem" }}>
               {activeDrag.label}
             </Typography>
           </Box>
