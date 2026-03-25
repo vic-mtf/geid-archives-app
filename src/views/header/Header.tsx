@@ -15,18 +15,18 @@ export default function Header() {
           bgcolor: appConfig.colors.main,
         }}>
         <Toolbar variant='dense'>
-          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 0.75 }} flexGrow={1}>
+          <Box display="flex" alignItems="center" gap={{ xs: 0.75, sm: 1 }} flexGrow={1}>
             <CardMedia
               component="img"
               src={geidLogo}
               draggable={false}
-              sx={{ height: { xs: 18, sm: 20 }, width: "auto", opacity: 0.9 }}
+              sx={{ height: { xs: 24, sm: 28 }, width: "auto" }}
             />
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.25)", my: 0.75 }} />
+            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.3)", my: 0.25 }} />
             <Typography
               noWrap
               component='div'
-              sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" }, fontWeight: 600, letterSpacing: 0.3 }}>
+              sx={{ fontSize: { xs: "1rem", sm: "1.1rem" }, fontWeight: 700 }}>
               Archives
             </Typography>
           </Box>
