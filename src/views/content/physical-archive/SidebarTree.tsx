@@ -77,7 +77,7 @@ const SidebarTree = React.memo(function SidebarTree({
 
   return (
     <Box sx={{
-      display: "flex",
+      display: { xs: "none", md: "flex" },
       flexDirection: "column",
       overflow: "hidden",
       minWidth: 0,

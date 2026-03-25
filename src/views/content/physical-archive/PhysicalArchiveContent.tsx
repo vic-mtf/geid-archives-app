@@ -337,12 +337,14 @@ export default function PhysicalArchiveContent() {
         display: "grid",
         flex: 1,
         overflow: "hidden",
-        gridTemplateColumns: insideContainer
-          ? isMobile
-            ? showDetail ? "0 0 0 1fr" : "0 0 1fr 0"
-            : `${treeWidth}px 1px 1fr ${selected ? 300 : 280}px`
-          : "1fr",
         minHeight: 0,
+        gridTemplateColumns: insideContainer
+          ? {
+              xs: showDetail ? "0px 0px 0px 1fr" : "0px 0px 1fr 0px",
+              md: `${treeWidth}px 1px 1fr 280px`,
+              lg: `${treeWidth}px 1px 1fr 320px`,
+            }
+          : "1fr",
       }}>
 
         {/* ── Col 1 : Sidebar arborescence ── */}

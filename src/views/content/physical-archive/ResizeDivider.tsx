@@ -71,6 +71,7 @@ const ResizeDivider = React.memo(function ResizeDivider({
         bgcolor: "divider",
         cursor: "col-resize",
         position: "relative",
+        display: { xs: "none", md: "block" },
         // Zone de clic élargie (invisible, 12px)
         "&::after": {
           content: '""',
