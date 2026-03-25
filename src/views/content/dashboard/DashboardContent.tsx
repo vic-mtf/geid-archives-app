@@ -217,7 +217,7 @@ export default function DashboardContent() {
       {/* ── Rangée 1 : Cartes stats principales ──────────── */}
       {visible.has("stats") && <Grid container spacing={2} mb={2.5}>
         {[
-          { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager" },
+          { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
           { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
           { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
           { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
