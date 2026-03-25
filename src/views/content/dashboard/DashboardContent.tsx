@@ -48,6 +48,7 @@ import scrollBarSx from "@/utils/scrollBarSx";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
 import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 
+import { useTranslation } from "react-i18next";
 import StatCard from "./StatCard";
 import { EmptyPlaceholder } from "./StatCard";
 import DashboardBottomRow from "./DashboardBottomRow";
@@ -71,6 +72,7 @@ export default function DashboardContent() {
   const dataVersion   = useSelector((store: RootState) => store.data.dataVersion);
   const navigateTo    = useNavigateSetState();
   const { canWrite } = useArchivePermissions();
+  const { t } = useTranslation();
 
   // ── Préférences utilisateur du dashboard ────────────────────
   const { data: prefs } = useApiCache<{
@@ -179,12 +181,12 @@ export default function DashboardContent() {
 
   // ── Données PieChart ────────────────────────────────────────
   const pieData = useMemo(() => [
-    { id: 0, value: statusCounts.ACTIVE,      label: "Actives",         color: "#4caf50" },
-    { id: 1, value: statusCounts.PENDING,     label: "En attente",      color: "#ff9800" },
-    { id: 2, value: statusCounts.SEMI_ACTIVE, label: "Intermédiaires",  color: "#2196f3" },
-    { id: 3, value: statusCounts.PERMANENT,   label: "Historiques",     color: "#9c27b0" },
-    { id: 4, value: statusCounts.DESTROYED,   label: "Détruites",       color: "#f44336" },
-  ].filter((d) => d.value > 0), [statusCounts]);
+    { id: 0, value: statusCounts.ACTIVE,      label: t("status.activesFemPlural"),   color: "#4caf50" },
+    { id: 1, value: statusCounts.PENDING,     label: t("status.pendingPlural"),      color: "#ff9800" },
+    { id: 2, value: statusCounts.SEMI_ACTIVE, label: t("status.semiActivePlural"),   color: "#2196f3" },
+    { id: 3, value: statusCounts.PERMANENT,   label: t("status.permanentPlural"),    color: "#9c27b0" },
+    { id: 4, value: statusCounts.DESTROYED,   label: t("status.destroyedFemPlural"), color: "#f44336" },
+  ].filter((d) => d.value > 0), [statusCounts, t]);
 
   // ── Rendu ─────────────────────────────────────────────────────
   return (
@@ -195,20 +197,20 @@ export default function DashboardContent() {
         <Stack spacing={1} mb={2}>
           {statusCounts.PENDING > 0 && (
             <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
-              action={<Chip label="Consulter" size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{statusCounts.PENDING}</strong> archives en attente de validation.
+              action={<Chip label={t("common.consult")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertPendingValidation", { count: statusCounts.PENDING }) }} />
             </Alert>
           )}
           {duaExpired.length > 0 && (
             <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
-              action={<Chip label="Voir" size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", quickFilter: "dua_expired" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{duaExpired.length}</strong> durées de conservation dépassées nécessitent une action.
+              action={<Chip label={t("common.see")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", quickFilter: "dua_expired" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertDuaExpired", { count: duaExpired.length }) }} />
             </Alert>
           )}
           {criticalBinders.length > 0 && (
             <Alert severity="warning" icon={<WarningAmberRoundedIcon fontSize="inherit" />}
-              action={<Chip label="Physique" size="small" onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
-              <strong>{criticalBinders.length}</strong> classeurs à plus de 90 % de capacité.
+              action={<Chip label={t("nav.physicalArchive")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertCriticalBinders", { count: criticalBinders.length }) }} />
             </Alert>
           )}
         </Stack>
@@ -217,12 +219,12 @@ export default function DashboardContent() {
       {/* ── Rangée 1 : Cartes stats principales ──────────── */}
       {visible.has("stats") && <Grid container spacing={2} mb={2.5}>
         {[
-          { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
-          { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
-          { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
-          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
-          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager", statusFilter: "PERMANENT" },
-          { label: "Conteneurs", value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
+          { label: t("dashboard.totalArchives"), value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
+          { label: t("dashboard.pending"), value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
+          { label: t("dashboard.active"), value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
+          { label: t("dashboard.semiActive"), value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
+          { label: t("dashboard.historic"), value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager", statusFilter: "PERMANENT" },
+          { label: t("dashboard.containers"), value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
         ].map((s) => (
           <Grid item xs={6} sm={4} md={2} key={s.label}>
             <StatCard
@@ -247,14 +249,14 @@ export default function DashboardContent() {
           <Card variant="outlined" sx={{ height: { xs: "auto", md: 420 } }}>
             <CardContent sx={{ pb: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
-                <Typography variant="body1" fontWeight="bold">Activité récente</Typography>
-                <Chip label="Tout voir" size="small" variant="outlined" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager" })} clickable />
+                <Typography variant="body1" fontWeight="bold">{t("dashboard.recentActivity")}</Typography>
+                <Chip label={t("common.seeAll")} size="small" variant="outlined" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager" })} clickable />
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {anyLoading ? (
                 <Stack spacing={0.5} flex={1}>{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} variant="rounded" height={36} />)}</Stack>
               ) : recentArchives.length === 0 ? (
-                <EmptyPlaceholder label="Aucune archive récente" />
+                <EmptyPlaceholder label={t("dashboard.noRecentArchive")} />
               ) : (
                 <List dense disablePadding sx={{ flex: 1, overflow: "auto", ...scrollBarSx }}>
                   {recentArchives.map((doc) => {
@@ -292,14 +294,14 @@ export default function DashboardContent() {
         {visible.has("distribution") && <Grid item xs={12} md={visible.has("recent") ? 5 : 12}>
           <Card variant="outlined" sx={{ height: { xs: "auto", md: 420 } }}>
             <CardContent sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-              <Typography variant="body1" fontWeight="bold" mb={1}>Répartition par statut</Typography>
+              <Typography variant="body1" fontWeight="bold" mb={1}>{t("dashboard.distributionByStatus")}</Typography>
               <Divider sx={{ mb: 1.5 }} />
               {anyLoading ? (
                 <Box display="flex" justifyContent="center" alignItems="center" flex={1} minHeight={260}>
                   <Skeleton variant="circular" width={190} height={190} />
                 </Box>
               ) : pieData.length === 0 ? (
-                <EmptyPlaceholder label="Aucune archive" />
+                <EmptyPlaceholder label={t("dashboard.noArchive")} />
               ) : (
                 <Box flex={1} display="flex" flexDirection="column">
                   <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>

@@ -33,6 +33,7 @@ import {
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/redux/store";
 import { incrementVersion } from "@/redux/data";
@@ -63,19 +64,20 @@ function addDuration(date: Date, value: number, unit: DuaUnit): Date {
 }
 
 /** Human-readable remaining time */
-function formatRemaining(expiresAt: Date): string {
+function formatRemaining(expiresAt: Date, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const now = new Date();
   const diffMs = expiresAt.getTime() - now.getTime();
-  if (diffMs <= 0) return "Expirée";
+  if (diffMs <= 0) return t("dua.expired");
   const days  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const months = Math.floor(days / 30);
   const years  = Math.floor(days / 365);
-  if (years  >= 1) return years === 1 ? "1 an restant" : `${years} ans restants`;
-  if (months >= 1) return months === 1 ? "1 mois restant" : `${months} mois restants`;
-  return days === 1 ? "1 jour restant" : `${days} jours restants`;
+  if (years  >= 1) return years === 1 ? t("dua.remaining1Year") : t("dua.remainingYears", { count: years });
+  if (months >= 1) return months === 1 ? t("dua.remaining1Month") : t("dua.remainingMonths", { count: months });
+  return days === 1 ? t("dua.remaining1Day") : t("dua.remainingDays", { count: days });
 }
 
 export default function DuaConfigDialog() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -138,7 +140,7 @@ export default function DuaConfigDialog() {
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <AccessTimeOutlinedIcon color="info" />
-        Paramètres DUA
+        {t("dua.title")}
         {doc?.designation && (
           <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }}>
             — {doc.designation}
@@ -148,14 +150,13 @@ export default function DuaConfigDialog() {
 
       <DialogContent>
         <Alert severity="info" sx={{ mb: 2 }}>
-          La DUA (Durée d'Utilité Administrative) définit la durée pendant laquelle le document
-          reste en phase intermédiaire avant d'être automatiquement conservé ou éliminé.
+          {t("dua.infoAlert")}
         </Alert>
 
         {/* Duration */}
         <MuiBox display="flex" gap={2} alignItems="flex-start" mb={2}>
           <TextField
-            label="Durée"
+            label={t("dua.durationLabel")}
             type="number"
             value={value}
             onChange={(e) => setValue(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
@@ -164,27 +165,27 @@ export default function DuaConfigDialog() {
             size="small"
           />
           <FormControl size="small" sx={{ width: 140 }}>
-            <InputLabel>Unité</InputLabel>
+            <InputLabel>{t("dua.unitLabel")}</InputLabel>
             <Select
               value={unit}
-              label="Unité"
+              label={t("dua.unitLabel")}
               onChange={(e) => setUnit(e.target.value as DuaUnit)}
             >
-              <MenuItem value="years">Années</MenuItem>
-              <MenuItem value="months">Mois</MenuItem>
+              <MenuItem value="years">{t("dua.unitYears")}</MenuItem>
+              <MenuItem value="months">{t("dua.unitMonths")}</MenuItem>
             </Select>
           </FormControl>
           {expiresAt && (
             <MuiBox flex={1} display="flex" flexDirection="column" justifyContent="center">
               <Typography variant="caption" color="text.secondary">
-                Date d'expiration
+                {t("dua.expirationDate")}
               </Typography>
               <Typography variant="body2" fontWeight={600} color={isExpired ? "error.main" : "text.primary"}>
                 {expiresAt.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
               </Typography>
               <Chip
                 size="small"
-                label={formatRemaining(expiresAt)}
+                label={formatRemaining(expiresAt, t)}
                 color={isExpired ? "error" : "info"}
                 sx={{ mt: 0.5, width: "fit-content" }}
               />
@@ -197,7 +198,7 @@ export default function DuaConfigDialog() {
         {/* Sort final */}
         <FormControl component="fieldset">
           <FormLabel component="legend" sx={{ mb: 1, fontSize: 14 }}>
-            Sort final à l'expiration de la DUA
+            {t("dua.sortFinalLabel")}
           </FormLabel>
           <RadioGroup
             value={sortFinal}
@@ -211,10 +212,10 @@ export default function DuaConfigDialog() {
                   <HistoryEduOutlinedIcon fontSize="small" color="action" />
                   <MuiBox>
                     <Typography variant="body2" fontWeight={500}>
-                      Conservation définitive
+                      {t("dua.conservation")}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Le document passe automatiquement en statut Historique (PERMANENT)
+                      {t("dua.conservationDesc")}
                     </Typography>
                   </MuiBox>
                 </MuiBox>
@@ -228,10 +229,10 @@ export default function DuaConfigDialog() {
                   <DeleteForeverOutlinedIcon fontSize="small" color="error" />
                   <MuiBox>
                     <Typography variant="body2" fontWeight={500}>
-                      Élimination
+                      {t("dua.elimination")}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Le document passe automatiquement en statut Détruit (DESTROYED)
+                      {t("dua.eliminationDesc")}
                     </Typography>
                   </MuiBox>
                 </MuiBox>
@@ -243,22 +244,20 @@ export default function DuaConfigDialog() {
         {/* DUA start date info */}
         {doc?.dua?.startDate && (
           <MuiBox mt={2} p={1.5} bgcolor="action.hover" borderRadius={1}>
-            <Typography variant="caption" color="text.secondary">
-              Date de début DUA :{" "}
-              <strong>
-                {new Date(doc.dua.startDate).toLocaleDateString("fr-FR", {
+            <Typography variant="caption" color="text.secondary" dangerouslySetInnerHTML={{
+              __html: t("dua.startDateInfo", {
+                date: new Date(doc.dua.startDate).toLocaleDateString("fr-FR", {
                   day: "2-digit", month: "long", year: "numeric",
-                })}
-              </strong>
-              {" "}(définie lors du passage en Intermédiaire)
-            </Typography>
+                }),
+              }),
+            }} />
           </MuiBox>
         )}
       </DialogContent>
 
       <DialogActions>
         <Button onClick={handleClose} color="inherit" disabled={loading}>
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={handleSave}
@@ -267,7 +266,7 @@ export default function DuaConfigDialog() {
           disabled={!canSave}
           startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
         >
-          Enregistrer la DUA
+          {t("dua.saveButton")}
         </Button>
       </DialogActions>
     </Dialog>

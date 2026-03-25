@@ -5,11 +5,13 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Alert, Collapse } from "@mui/material";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import SignalWifiStatusbar4BarRoundedIcon from "@mui/icons-material/SignalWifiStatusbar4BarRounded";
 
 const NetworkStatus = React.memo(function NetworkStatus() {
+  const { t } = useTranslation();
   const [online, setOnline] = useState(navigator.onLine);
   const [showReconnected, setShowReconnected] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
@@ -58,8 +60,8 @@ const NetworkStatus = React.memo(function NetworkStatus() {
         sx={{ borderRadius: 2, boxShadow: 4 }}
       >
         {online
-          ? "La connexion a été rétablie"
-          : "Pas de connexion internet. Certaines fonctionnalités ne sont pas disponibles."
+          ? t("network.connectionRestored")
+          : t("network.noConnection")
         }
       </Alert>
     </Collapse>

@@ -37,6 +37,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
+import { useTranslation } from "react-i18next";
 import useToken from "@/hooks/useToken";
 import useAxios from "@/hooks/useAxios";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
@@ -118,6 +119,7 @@ interface SearchResponse {
 // ── Composant ─────────────────────────────────────────────
 
 export default function GlobalSearchDialog() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -260,7 +262,7 @@ export default function GlobalSearchDialog() {
           autoFocus
           fullWidth
           variant="standard"
-          placeholder="Rechercher une archive, un document…"
+          placeholder={t("search.placeholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           InputProps={{
@@ -272,7 +274,7 @@ export default function GlobalSearchDialog() {
               </InputAdornment>
             ) : query ? (
               <InputAdornment position="end">
-                <Tooltip title="Effacer la recherche">
+                <Tooltip title={t("search.clearSearch")}>
                   <IconButton size="small" onClick={() => setQuery("")} sx={{ bgcolor: "action.hover", borderRadius: 1, px: 0.75 }}>
                     <CloseRoundedIcon sx={{ fontSize: 14 }} />
                   </IconButton>
@@ -282,7 +284,7 @@ export default function GlobalSearchDialog() {
           }}
         />
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-        <Tooltip title="Fermer">
+        <Tooltip title={t("search.closeDialog")}>
           <IconButton size="small" onClick={handleClose}>
             <CloseRoundedIcon fontSize="small" />
           </IconButton>
@@ -301,10 +303,10 @@ export default function GlobalSearchDialog() {
             py={5}>
             <SearchRoundedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
             <Typography color="text.secondary" variant="body2">
-              Saisissez au moins 2 caractères pour lancer la recherche
+              {t("search.minChars")}
             </Typography>
             <Typography variant="caption" color="text.disabled">
-              Archives numériques + documents physiques · Raccourci : Ctrl+K
+              {t("search.shortcutHint")}
             </Typography>
           </Box>
         )}
@@ -318,11 +320,9 @@ export default function GlobalSearchDialog() {
             justifyContent="center"
             gap={1}
             py={5}>
-            <Typography color="text.secondary" variant="body2">
-              Aucun résultat pour <strong>«&nbsp;{debouncedQuery}&nbsp;»</strong>
-            </Typography>
+            <Typography color="text.secondary" variant="body2" dangerouslySetInnerHTML={{ __html: t("search.noResults", { query: debouncedQuery }) }} />
             <Typography variant="caption" color="text.disabled">
-              Essayez des termes différents ou vérifiez l&apos;orthographe.
+              {t("search.noResultsHint")}
             </Typography>
           </Box>
         )}
@@ -331,7 +331,7 @@ export default function GlobalSearchDialog() {
         {searchError && (
           <Box py={4} textAlign="center">
             <Typography color="error" variant="body2">
-              La recherche a échoué. Vérifiez votre connexion et réessayez.
+              {t("search.searchFailed")}
             </Typography>
           </Box>
         )}
@@ -345,7 +345,7 @@ export default function GlobalSearchDialog() {
                 <Box px={2} py={1} display="flex" alignItems="center" gap={1} bgcolor="action.hover">
                   <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
                   <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-                    Archives numériques
+                    {t("search.digitalArchives")}
                   </Typography>
                   <Chip label={archives.length} size="small" />
                 </Box>
@@ -396,7 +396,7 @@ export default function GlobalSearchDialog() {
                 <Box px={2} py={1} display="flex" alignItems="center" gap={1} bgcolor="action.hover">
                   <FolderOpenOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
                   <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
-                    Documents physiques
+                    {t("search.physicalDocuments")}
                   </Typography>
                   <Chip label={records.length} size="small" />
                 </Box>
@@ -440,7 +440,7 @@ export default function GlobalSearchDialog() {
         {hasResults && (
           <Box px={2} py={1} borderTop={1} borderColor="divider" textAlign="right">
             <Typography variant="caption" color="text.secondary">
-              {results?.total} résultats pour «&nbsp;{debouncedQuery}&nbsp;»
+              {t("search.totalResults", { count: results?.total, query: debouncedQuery })}
             </Typography>
           </Box>
         )}

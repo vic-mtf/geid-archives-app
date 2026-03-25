@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import _archives_logo from "@/assets/crdoy0js-removebg-preview.webp";
 import {
   CardMedia,
@@ -22,6 +23,7 @@ interface CoverProps {
 }
 
 export default function Cover({ setOpened }: CoverProps) {
+  const { t } = useTranslation();
   const connected = useSelector((store: RootState) => store.user.connected);
   const dispatch = useDispatch<AppDispatch>();
   const handleFinish = useCallback(() => {
@@ -117,13 +119,11 @@ export default function Cover({ setOpened }: CoverProps) {
           px: 2,
         }}>
         <Typography variant="caption" color="text.primary">
-          {footerText}
+          {t("common.footer")}
         </Typography>
       </Box>
     </BoxGradient>
   );
 }
 
-const footerText =
-  "Direction Archives et Nouvelles Technologies de l'Information et de la Communication © 2024";
 const SIGN_IN_CHANNEL = new BroadcastChannel(channels.signIn);

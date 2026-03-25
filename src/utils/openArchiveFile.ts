@@ -1,4 +1,5 @@
 import store from "@/redux/store";
+import i18n from "@/i18n/i18n";
 
 const BASE = (import.meta.env.VITE_SERVER_BASE_URL as string) ?? "";
 
@@ -90,7 +91,7 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
       ...INITIAL_STATE,
       open: true,
       fileName: displayName,
-      error: "Vous êtes hors ligne. Connectez-vous à internet pour accéder à ce fichier.",
+      error: i18n.t("network.offlineError"),
     });
     setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
     return;
@@ -112,10 +113,10 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
 
     if (!res.ok) {
       const errorMsg = res.status === 403
-        ? "Vous n'avez pas les droits nécessaires pour accéder à ce fichier."
+        ? i18n.t("network.forbidden")
         : res.status === 404
-          ? "Ce fichier est introuvable. Il a peut-être été supprimé ou déplacé."
-          : "Une erreur inattendue est survenue lors de la récupération du fichier.";
+          ? i18n.t("network.notFound")
+          : i18n.t("network.unexpectedError");
       _onProgress?.({ ...INITIAL_STATE, open: true, fileName: displayName, error: errorMsg });
       setTimeout(() => _onProgress?.({ ...INITIAL_STATE }), 5000);
       return;
@@ -156,8 +157,8 @@ export default async function openArchiveFile(archiveId: string, fileName?: stri
       // Géré dans cancelFileLoading
     } else {
       const errorMsg = !navigator.onLine
-        ? "La connexion a été perdue pendant le chargement. Le fichier n'a pas pu être récupéré."
-        : "Le chargement a échoué. Vérifiez votre connexion et réessayez.";
+        ? i18n.t("network.connectionLost")
+        : i18n.t("network.loadingFailed");
       _onProgress?.({
         ...INITIAL_STATE,
         open: true,

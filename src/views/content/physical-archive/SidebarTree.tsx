@@ -7,6 +7,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
@@ -53,6 +54,7 @@ const SidebarTree = React.memo(function SidebarTree({
   executeFetch,
 }: SidebarTreeProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
 
   // Charger la liste des conteneurs pour le sélecteur
   const apiCache = useSelector((store: RootState) => (store.data as unknown as Record<string, unknown>).apiCache as Record<string, { data: unknown }> | undefined);
@@ -92,7 +94,7 @@ const SidebarTree = React.memo(function SidebarTree({
           variant="outlined"
           displayEmpty
           renderValue={(val) => {
-            if (!val) return <Typography variant="caption" color="text.secondary">Conteneur…</Typography>;
+            if (!val) return <Typography variant="caption" color="text.secondary">{t("physical.containerPlaceholder")}</Typography>;
             const c = containers.find((c) => c._id === val);
             return <Typography variant="caption" fontWeight={600} noWrap>{c?.name ?? val}</Typography>;
           }}
@@ -110,7 +112,7 @@ const SidebarTree = React.memo(function SidebarTree({
           ))}
         </Select>
         {canWrite && (
-          <Tooltip title="Nouveau conteneur">
+          <Tooltip title={t("physical.newContainer")}>
             <IconButton size="small" onClick={() => onSetFormOpen("container")}>
               <AddRoundedIcon sx={{ fontSize: 18 }} />
             </IconButton>

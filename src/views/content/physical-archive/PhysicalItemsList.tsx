@@ -13,6 +13,7 @@ import {
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
 import { motion } from "framer-motion";
 
+import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import type { PhysicalLevel } from "@/constants/physical";
 import InlineEditableLabel from "./InlineEditableLabel";
@@ -70,6 +71,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
   onRename,
   parentDocumentId,
 }: PhysicalItemsListProps) {
+  const { t } = useTranslation();
   const fadeIn = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } };
 
   if (loading) {
@@ -98,10 +100,10 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { sx: { fontSize: 40 } })}
           </Box>
           <Typography color="text.secondary" variant="body2">
-            Aucun {levelConfig[currentLevel].label.toLowerCase()}
+            {t("physical.emptyLevel", { level: levelConfig[currentLevel].label.toLowerCase() })}
           </Typography>
           <Typography color="text.disabled" variant="caption">
-            Utilisez le bouton + pour en créer
+            {t("physical.emptyLevelHint")}
           </Typography>
         </Box>
       </motion.div>

@@ -9,6 +9,7 @@
  */
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Divider,
   ListItemIcon,
@@ -45,6 +46,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
   onUnlink,
   onMove,
 }: ArchiveContextMenuProps) {
+  const { t } = useTranslation();
   if (!state) return null;
 
   return (
@@ -60,13 +62,13 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
       {/* Ouvrir le fichier */}
       <MenuItem onClick={() => { onOpen(state.archiveId); onClose(); }}>
         <ListItemIcon><OpenInNewRoundedIcon fontSize="small" /></ListItemIcon>
-        <ListItemText>Ouvrir le fichier</ListItemText>
+        <ListItemText>{t("physical.archiveContextMenu.openFile")}</ListItemText>
       </MenuItem>
 
       {/* Télécharger */}
       <MenuItem onClick={() => { onOpen(state.archiveId); onClose(); }}>
         <ListItemIcon><FileDownloadOutlinedIcon fontSize="small" /></ListItemIcon>
-        <ListItemText>Télécharger</ListItemText>
+        <ListItemText>{t("physical.archiveContextMenu.download")}</ListItemText>
       </MenuItem>
 
       {/* Actions d'écriture */}
@@ -76,7 +78,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
       {canWrite && (
         <MenuItem onClick={() => { onMove(state.archiveId, state.archiveLabel); onClose(); }}>
           <ListItemIcon><DriveFileMoveOutlinedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Déplacer vers un autre document</ListItemText>
+          <ListItemText>{t("physical.archiveContextMenu.moveToOther")}</ListItemText>
         </MenuItem>
       )}
 
@@ -87,7 +89,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
           sx={{ color: "error.main" }}
         >
           <ListItemIcon><LinkOffRoundedIcon fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText>Dissocier du document</ListItemText>
+          <ListItemText>{t("physical.archiveContextMenu.unlink")}</ListItemText>
         </MenuItem>
       )}
     </Menu>

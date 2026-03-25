@@ -10,6 +10,7 @@
 
 import React, { useCallback, useState } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { TreeView } from "@mui/x-tree-view/TreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
 import WarehouseOutlinedIcon      from "@mui/icons-material/WarehouseOutlined";
@@ -154,6 +155,7 @@ export interface PhysicalTreeViewProps {
 // ── Composant ────────────────────────────────────────────────
 
 export default function PhysicalTreeView({ headers, onSelect, selectedId, expandedIds: externalExpanded, dataVersion, onContextMenu, onArchiveContextMenu, canWrite, onRename, renamingId, onRenamingEnd, activeContainerId }: PhysicalTreeViewProps) {
+  const { t } = useTranslation();
   const [nodes, setNodes] = useState<TreeNode[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
@@ -449,10 +451,10 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
             <WarehouseOutlinedIcon fontSize="inherit" />
           </Box>
           <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
-            {nodes.length === 0 ? "Aucun conteneur" : "Ce conteneur est vide"}
+            {nodes.length === 0 ? t("physical.noContainer") : t("physical.emptyContainer")}
           </Typography>
           <Typography variant="caption" color="text.disabled" textAlign="center" px={2}>
-            {nodes.length === 0 ? "Créez votre premier conteneur pour commencer" : "Commencez par ajouter une étagère"}
+            {nodes.length === 0 ? t("physical.noContainerHint") : t("physical.emptyContainerHint")}
           </Typography>
         </Box>
       ) : (

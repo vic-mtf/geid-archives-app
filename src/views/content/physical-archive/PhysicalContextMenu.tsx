@@ -9,6 +9,7 @@
  * Les actions d'écriture sont masquées si l'utilisateur n'a pas les droits.
  */
 
+import { useTranslation } from "react-i18next";
 import {
   Divider,
   ListItemIcon,
@@ -24,14 +25,14 @@ import type { PhysicalLevel } from "@/constants/physical";
 
 // ── Types ────────────────────────────────────────────────────
 
-/** Label complet avec article pour le menu "Ajouter ..." */
-const CHILD_LABELS: Record<PhysicalLevel, string | null> = {
-  container: "une étagère",
-  shelf:     "un niveau",
-  floor:     "un classeur",
-  binder:    "un dossier",
-  record:    "un document",
-  document:  "un document",
+/** Niveaux qui ont un enfant (pour le menu "Ajouter ...") */
+const HAS_CHILD: Record<PhysicalLevel, boolean> = {
+  container: true,
+  shelf:     true,
+  floor:     true,
+  binder:    true,
+  record:    true,
+  document:  true,
 };
 
 export interface ContextMenuState {
@@ -72,9 +73,10 @@ export default function PhysicalContextMenu({
   onViewDetail,
   onRename,
 }: PhysicalContextMenuProps) {
+  const { t } = useTranslation();
   if (!state) return null;
 
-  const childLabel = CHILD_LABELS[state.level];
+  const hasChild = HAS_CHILD[state.level];
 
   return (
     <Menu
@@ -89,7 +91,7 @@ export default function PhysicalContextMenu({
       {/* Voir le détail */}
       <MenuItem onClick={() => { onViewDetail(state.itemId, state.level); onClose(); }}>
         <ListItemIcon><OpenInNewRoundedIcon fontSize="small" /></ListItemIcon>
-        <ListItemText>Voir le détail</ListItemText>
+        <ListItemText>{t("physical.contextMenu.viewDetail")}</ListItemText>
       </MenuItem>
 
       {/* Actions d'écriture — masquées si pas de droits */}
@@ -98,14 +100,14 @@ export default function PhysicalContextMenu({
       {canWrite && (
         <MenuItem onClick={() => { onRename(state.itemId, state.level, state.itemLabel); onClose(); }}>
           <ListItemIcon><EditOutlinedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Renommer</ListItemText>
+          <ListItemText>{t("physical.contextMenu.rename")}</ListItemText>
         </MenuItem>
       )}
 
-      {canWrite && childLabel && (
+      {canWrite && hasChild && (
         <MenuItem onClick={() => { onAdd(state.level, state.itemId); onClose(); }}>
           <ListItemIcon><AddRoundedIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Ajouter {childLabel}</ListItemText>
+          <ListItemText>{t("physical.contextMenu.addChild", { child: t(`physical.addChild.${state.level}`) })}</ListItemText>
         </MenuItem>
       )}
 
@@ -113,7 +115,7 @@ export default function PhysicalContextMenu({
         <MenuItem onClick={() => { onDelete(state.itemId, state.itemLabel, state.level); onClose(); }}
           sx={{ color: "error.main" }}>
           <ListItemIcon><DeleteOutlineRoundedIcon fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText>Supprimer « {state.itemLabel} »</ListItemText>
+          <ListItemText>{t("physical.contextMenu.deleteItem", { label: state.itemLabel })}</ListItemText>
         </MenuItem>
       )}
     </Menu>

@@ -25,6 +25,7 @@ import KeyboardReturnOutlinedIcon   from "@mui/icons-material/KeyboardReturnOutl
 import InfoOutlinedIcon             from "@mui/icons-material/InfoOutlined";
 import NavigateNextRoundedIcon      from "@mui/icons-material/NavigateNextRounded";
 
+import { useTranslation } from "react-i18next";
 import useAxios      from "@/hooks/useAxios";
 import { useSnackbar } from "notistack";
 import useToken      from "@/hooks/useToken";
@@ -71,6 +72,7 @@ export default function PhysicalArchiveContent() {
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { canWrite } = useArchivePermissions();
+  const { t } = useTranslation();
 
   // Largeur du tree (ajustable par drag)
   const [treeWidth, setTreeWidth] = useState(280);
@@ -419,7 +421,7 @@ export default function PhysicalArchiveContent() {
             }
             <Box flex={1} />
             {canWrite && (
-              <Tooltip title={`Ajouter ${{ container: "un conteneur", shelf: "une étagère", floor: "un niveau", binder: "un classeur", record: "un dossier", document: "un document" }[currentLevel]}`}>
+              <Tooltip title={`${t("common.add")} ${t(`physical.addItem.${currentLevel}`)}`}>
                 <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormParentLevel(breadcrumb.length > 0 ? breadcrumb[breadcrumb.length - 1]?.level : undefined); setFormOpen(true); }}>
                   <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
@@ -476,7 +478,7 @@ export default function PhysicalArchiveContent() {
         }}>
           {isMobile && showDetail && (
             <Button startIcon={<ArrowBackRoundedIcon />} onClick={() => setSelected(null)} sx={{ mb: 1, alignSelf: "flex-start" }} size="small">
-              Retour
+              {t("common.back")}
             </Button>
           )}
           {!selected ? (() => {
@@ -500,7 +502,7 @@ export default function PhysicalArchiveContent() {
                 <Stack alignItems="center" gap={1} px={2} textAlign="center">
                   <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
                   <Typography color="text.secondary" variant="body2">
-                    Sélectionnez un élément pour consulter ses informations
+                    {t("physical.selectElementDetail")}
                   </Typography>
                 </Stack>
               </Box>
@@ -575,9 +577,9 @@ export default function PhysicalArchiveContent() {
               data: { record: null, document: null },
             });
             dispatch(incrementVersion());
-            enqueueSnackbar(`L'archive « ${label} » a été dissociée du document.`, { variant: "success" });
+            enqueueSnackbar(t("notifications.archiveUnlinkedFromDoc", { label }), { variant: "success" });
           } catch {
-            enqueueSnackbar("La dissociation a échoué. Vérifiez vos droits et réessayez.", { variant: "error" });
+            enqueueSnackbar(t("notifications.archiveUnlinkFromDocFailed"), { variant: "error" });
           }
         }}
       />
@@ -594,17 +596,14 @@ export default function PhysicalArchiveContent() {
       {/* Confirmation de déplacement d'archive par drag & drop */}
       <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth>
         <DialogTitle component="div" fontWeight="bold">
-          Confirmer le déplacement
+          {t("dialogs.confirmMove")}
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2">
-            Déplacer l'archive <strong>« {moveConfirm?.archiveLabel} »</strong> vers
-            le document <strong>« {moveConfirm?.documentLabel} »</strong> ?
-          </Typography>
+          <Typography variant="body2" dangerouslySetInnerHTML={{ __html: t("dialogs.moveMessage", { archiveLabel: moveConfirm?.archiveLabel, documentLabel: moveConfirm?.documentLabel }) }} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancelMove} color="inherit">Annuler</Button>
-          <Button onClick={confirmMove} variant="contained">Déplacer</Button>
+          <Button onClick={cancelMove} color="inherit">{t("common.cancel")}</Button>
+          <Button onClick={confirmMove} variant="contained">{t("dialogs.moveAction")}</Button>
         </DialogActions>
       </Dialog>
     </Box>

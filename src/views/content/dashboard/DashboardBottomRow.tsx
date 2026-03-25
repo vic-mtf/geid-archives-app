@@ -27,6 +27,7 @@ import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 
+import { useTranslation } from "react-i18next";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
 import deepNavigate from "@/utils/deepNavigate";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
@@ -66,6 +67,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
 }: DashboardBottomRowProps) {
   const theme = useTheme();
   const navigateTo = useNavigateSetState();
+  const { t } = useTranslation();
 
   return (
     <Grid container spacing={2}>
@@ -76,13 +78,13 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                 <AlarmRoundedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
-                <Typography variant="body2" fontWeight="bold">Alertes de conservation</Typography>
+                <Typography variant="body2" fontWeight="bold">{t("dashboard.conservationAlerts")}</Typography>
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {duaExpired.length > 0 && (
                 <Box mb={1}>
                   <Typography variant="caption" color="error.main" fontWeight="bold" display="block" mb={0.5}>
-                    Expirées ({duaExpired.length})
+                    {t("dashboard.expired", { count: duaExpired.length })}
                   </Typography>
                   <List dense disablePadding>
                     {duaExpired.slice(0, 3).map((doc) => (
@@ -96,7 +98,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
               {duaSoon.length > 0 && (
                 <Box>
                   <Typography variant="caption" color="warning.main" fontWeight="bold" display="block" mb={0.5}>
-                    Bientôt ({duaSoon.length})
+                    {t("dashboard.soon", { count: duaSoon.length })}
                   </Typography>
                   <List dense disablePadding>
                     {duaSoon.slice(0, 3).map((doc) => (
@@ -119,7 +121,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                 <FolderOpenOutlinedIcon fontSize="small" color="action" />
-                <Typography variant="body2" fontWeight="bold">Classeurs</Typography>
+                <Typography variant="body2" fontWeight="bold">{t("dashboard.binders")}</Typography>
               </Stack>
               <Divider sx={{ mb: 1 }} />
               <Stack spacing={0.75}>
@@ -157,7 +159,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                 <LayersOutlinedIcon fontSize="small" color="action" />
-                <Typography variant="body2" fontWeight="bold">Inventaire physique</Typography>
+                <Typography variant="body2" fontWeight="bold">{t("dashboard.physicalInventory")}</Typography>
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {containersLoading || bindersLoading || recordsLoading ? (
@@ -165,10 +167,10 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
               ) : (
                 <Stack spacing={0.75}>
                   {[
-                    { label: "Conteneurs", value: containerList.length, color: theme.palette.primary.main },
-                    { label: "Classeurs", value: binderList.length, color: theme.palette.warning.main },
-                    { label: "Dossiers", value: recordList.length, color: theme.palette.info.main },
-                    { label: "Archives liées", value: archiveList.filter(a => (a as Record<string, unknown>).record).length, color: theme.palette.success.main },
+                    { label: t("dashboard.containers"), value: containerList.length, color: theme.palette.primary.main },
+                    { label: t("dashboard.binders"), value: binderList.length, color: theme.palette.warning.main },
+                    { label: t("dashboard.folders"), value: recordList.length, color: theme.palette.info.main },
+                    { label: t("dashboard.linkedArchives"), value: archiveList.filter(a => (a as Record<string, unknown>).record).length, color: theme.palette.success.main },
                   ].map(({ label, value, color }) => (
                     <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
                       <Stack direction="row" alignItems="center" spacing={1}>
@@ -182,7 +184,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
               )}
               <Box mt={1.5} display="flex" justifyContent="flex-end">
                 <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                  Gérer <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
+                  {t("common.manage")} <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
                 </Typography>
               </Box>
             </CardContent>
@@ -198,7 +200,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                   <PeopleOutlineRoundedIcon fontSize="small" color="action" />
-                  <Typography variant="body2" fontWeight="bold">Utilisateurs</Typography>
+                  <Typography variant="body2" fontWeight="bold">{t("dashboard.users")}</Typography>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
                 {statsLoading ? (
@@ -206,11 +208,11 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                 ) : globalStats ? (
                   <Stack spacing={0.75}>
                     {[
-                      { label: "Total", value: globalStats.users.total, color: theme.palette.primary.main },
-                      { label: "Actifs", value: globalStats.users.active, color: theme.palette.success.main },
-                      { label: "Inactifs", value: globalStats.users.inactive, color: theme.palette.error.main },
-                      { label: "Accès archives", value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
-                      { label: "Admins", value: globalStats.users.admins, color: theme.palette.warning.main },
+                      { label: t("dashboard.usersTotal"), value: globalStats.users.total, color: theme.palette.primary.main },
+                      { label: t("dashboard.usersActive"), value: globalStats.users.active, color: theme.palette.success.main },
+                      { label: t("dashboard.usersInactive"), value: globalStats.users.inactive, color: theme.palette.error.main },
+                      { label: t("dashboard.usersArchiveAccess"), value: globalStats.users.withArchiveAccess, color: theme.palette.info.main },
+                      { label: t("dashboard.usersAdmins"), value: globalStats.users.admins, color: theme.palette.warning.main },
                     ].map(({ label, value, color }) => (
                       <Stack key={label} direction="row" alignItems="center" justifyContent="space-between">
                         <Stack direction="row" alignItems="center" spacing={1}>
@@ -224,7 +226,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                 ) : null}
                 <Box mt={1.5} display="flex" justifyContent="flex-end">
                   <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                    Gérer <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
+                    {t("common.manage")} <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
                   </Typography>
                 </Box>
               </CardContent>
@@ -238,13 +240,13 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
         <Grid item xs={12} sm={6} md={canWrite ? 3 : 6}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent>
-              <Typography variant="body2" fontWeight="bold" mb={1}>Accès rapide</Typography>
+              <Typography variant="body2" fontWeight="bold" mb={1}>{t("dashboard.quickAccess")}</Typography>
               <Divider sx={{ mb: 1 }} />
               <Stack spacing={0.75}>
                 {[
-                  { label: "Archives numériques", desc: "Soumettre, valider, modifier", tab: "archiveManager" },
-                  { label: "Archivage physique", desc: "Conteneurs, classeurs, dossiers", tab: "physicalArchive" },
-                  { label: "Documentation", desc: "Manuel utilisateur", tab: "help" },
+                  { label: t("dashboard.digitalArchives"), desc: t("dashboard.digitalArchivesDesc"), tab: "archiveManager" },
+                  { label: t("dashboard.physicalArchiving"), desc: t("dashboard.physicalArchivingDesc"), tab: "physicalArchive" },
+                  { label: t("dashboard.documentation"), desc: t("dashboard.documentationDesc"), tab: "help" },
                 ].map(({ label, tab, desc }) => (
                   <Box key={tab} onClick={() => deepNavigate(navigateTo, { tab })}
                     sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1, py: 0.75, borderRadius: 1, cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, border: "1px solid", borderColor: "divider" }}>

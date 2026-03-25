@@ -28,9 +28,11 @@ import {
   useTheme,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import i18n from "@/i18n/i18n";
 import { useSnackbar } from "notistack";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
@@ -80,30 +82,30 @@ interface LevelConfig {
 
 const levels: Record<PhysicalLevel, LevelConfig> = {
   container: {
-    title: "Nouveau conteneur",
+    title: i18n.t("forms.physicalEntity.container.title"),
     url: "/api/stuff/archives/physical/containers",
     fields: [
       {
         name: "name",
-        label: "Nom *",
+        label: i18n.t("forms.physicalEntity.container.nameLabel"),
         required: true,
-        helperText: "Identifiant lisible du conteneur pour le localiser physiquement (ex : Armoire A — Bâtiment Principal)",
+        helperText: i18n.t("forms.physicalEntity.container.nameHelper"),
       },
       {
         name: "location",
-        label: "Localisation",
-        helperText: "Adresse précise dans les locaux (ex : Salle archives, Niveau 0, Couloir B)",
+        label: i18n.t("forms.physicalEntity.container.locationLabel"),
+        helperText: i18n.t("forms.physicalEntity.container.locationHelper"),
       },
       {
         name: "description",
-        label: "Description",
+        label: i18n.t("forms.physicalEntity.container.descriptionLabel"),
         multiline: true,
         rows: 3,
-        helperText: "Contenu prévu, restrictions d'accès ou conditions de conservation",
+        helperText: i18n.t("forms.physicalEntity.container.descriptionHelper"),
       },
     ],
     schema: yup.object({
-      name: yup.string().trim().required("Le nom est requis"),
+      name: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.nameRequired")),
       location: yup.string(),
       description: yup.string(),
     }),
@@ -111,160 +113,160 @@ const levels: Record<PhysicalLevel, LevelConfig> = {
   },
 
   shelf: {
-    title: "Nouvelle étagère",
+    title: i18n.t("forms.physicalEntity.shelf.title"),
     url: "/api/stuff/archives/physical/shelves",
     fields: [
       {
         name: "name",
-        label: "Nom *",
+        label: i18n.t("forms.physicalEntity.shelf.nameLabel"),
         required: true,
-        helperText: "Désignation de la rangée avec sa position (ex : Étagère 1 — Haut)",
+        helperText: i18n.t("forms.physicalEntity.shelf.nameHelper"),
       },
       {
         name: "description",
-        label: "Description",
+        label: i18n.t("forms.physicalEntity.shelf.descriptionLabel"),
         multiline: true,
         rows: 2,
-        helperText: "Description optionnelle du contenu prévu de cette rangée",
+        helperText: i18n.t("forms.physicalEntity.shelf.descriptionHelper"),
       },
     ],
     schema: yup.object({
-      name: yup.string().trim().required("Le nom est requis"),
+      name: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.nameRequired")),
       description: yup.string(),
     }),
     buildBody: (data, parentId) => ({ ...data, container: parentId }),
   },
 
   floor: {
-    title: "Nouvel étage",
+    title: i18n.t("forms.physicalEntity.floor.title"),
     url: "/api/stuff/archives/physical/floors",
     fields: [
       {
         name: "number",
-        label: "Numéro *",
+        label: i18n.t("forms.physicalEntity.floor.numberLabel"),
         required: true,
         type: "number",
-        helperText: "Position sur l'étagère, commence à 1",
+        helperText: i18n.t("forms.physicalEntity.floor.numberHelper"),
       },
       {
         name: "label",
-        label: "Libellé",
-        helperText: "Description libre de ce compartiment (ex : Dossiers actifs 2023-2024)",
+        label: i18n.t("forms.physicalEntity.floor.labelLabel"),
+        helperText: i18n.t("forms.physicalEntity.floor.labelHelper"),
       },
     ],
     schema: yup.object({
-      number: yup.number().typeError("Doit être un nombre").required("Le numéro est requis").min(1),
+      number: yup.number().typeError(i18n.t("forms.physicalEntity.validationErrors.mustBeNumber")).required(i18n.t("forms.physicalEntity.validationErrors.numberRequired")).min(1),
       label: yup.string(),
     }),
     buildBody: (data, parentId) => ({ ...data, shelf: parentId }),
   },
 
   binder: {
-    title: "Nouveau classeur",
+    title: i18n.t("forms.physicalEntity.binder.title"),
     url: "/api/stuff/archives/physical/binders",
     fields: [
       {
         name: "name",
-        label: "Nom *",
+        label: i18n.t("forms.physicalEntity.binder.nameLabel"),
         required: true,
-        helperText: "Titre du classeur permettant d'identifier rapidement son contenu",
+        helperText: i18n.t("forms.physicalEntity.binder.nameHelper"),
       },
       {
         name: "nature",
-        label: "Nature *",
+        label: i18n.t("forms.physicalEntity.binder.natureLabel"),
         required: true,
-        helperText: "Catégorie thématique en MAJUSCULES — détermine les dossiers autorisés (ex : RH, FINANCE, JURIDIQUE)",
+        helperText: i18n.t("forms.physicalEntity.binder.natureHelper"),
       },
       {
         name: "maxCapacity",
-        label: "Capacité maximale *",
+        label: i18n.t("forms.physicalEntity.binder.maxCapacityLabel"),
         required: true,
         type: "number",
-        helperText: "Nombre maximum de dossiers pouvant être rangés dans ce classeur",
+        helperText: i18n.t("forms.physicalEntity.binder.maxCapacityHelper"),
       },
     ],
     schema: yup.object({
-      name: yup.string().trim().required("Le nom est requis"),
-      nature: yup.string().trim().required("La nature est requise"),
-      maxCapacity: yup.number().typeError("Doit être un nombre").required("La capacité est requise").min(1, "Minimum 1"),
+      name: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.nameRequired")),
+      nature: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.natureRequired")),
+      maxCapacity: yup.number().typeError(i18n.t("forms.physicalEntity.validationErrors.mustBeNumber")).required(i18n.t("forms.physicalEntity.validationErrors.capacityRequired")).min(1, i18n.t("forms.physicalEntity.validationErrors.capacityMin")),
     }),
     buildBody: (data, parentId) => ({ ...data, floor: parentId }),
   },
 
   record: {
-    title: "Nouveau dossier",
+    title: i18n.t("forms.physicalEntity.record.title"),
     url: "/api/stuff/archives/physical/records",
     fields: [
       {
         name: "internalNumber",
-        label: "N° interne *",
+        label: i18n.t("forms.physicalEntity.record.internalNumberLabel"),
         required: true,
-        helperText: "Code unique attribué par le service d'archives (ex : DOS-2024-0042)",
+        helperText: i18n.t("forms.physicalEntity.record.internalNumberHelper"),
       },
       {
         name: "refNumber",
-        label: "N° référence *",
+        label: i18n.t("forms.physicalEntity.record.refNumberLabel"),
         required: true,
-        helperText: "Référence croisée avec votre système de gestion (ex : REF-DRH-042)",
+        helperText: i18n.t("forms.physicalEntity.record.refNumberHelper"),
       },
       {
         name: "subject",
-        label: "Objet *",
+        label: i18n.t("forms.physicalEntity.record.subjectLabel"),
         required: true,
-        helperText: "Intitulé précis décrivant le contenu principal du dossier",
+        helperText: i18n.t("forms.physicalEntity.record.subjectHelper"),
       },
       {
         name: "category",
-        label: "Catégorie *",
+        label: i18n.t("forms.physicalEntity.record.categoryLabel"),
         required: true,
-        helperText: "Famille documentaire pour le filtrage (ex : Contrats, Marchés, Personnel)",
+        helperText: i18n.t("forms.physicalEntity.record.categoryHelper"),
       },
-      { name: "editionDate", label: "Date d'édition *", required: true, type: "date", helperText: "Date à laquelle le document original a été produit ou signé" },
-      { name: "archivingDate", label: "Date d'archivage *", required: true, type: "date", helperText: "Date d'intégration physique aux archives (généralement aujourd'hui)" },
+      { name: "editionDate", label: i18n.t("forms.physicalEntity.record.editionDateLabel"), required: true, type: "date", helperText: i18n.t("forms.physicalEntity.record.editionDateHelper") },
+      { name: "archivingDate", label: i18n.t("forms.physicalEntity.record.archivingDateLabel"), required: true, type: "date", helperText: i18n.t("forms.physicalEntity.record.archivingDateHelper") },
     ],
     schema: yup.object({
-      internalNumber: yup.string().trim().required("Le N° interne est requis"),
-      refNumber: yup.string().trim().required("Le N° référence est requis"),
-      subject: yup.string().trim().required("L'objet est requis"),
-      category: yup.string().trim().required("La catégorie est requise"),
-      editionDate: yup.string().required("La date d'édition est requise"),
-      archivingDate: yup.string().required("La date d'archivage est requise"),
+      internalNumber: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.internalNumberRequired")),
+      refNumber: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.refNumberRequired")),
+      subject: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.subjectRequired")),
+      category: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.categoryRequired")),
+      editionDate: yup.string().required(i18n.t("forms.physicalEntity.validationErrors.editionDateRequired")),
+      archivingDate: yup.string().required(i18n.t("forms.physicalEntity.validationErrors.archivingDateRequired")),
     }),
     // nature injectée automatiquement depuis le classeur parent dans onSubmit
     buildBody: (data, parentId) => ({ ...data, binder: parentId }),
   },
 
   document: {
-    title: "Nouveau document",
+    title: i18n.t("forms.physicalEntity.document.title"),
     url: "/api/stuff/archives/physical/documents",
     fields: [
       {
         name: "title",
-        label: "Titre *",
+        label: i18n.t("forms.physicalEntity.document.titleLabel"),
         required: true,
-        helperText: "Intitulé du document (ex : Contrat de travail, PV de réunion)",
+        helperText: i18n.t("forms.physicalEntity.document.titleHelper"),
       },
       {
         name: "description",
-        label: "Description",
+        label: i18n.t("forms.physicalEntity.document.descriptionLabel"),
         multiline: true,
         rows: 2,
-        helperText: "Description du contenu du document",
+        helperText: i18n.t("forms.physicalEntity.document.descriptionHelper"),
       },
       {
         name: "nature",
-        label: "Nature",
-        helperText: "Type de document en MAJUSCULES (ex : CONTRAT, PV, FACTURE)",
+        label: i18n.t("forms.physicalEntity.document.natureLabel"),
+        helperText: i18n.t("forms.physicalEntity.document.natureHelper"),
       },
       {
         name: "documentDate",
-        label: "Date du document",
+        label: i18n.t("forms.physicalEntity.document.documentDateLabel"),
         type: "date",
-        helperText: "Date figurant sur le document original",
+        helperText: i18n.t("forms.physicalEntity.document.documentDateHelper"),
       },
     ],
     schema: yup.object({
-      title: yup.string().trim().required("Le titre est requis"),
+      title: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.titleRequired")),
       description: yup.string(),
       nature: yup.string(),
       documentDate: yup.string(),
@@ -293,6 +295,7 @@ export default function PhysicalEntityForm({
   onClose,
   onSuccess,
 }: PhysicalEntityFormProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const config = levels[level];
@@ -351,24 +354,16 @@ export default function PhysicalEntityForm({
     if (level === "record" && binderNature) {
       body = { ...body, nature: binderNature };
     }
-    const levelNames: Record<PhysicalLevel, string> = {
-      container: "conteneur",
-      shelf:     "étagère",
-      floor:     "niveau",
-      binder:    "classeur",
-      record:    "dossier",
-      document:  "document",
-    };
-    const levelName = levelNames[level] ?? "élément";
-    const snackKey = enqueueSnackbar(`Création du ${levelName} en cours, veuillez patienter…`, {
+    const levelName = t(`physical.levelsLower.${level}`) ?? level;
+    const snackKey = enqueueSnackbar(t("notifications.physicalCreatePending", { level: levelName }), {
       autoHideDuration: null,
     });
     try {
       await execute({ data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar(`Le ${levelName} a été créé et ajouté à l'inventaire physique. Vous pouvez maintenant y rattacher des archives ou y ajouter des sous-éléments.`, {
+      enqueueSnackbar(t("notifications.physicalCreated", { level: levelName }), {
         variant: "success",
-        title: `${levelName.charAt(0).toUpperCase() + levelName.slice(1)} créé avec succès`,
+        title: t("notifications.physicalCreatedTitle", { level: levelName.charAt(0).toUpperCase() + levelName.slice(1) }),
       });
       reset();
       onSuccess();
@@ -376,23 +371,23 @@ export default function PhysicalEntityForm({
       closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        `La création du ${levelName} a échoué. Vérifiez les informations saisies et réessayez.`;
-      enqueueSnackbar(msg, { variant: "error", title: `Impossible de créer le ${levelName}` });
+        t("notifications.physicalCreateFailed", { level: levelName });
+      enqueueSnackbar(msg, { variant: "error", title: t("notifications.physicalCreateFailedTitle", { level: levelName }) });
     }
   };
 
   // Label du niveau PARENT — avec article contracté correct
-  const parentLevelLabel: Partial<Record<PhysicalLevel, string>> = {
-    shelf:    "au conteneur",
-    floor:    "à l'étagère",
-    binder:   "au niveau",
-    record:   "au classeur",
-    document: "au dossier",
+  const parentLevelLabels: Partial<Record<PhysicalLevel, string>> = {
+    shelf:    t("forms.physicalEntity.parentLabel.shelf"),
+    floor:    t("forms.physicalEntity.parentLabel.floor"),
+    binder:   t("forms.physicalEntity.parentLabel.binder"),
+    record:   t("forms.physicalEntity.parentLabel.record"),
+    document: t("forms.physicalEntity.parentLabel.document"),
   };
   // Si on crée un document dans un document, le parent est un document, pas un dossier
   const resolvedParentLabel = (level === "document" && parentLevel === "document")
-    ? "au document"
-    : parentLevelLabel[level];
+    ? t("forms.physicalEntity.parentLabel.documentInDocument")
+    : parentLevelLabels[level];
 
   // Sections du guide par niveau — IDs correspondant aux sections de HelpContent
   const guideSection: Partial<Record<PhysicalLevel, string>> = {
@@ -409,7 +404,7 @@ export default function PhysicalEntityForm({
       <DialogTitle component="div" fontWeight="bold">
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <span>{config.title}</span>
-          <Tooltip title="Voir le guide utilisateur pour ce type d'élément" placement="top">
+          <Tooltip title={t("forms.physicalEntity.guideTooltip")} placement="top">
             <IconButton
               size="small"
               tabIndex={-1}
@@ -433,7 +428,7 @@ export default function PhysicalEntityForm({
         </Stack>
         {parentId && (
           <Typography variant="caption" color="text.secondary" display="block">
-            Rattaché {resolvedParentLabel ?? "à l'élément parent"}{parentName && <> : <strong>{parentName}</strong></>}
+            {t("forms.physicalEntity.attachedTo", { parentLabel: resolvedParentLabel ?? "à l'élément parent" })}{parentName && <> : <strong>{parentName}</strong></>}
           </Typography>
         )}
       </DialogTitle>
@@ -485,10 +480,10 @@ export default function PhysicalEntityForm({
 
       <DialogActions>
         <Button onClick={handleClose} color="inherit">
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button type="submit" form="physical-form" variant="contained" disabled={isSubmitting}>
-          Enregistrer
+          {t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button, DialogTitle, Dialog, useMediaQuery, useTheme } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -9,6 +10,7 @@ import FormContent from "./FormContent";
 import { FieldValues } from "react-hook-form";
 
 export default function ValidateForm() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [doc, setDoc] = useState<string | null>(null);
@@ -32,9 +34,9 @@ export default function ValidateForm() {
       };
 
       const pendingKey = enqueueSnackbar(
-        "Le document est en cours de validation. Vous pouvez encore annuler si vous avez fait une erreur.",
+        t("notifications.validatePending"),
         {
-          title: "Validation en cours…",
+          title: t("notifications.validatePendingTitle"),
           action: (id) => (
             <Button
               color="inherit"
@@ -44,7 +46,7 @@ export default function ValidateForm() {
                 window.clearTimeout(timer);
                 closeSnackbar(id);
               }}>
-              Annuler
+              {t("common.cancel")}
             </Button>
           ),
           autoHideDuration: null,
@@ -57,21 +59,21 @@ export default function ValidateForm() {
           .then(() => {
             closeSnackbar(pendingKey);
             dispatch(incrementVersion());
-            enqueueSnackbar("Le document a été validé avec succès. Il entre maintenant dans le cycle de vie actif et est accessible dans la liste des archives.", {
+            enqueueSnackbar(t("notifications.validateSuccess"), {
               variant: "success",
-              title: "Document validé !",
+              title: t("notifications.validateSuccessTitle"),
             });
           })
           .catch((err) => {
             closeSnackbar(pendingKey);
             const msg =
               (err?.response?.data?.error as string) ??
-              "Une erreur est survenue. Impossible de valider ce document.";
-            enqueueSnackbar(msg, { variant: "error", title: "Validation échouée — vérifiez les informations" });
+              t("notifications.validateFailed");
+            enqueueSnackbar(msg, { variant: "error", title: t("notifications.validateFailedTitle") });
           });
       }, 1500);
     },
-    [cancel, closeSnackbar, enqueueSnackbar, refresh, doc, dispatch]
+    [cancel, closeSnackbar, enqueueSnackbar, refresh, doc, dispatch, t]
   );
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export default function ValidateForm() {
         component: "div",
       }}>
       <DialogTitle component='div' fontWeight='bold' fontSize={18}>
-        Validation du document
+        {t("forms.validate.title")}
       </DialogTitle>
       <FormContent
         onClose={(event) => {

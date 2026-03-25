@@ -7,6 +7,7 @@
  */
 
 import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Chip,
@@ -81,52 +82,56 @@ function fmtDate(d?: string) {
 }
 
 function ContainerDetail({ item }: { item: Container }) {
+  const { t } = useTranslation();
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      {item.location && <DetailRow icon={<LocationOnOutlinedIcon fontSize="small" />} label="Localisation" value={item.location} />}
-      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />}
-      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
-      {item.updatedAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Modifié le" value={fmtDate(item.updatedAt)} />}
+      <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.name")} value={item.name} />
+      {item.location && <DetailRow icon={<LocationOnOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.location")} value={item.location} />}
+      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.description")} value={item.description} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.createdAt")} value={fmtDate(item.createdAt)} />}
+      {item.updatedAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.updatedAt")} value={fmtDate(item.updatedAt)} />}
     </Stack>
   );
 }
 
 function ShelfDetail({ item }: { item: Shelf }) {
+  const { t } = useTranslation();
   const containerName = typeof item.container === "object" && item.container ? (item.container as { name?: string }).name : null;
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      {containerName && <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label="Conteneur" value={containerName} />}
-      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />}
-      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
+      <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.name")} value={item.name} />
+      {containerName && <DetailRow icon={<WarehouseOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.container")} value={containerName} />}
+      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.description")} value={item.description} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.createdAt")} value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
 
 function FloorDetail({ item }: { item: Floor }) {
+  const { t } = useTranslation();
   const shelfName = typeof item.shelf === "object" && item.shelf ? (item.shelf as { name?: string }).name : null;
   const unitName = typeof item.administrativeUnit === "object" && item.administrativeUnit ? (item.administrativeUnit as { name: string }).name : null;
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<ViewStreamOutlinedIcon fontSize="small" />} label="Numéro" value={`${item.number}`} />
-      {item.label && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Libellé" value={item.label} />}
-      {shelfName && <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label="Étagère" value={shelfName} />}
-      {unitName && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Unité administrative" value={unitName} />}
-      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
+      <DetailRow icon={<ViewStreamOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.number")} value={`${item.number}`} />
+      {item.label && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.label")} value={item.label} />}
+      {shelfName && <DetailRow icon={<DnsOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.shelf")} value={shelfName} />}
+      {unitName && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.administrativeUnit")} value={unitName} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.createdAt")} value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
 
 function BinderDetail({ item }: { item: Binder }) {
+  const { t } = useTranslation();
   const pct = item.currentCount != null ? Math.min(100, (item.currentCount / item.maxCapacity) * 100) : 0;
   return (
     <Stack spacing={1.5}>
-      <DetailRow icon={<FolderOutlinedIcon fontSize="small" />} label="Nom" value={item.name} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
+      <DetailRow icon={<FolderOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.name")} value={item.name} />
+      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.nature")} value={item.nature} />
       <Box>
         <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-          Occupation : {item.currentCount ?? 0} / {item.maxCapacity}
+          {t("physical.detailLabels.occupation", { current: item.currentCount ?? 0, max: item.maxCapacity })}
         </Typography>
         <LinearProgress
           variant="determinate"
@@ -135,12 +140,13 @@ function BinderDetail({ item }: { item: Binder }) {
           sx={{ height: 6, borderRadius: 2 }}
         />
       </Box>
-      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.createdAt")} value={fmtDate(item.createdAt)} />}
     </Stack>
   );
 }
 
 function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record<string, string> }) {
+  const { t } = useTranslation();
   const [{ data: archivesData, loading: archLoading }] = useAxios<{
     record: string; count: number;
     archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; fileUrl?: string }>;
@@ -150,31 +156,31 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
 
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label="N° interne" value={item.internalNumber} />
-      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label="N° référence" value={item.refNumber} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Objet" value={item.subject} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Catégorie" value={item.category} />
-      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />
-      {item.editionDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'édition" value={fmtDate(item.editionDate)} />}
-      {item.archivingDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date d'archivage" value={fmtDate(item.archivingDate)} />}
-      {item.qrCode && <DetailRow icon={<QrCode2RoundedIcon fontSize="small" />} label="Code QR" value={item.qrCode} />}
+      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.internalNumber")} value={item.internalNumber} />
+      <DetailRow icon={<ArticleOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.refNumber")} value={item.refNumber} />
+      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.subject")} value={item.subject} />
+      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.category")} value={item.category} />
+      <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.nature")} value={item.nature} />
+      {item.editionDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.editionDate")} value={fmtDate(item.editionDate)} />}
+      {item.archivingDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.archivingDate")} value={fmtDate(item.archivingDate)} />}
+      {item.qrCode && <DetailRow icon={<QrCode2RoundedIcon fontSize="small" />} label={t("physical.detailLabels.qrCode")} value={item.qrCode} />}
       {item.agent && typeof item.agent === "object" && (
-        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Agent" value={`${(item.agent as { firstName?: string }).firstName ?? ""} ${(item.agent as { lastName?: string }).lastName ?? ""}`.trim()} />
+        <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.agent")} value={`${(item.agent as { firstName?: string }).firstName ?? ""} ${(item.agent as { lastName?: string }).lastName ?? ""}`.trim()} />
       )}
-      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Créé le" value={fmtDate(item.createdAt)} />}
+      {item.createdAt && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.createdAt")} value={fmtDate(item.createdAt)} />}
 
       {/* Archives numériques liées */}
       <Divider sx={{ my: 1 }} />
       <Stack direction="row" alignItems="center" gap={1} mb={1}>
         <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
-        <Typography variant="subtitle2" fontWeight="bold">Archives numériques liées</Typography>
+        <Typography variant="subtitle2" fontWeight="bold">{t("physical.linkedDigitalArchives")}</Typography>
         {archivesData && <Chip label={archivesData.count} size="small" color="default" />}
       </Stack>
       {archLoading ? (
         <CircularProgress size={20} />
       ) : linkedArchives.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
-          Aucune archive numérique n&apos;est rattachée à ce dossier.
+          {t("physical.noLinkedArchiveRecord")}
         </Typography>
       ) : (
         <Stack spacing={0.5}>
@@ -199,6 +205,7 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
 }
 
 function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Record<string, string> }) {
+  const { t } = useTranslation();
   const [{ data: archivesData, loading: archLoading }] = useAxios<{
     document: string; count: number;
     archives: Array<{ _id: string; designation?: string; folder?: string; classNumber?: string; status?: string; validated?: boolean; fileUrl?: string }>;
@@ -208,22 +215,22 @@ function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Re
 
   return (
     <Stack spacing={1}>
-      <DetailRow icon={<DescriptionOutlinedIcon fontSize="small" />} label="Titre" value={item.title} />
-      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label="Description" value={item.description} />}
-      {item.nature && <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label="Nature" value={item.nature} />}
-      {item.documentDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label="Date du document" value={new Date(item.documentDate).toLocaleDateString("fr-FR")} />}
+      <DetailRow icon={<DescriptionOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.title")} value={item.title} />
+      {item.description && <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.description")} value={item.description} />}
+      {item.nature && <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.nature")} value={item.nature} />}
+      {item.documentDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.documentDate")} value={new Date(item.documentDate).toLocaleDateString("fr-FR")} />}
 
       <Divider sx={{ my: 1 }} />
       <Stack direction="row" alignItems="center" gap={1} mb={1}>
         <ArticleOutlinedIcon fontSize="small" sx={{ color: "text.secondary" }} />
-        <Typography variant="subtitle2" fontWeight="bold">Archives numériques liées</Typography>
+        <Typography variant="subtitle2" fontWeight="bold">{t("physical.linkedDigitalArchives")}</Typography>
         {archivesData && <Chip label={archivesData.count} size="small" color="default" />}
       </Stack>
       {archLoading ? (
         <CircularProgress size={20} />
       ) : linkedArchives.length === 0 ? (
         <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 0.5 }}>
-          Aucune archive numérique rattachée à ce document.
+          {t("physical.noLinkedArchiveDocument")}
         </Typography>
       ) : (
         <Stack spacing={0.5}>
@@ -250,6 +257,7 @@ function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Re
 // ── Composant principal ──────────────────────────────────────
 
 export default function DetailPanel({ level, item, onDelete, headers }: DetailPanelProps) {
+  const { t } = useTranslation();
   const itemLabel = useMemo(() => {
     const it = item as unknown as Record<string, unknown>;
     return (it.name ?? it.title ?? it.internalNumber ?? it.subject ?? (it.number !== undefined ? `Étage ${it.number}` : null) ?? it._id) as string;
@@ -262,7 +270,7 @@ export default function DetailPanel({ level, item, onDelete, headers }: DetailPa
           {LEVEL_LABELS[level]}
         </Typography>
         <Chip label={LEVEL_LABELS[level]} size="small" variant="outlined" />
-        <Tooltip title="Supprimer cet élément" placement="top">
+        <Tooltip title={t("physical.deleteTooltip")} placement="top">
           <IconButton size="small" color="error" onClick={() => onDelete(item._id, itemLabel)}>
             <DeleteOutlineRoundedIcon fontSize="small" />
           </IconButton>

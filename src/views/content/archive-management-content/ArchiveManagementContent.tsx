@@ -38,7 +38,7 @@ import ArchiveManagementHeader from "./ArchiveManagementHeader";
 import ArchiveSidebar          from "./ArchiveSidebar";
 import MobileFilterChips       from "./MobileFilterChips";
 import SummaryPanel            from "./SummaryPanel";
-import STATUS_NAV, { type StatusFilter } from "./statusNav";
+import getStatusNav, { type StatusFilter } from "./statusNav";
 import { exportArchivesCSV }   from "./exportCSV";
 import { computeExpiresAt, dispatchArchiveAction } from "./helpers";
 
@@ -380,7 +380,7 @@ export default function ArchiveManagementContent() {
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}
       <ArchiveSidebar
         canWrite={canWrite}
-        statusNav={STATUS_NAV}
+        statusNav={getStatusNav()}
         statusFilter={statusFilter}
         quickFilter={quickFilter}
         totalCount={totalCount}
@@ -402,7 +402,7 @@ export default function ArchiveManagementContent() {
 
         {/* Chips de filtre — mobile uniquement */}
         <MobileFilterChips
-          statusNav={STATUS_NAV}
+          statusNav={getStatusNav()}
           statusFilter={statusFilter}
           quickFilter={quickFilter}
           totalCount={totalCount}

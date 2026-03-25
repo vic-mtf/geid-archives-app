@@ -5,6 +5,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import "dayjs/locale/fr";
 import store from "./redux/store";
+import "./i18n/i18n";
 import "./styles/index.css";
 import App from "./App";
 import ConfigAppProvider from "./providers/ConfigAppProvider";

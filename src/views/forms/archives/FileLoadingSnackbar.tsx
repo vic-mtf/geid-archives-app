@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -28,6 +29,7 @@ const INITIAL: FileLoadingState = {
 };
 
 const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
+  const { t } = useTranslation();
   const [state, setState] = useState<FileLoadingState>(INITIAL);
 
   useEffect(() => {
@@ -73,7 +75,7 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
             <ErrorOutlineRoundedIcon color="error" sx={{ mt: 0.25, flexShrink: 0 }} />
             <Box flex={1}>
               <Typography variant="body2" fontWeight={600} color="error.main">
-                Impossible d'ouvrir le fichier
+                {t("files.cannotOpenFile")}
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mt={0.25}>
                 {state.error}
@@ -87,7 +89,7 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
           <Stack direction="row" alignItems="center" spacing={1}>
             <CloseRoundedIcon color="warning" sx={{ flexShrink: 0 }} />
             <Typography variant="body2" color="text.secondary">
-              Le chargement de « {state.fileName} » a été annulé.
+              {t("files.cancelled", { fileName: state.fileName })}
             </Typography>
           </Stack>
         )}
@@ -97,7 +99,7 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
           <Stack spacing={0.5}>
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="body2" fontWeight={500} noWrap sx={{ flex: 1, mr: 1 }}>
-                Préparation de « {state.fileName} »
+                {t("files.preparingFile", { fileName: state.fileName })}
               </Typography>
               <Button
                 size="small"
@@ -105,15 +107,15 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
                 onClick={cancelFileLoading}
                 sx={{ minWidth: 0, fontSize: "0.75rem", textTransform: "none", flexShrink: 0 }}
               >
-                Annuler
+                {t("common.cancel")}
               </Button>
             </Stack>
             <Typography variant="caption" color="text.secondary">
               {hasTotal
-                ? `${formatSize(state.received)} sur ${formatSize(state.total)} — ${state.progress} %`
+                ? t("files.progressWithTotal", { received: formatSize(state.received), total: formatSize(state.total), percent: state.progress })
                 : state.received > 0
-                  ? `${formatSize(state.received)} téléchargés…`
-                  : "Connexion au serveur, veuillez patienter…"
+                  ? t("files.progressWithoutTotal", { received: formatSize(state.received) })
+                  : t("files.connecting")
               }
             </Typography>
           </Stack>

@@ -7,7 +7,7 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
-// Typography est utilisé dans le corps du Dialog
+import { useTranslation } from "react-i18next";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -17,6 +17,7 @@ import useAxios from "@/hooks/useAxios";
 const EVENT_NAME = "__delete_archive_docs";
 
 export default function ArchiveDeleteConfirm() {
+  const { t } = useTranslation();
   const [ids, setIds] = useState<(string | number)[]>([]);
   const { enqueueSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
@@ -43,8 +44,8 @@ export default function ArchiveDeleteConfirm() {
     const count = ids.length;
     const key = enqueueSnackbar(
       count > 1
-        ? `Suppression des ${count} archives en cours, veuillez patienter…`
-        : "Suppression de l'archive en cours, veuillez patienter…",
+        ? t("notifications.archiveDeletePendingBulk", { count })
+        : t("notifications.archiveDeletePendingSingle"),
       { autoHideDuration: null }
     );
     try {
@@ -53,16 +54,16 @@ export default function ArchiveDeleteConfirm() {
       );
       enqueueSnackbar(
         count > 1
-          ? `Les ${count} archives sélectionnées ont été supprimées définitivement. Elles ne peuvent plus être récupérées.`
-          : "L'archive a été supprimée définitivement. Elle ne peut plus être récupérée.",
-        { variant: "success", title: count > 1 ? `${count} archives supprimées` : "Archive supprimée" }
+          ? t("notifications.archiveDeletedBulk", { count })
+          : t("notifications.archiveDeletedSingle"),
+        { variant: "success", title: count > 1 ? t("notifications.archiveDeletedBulkTitle", { count }) : t("notifications.archiveDeletedSingleTitle") }
       );
       dispatch(incrementVersion());
       handleClose();
     } catch {
       enqueueSnackbar(
-        "La suppression a échoué. Les archives sélectionnées n'ont pas été affectées. Vérifiez votre connexion et réessayez.",
-        { variant: "error", title: "Suppression impossible" }
+        t("notifications.archiveDeleteFailed"),
+        { variant: "error", title: t("notifications.archiveDeleteFailedTitle") }
       );
     } finally {
       enqueueSnackbar("", { key, persist: false });
@@ -72,21 +73,21 @@ export default function ArchiveDeleteConfirm() {
   return (
     <Dialog open={ids.length > 0} onClose={handleClose} maxWidth="xs" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
-        Confirmer la suppression
+        {t("dialogs.confirmDeletion")}
       </DialogTitle>
       <DialogContent>
         <Typography>
           {ids.length > 1
-            ? `Supprimer les ${ids.length} archives sélectionnées ?`
-            : "Supprimer cette archive ? Cette action est irréversible."}
+            ? t("dialogs.deleteArchiveBulk", { count: ids.length })
+            : t("dialogs.deleteArchiveSingle")}
         </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="inherit">
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="error">
-          Supprimer
+          {t("common.delete")}
         </Button>
       </DialogActions>
     </Dialog>

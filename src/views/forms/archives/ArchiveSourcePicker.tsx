@@ -21,10 +21,12 @@ import {
 } from "@mui/material";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined";
+import { useTranslation } from "react-i18next";
 
 const EVENT_NAME = "__open_archive_source_picker";
 
 const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -55,11 +57,11 @@ const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
-        Ajouter une archive
+        {t("forms.archiveSource.title")}
       </DialogTitle>
       <DialogContent sx={{ pb: 2 }}>
         <Typography variant="body2" color="text.secondary" mb={2}>
-          Choisissez la source de l'archive à ajouter.
+          {t("forms.archiveSource.chooseSource")}
         </Typography>
         <List disablePadding>
           <ListItemButton
@@ -70,8 +72,8 @@ const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
               <UploadFileRoundedIcon color="primary" />
             </ListItemIcon>
             <ListItemText
-              primary="Depuis mon appareil"
-              secondary="Téléverser un fichier depuis votre ordinateur ou téléphone"
+              primary={t("forms.archiveSource.fromDevice")}
+              secondary={t("forms.archiveSource.fromDeviceDesc")}
             />
           </ListItemButton>
 
@@ -83,8 +85,8 @@ const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
               <CloudSyncOutlinedIcon color="info" />
             </ListItemIcon>
             <ListItemText
-              primary="Depuis mon espace personnel"
-              secondary="Récupérer un fichier déjà présent dans votre espace personnel"
+              primary={t("forms.archiveSource.fromWorkspace")}
+              secondary={t("forms.archiveSource.fromWorkspaceDesc")}
             />
           </ListItemButton>
         </List>

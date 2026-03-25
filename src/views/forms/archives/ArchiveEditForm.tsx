@@ -15,9 +15,11 @@ import {
   useTheme,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import i18n from "@/i18n/i18n";
 import { useSnackbar } from "notistack";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
@@ -29,12 +31,13 @@ import type { ArchiveDocument } from "@/types";
 const EVENT_NAME = "__edit_archive_doc";
 
 const schema = yup.object({
-  designation: yup.string().trim().required("La désignation est requise"),
-  description: yup.string().trim().required("La description est requise"),
+  designation: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.designationRequired")),
+  description: yup.string().trim().required(i18n.t("forms.physicalEntity.validationErrors.descriptionRequired")),
   tags: yup.string(),
 });
 
 export default function ArchiveEditForm() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [doc, setDoc] = useState<ArchiveDocument | null>(null);
@@ -87,18 +90,18 @@ export default function ArchiveEditForm() {
       designation: data.designation,
       description: data.description,
       tags: data.tags
-        ? (data.tags as string).split(",").map((t: string) => t.trim()).filter(Boolean)
+        ? (data.tags as string).split(",").map((tag: string) => tag.trim()).filter(Boolean)
         : [],
     };
-    const snackKey = enqueueSnackbar("Enregistrement des modifications en cours, veuillez patienter…", {
+    const snackKey = enqueueSnackbar(t("notifications.archiveUpdatePending"), {
       autoHideDuration: null,
     });
     try {
       await execute({ url: `/api/stuff/archives/${doc._id ?? doc.id}`, data: body });
       closeSnackbar(snackKey);
-      enqueueSnackbar("Les modifications ont été enregistrées. La fiche de l'archive est maintenant à jour.", {
+      enqueueSnackbar(t("notifications.archiveUpdated"), {
         variant: "success",
-        title: "Archive mise à jour",
+        title: t("notifications.archiveUpdatedTitle"),
       });
       dispatch(incrementVersion());
       handleClose();
@@ -106,15 +109,15 @@ export default function ArchiveEditForm() {
       closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
-        "Impossible d'enregistrer les modifications. Vérifiez votre connexion et réessayez.";
-      enqueueSnackbar(msg, { variant: "error", title: "Impossible d'enregistrer les modifications" });
+        t("notifications.archiveUpdateFailed");
+      enqueueSnackbar(msg, { variant: "error", title: t("notifications.archiveUpdateFailedTitle") });
     }
   };
 
   return (
     <Dialog open={Boolean(doc)} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
-        Modifier l'archive
+        {t("forms.archiveEdit.title")}
         {doc?.designation && (
           <Typography variant="caption" color="text.secondary" display="block" noWrap>
             {doc.designation as string}
@@ -127,18 +130,18 @@ export default function ArchiveEditForm() {
           <Stack spacing={2} mt={0.5}>
             <TextField
               {...register("designation")}
-              label="Désignation *"
+              label={t("forms.archiveEdit.designationLabel")}
               fullWidth
-              placeholder="Ex : Rapport annuel RH 2024"
+              placeholder={t("forms.archiveEdit.designationPlaceholder")}
               error={!!errors.designation}
               helperText={
                 (errors.designation?.message as string) ||
-                "Titre principal du document, tel qu'il apparaîtra dans la liste des archives"
+                t("forms.archiveEdit.designationHelper")
               }
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <Tooltip title="Voir le guide : Modifier une archive" placement="top">
+                    <Tooltip title={t("forms.archiveEdit.designationHelpTooltip")} placement="top">
                       <IconButton size="small" tabIndex={-1} sx={{ color: "text.disabled" }}>
                         <HelpOutlineIcon sx={{ fontSize: 16 }} />
                       </IconButton>
@@ -149,32 +152,32 @@ export default function ArchiveEditForm() {
             />
             <TextField
               {...register("description")}
-              label="Description *"
+              label={t("forms.archiveEdit.descriptionLabel")}
               fullWidth
               multiline
               rows={3}
-              placeholder="Décrivez le contenu et l'objet du document…"
+              placeholder={t("forms.archiveEdit.descriptionPlaceholder")}
               error={!!errors.description}
               helperText={
                 (errors.description?.message as string) ||
-                "Résumé du contenu — utilisé pour la recherche et l'identification du document"
+                t("forms.archiveEdit.descriptionHelper")
               }
             />
             <TextField
               {...register("tags")}
-              label="Mots-clés"
+              label={t("forms.archiveEdit.tagsLabel")}
               fullWidth
-              placeholder="rapport, finance, 2024, contrat"
-              helperText="Termes séparés par des virgules facilitant la recherche (ex : rapport, RH, 2024)"
+              placeholder={t("forms.archiveEdit.tagsPlaceholder")}
+              helperText={t("forms.archiveEdit.tagsHelper")}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="inherit">
-            Annuler
+            {t("common.cancel")}
           </Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Enregistrer
+            {t("common.save")}
           </Button>
         </DialogActions>
       </form>

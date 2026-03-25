@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import getFileExtension from "@/utils/getFileExtention";
 import getFileIcon from "@/utils/getFileIcon";
 import { useDispatch, useSelector } from "react-redux";
@@ -59,6 +60,7 @@ function FilePreview({ file }: { file: File }) {
 const EVENT_NAME = "__open_archive_create";
 
 export default function ArchiveCreateDialog() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -114,10 +116,10 @@ export default function ArchiveCreateDialog() {
 
   const handleSubmit = async () => {
     setError(null);
-    if (!file)                      return setError("Veuillez sélectionner un fichier.");
-    if (!designation.current?.trim()) return setError("La désignation est requise.");
-    if (!description.current?.trim()) return setError("La description est requise.");
-    if (!typeRef.current)             return setError("Le type de document est requis.");
+    if (!file)                      return setError(t("forms.archiveCreate.errorNoFile"));
+    if (!designation.current?.trim()) return setError(t("forms.archiveCreate.errorNoDesignation"));
+    if (!description.current?.trim()) return setError(t("forms.archiveCreate.errorNoDescription"));
+    if (!typeRef.current)             return setError(t("forms.archiveCreate.errorNoType"));
 
     setLoading(true);
     const formData = new FormData();
@@ -142,12 +144,12 @@ export default function ArchiveCreateDialog() {
       }
       dispatch(incrementVersion());
       enqueueSnackbar(
-        `"${designation.current}" a bien été transmise au service d'archivage. Elle est maintenant en attente de validation par un archiviste.`,
-        { variant: "success", title: "Archive déposée avec succès" }
+        t("notifications.archiveCreated", { name: designation.current }),
+        { variant: "success", title: t("notifications.archiveCreatedTitle") }
       );
       handleClose();
     } catch (err: unknown) {
-      setError((err as Error).message ?? "Une erreur est survenue. Réessayez.");
+      setError((err as Error).message ?? t("notifications.archiveCreateError"));
     } finally {
       setLoading(false);
     }
@@ -156,9 +158,9 @@ export default function ArchiveCreateDialog() {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
-        Ajouter une archive
+        {t("forms.archiveCreate.title")}
         <Typography variant="caption" color="text.secondary" display="block">
-          Téléversez un fichier et renseignez ses métadonnées
+          {t("forms.archiveCreate.subtitle")}
         </Typography>
       </DialogTitle>
 
@@ -194,11 +196,9 @@ export default function ArchiveCreateDialog() {
             ) : (
               <Stack alignItems="center" spacing={0.5}>
                 <UploadFileRoundedIcon sx={{ color: "text.disabled", fontSize: 36 }} />
-                <Typography variant="body2" color="text.secondary">
-                  Glissez un fichier ici ou <strong>cliquez pour parcourir</strong>
-                </Typography>
+                <Typography variant="body2" color="text.secondary" dangerouslySetInnerHTML={{ __html: t("forms.archiveCreate.dropZone") }} />
                 <Typography variant="caption" color="text.disabled">
-                  PDF, Word, Excel, images… (max. 50 Mo)
+                  {t("forms.archiveCreate.dropZoneHint")}
                 </Typography>
               </Stack>
             )}
@@ -206,23 +206,23 @@ export default function ArchiveCreateDialog() {
 
           {/* Fields */}
           <TextField
-            label="Désignation *"
+            label={t("forms.archiveCreate.designationLabel")}
             fullWidth
             size="small"
-            placeholder="Ex : Rapport annuel RH 2024"
+            placeholder={t("forms.archiveCreate.designationPlaceholder")}
             onChange={(e) => { designation.current = e.target.value; }}
-            helperText="Titre principal du document"
+            helperText={t("forms.archiveCreate.designationHelper")}
           />
 
           <Typology type={typeRef} subType={subTypeRef} />
 
           <TextField
-            label="Description *"
+            label={t("forms.archiveCreate.descriptionLabel")}
             fullWidth
             size="small"
             multiline
             rows={3}
-            placeholder="Décrivez brièvement le contenu et l'objet du document…"
+            placeholder={t("forms.archiveCreate.descriptionPlaceholder")}
             onChange={(e) => { description.current = e.target.value; }}
           />
 
@@ -232,7 +232,7 @@ export default function ArchiveCreateDialog() {
 
       <DialogActions>
         <Button onClick={handleClose} color="inherit" disabled={loading}>
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -241,7 +241,7 @@ export default function ArchiveCreateDialog() {
           startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
           disableElevation
         >
-          Envoyer au service d'archivage
+          {t("forms.archiveCreate.submitLabel")}
         </Button>
       </DialogActions>
     </Dialog>

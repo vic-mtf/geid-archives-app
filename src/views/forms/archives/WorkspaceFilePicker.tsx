@@ -28,6 +28,7 @@ import {
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import useAxios from "@/hooks/useAxios";
@@ -63,6 +64,7 @@ const ROOT_CATEGORIES: WorkspaceItem[] = [
 ];
 
 const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
@@ -135,7 +137,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
   }, [selectedFile]);
 
   // Breadcrumb
-  const breadcrumbParts = isRoot ? ["Espace personnel"] : ["Espace personnel", ...folder!.split("/")];
+  const breadcrumbParts = isRoot ? [t("forms.workspace.personalSpace")] : [t("forms.workspace.personalSpace"), ...folder!.split("/")];
   const fileCount = items.filter((i) => !i.isDirectory).length;
   const folderCount = items.filter((i) => i.isDirectory).length;
 
@@ -143,7 +145,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}
       PaperProps={{ sx: { height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column" } }}>
       <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0, flexShrink: 0 }}>
-        Choisir un fichier de votre espace personnel
+        {t("forms.workspace.title")}
       </DialogTitle>
 
       <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 0 }}>
@@ -161,7 +163,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
               startIcon={<ArrowBackRoundedIcon />}
               sx={{ minWidth: 0, mr: 1 }}
             >
-              Retour
+              {t("common.back")}
             </Button>
           )}
           {breadcrumbParts.map((part, i) => (
@@ -179,9 +181,9 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
           <Box flex={1} />
           {!loading && (
             <Typography variant="caption" color="text.disabled">
-              {folderCount > 0 && `${folderCount} dossiers`}
+              {folderCount > 0 && t("forms.workspace.foldersCount", { count: folderCount })}
               {folderCount > 0 && fileCount > 0 && ", "}
-              {fileCount > 0 && `${fileCount} fichiers`}
+              {fileCount > 0 && t("forms.workspace.filesCount", { count: fileCount })}
             </Typography>
           )}
         </Stack>
@@ -193,7 +195,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
         ) : items.length === 0 ? (
           <Box textAlign="center" py={6}>
             <Typography variant="body2" color="text.secondary">
-              Ce dossier est vide.
+              {t("forms.workspace.folderEmpty")}
             </Typography>
           </Box>
         ) : (
@@ -258,14 +260,14 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
 
       <DialogActions>
         <Button onClick={handleClose} color="inherit">
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
           disabled={!selectedFile || selectedFile.isDirectory}
           onClick={handleConfirm}
         >
-          Sélectionner
+          {t("common.select")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -23,26 +23,35 @@ export type NormalizedStatus =
   | "PERMANENT"
   | "DESTROYED";
 
-// ── Labels français ──────────────────────────────────────────
+// ── Labels i18n ──────────────────────────────────────────────
 
-/** Correspondance statut → libellé français pour l'affichage */
-export const STATUS_LABEL: Record<string, string> = {
-  // Statuts actuels (SCREAMING_SNAKE_CASE)
-  PENDING:         "En attente",
-  ACTIVE:          "Actif",
-  SEMI_ACTIVE:     "Intermédiaire",
-  PERMANENT:       "Historique",
-  DESTROYED:       "Détruit",
+import i18n from "@/i18n/i18n";
+
+/** Clés i18n pour chaque statut normalisé */
+const STATUS_I18N_KEY: Record<string, string> = {
+  PENDING:         "status.PENDING",
+  ACTIVE:          "status.ACTIVE",
+  SEMI_ACTIVE:     "status.SEMI_ACTIVE",
+  PERMANENT:       "status.PERMANENT",
+  DESTROYED:       "status.DESTROYED",
   // Legacy (anciens noms encore en base de données)
-  pending:         "En attente",
-  validated:       "Actif",
-  archived:        "Intermédiaire",
-  disposed:        "Détruit",
-  actif:           "Actif",
-  "intermédiaire": "Intermédiaire",
-  historique:      "Historique",
-  détruit:         "Détruit",
+  pending:         "status.PENDING",
+  validated:       "status.ACTIVE",
+  archived:        "status.SEMI_ACTIVE",
+  disposed:        "status.DESTROYED",
+  actif:           "status.ACTIVE",
+  "intermédiaire": "status.SEMI_ACTIVE",
+  historique:      "status.PERMANENT",
+  détruit:         "status.DESTROYED",
 };
+
+/** Correspondance statut → libellé traduit pour l'affichage */
+export const STATUS_LABEL: Record<string, string> = new Proxy({} as Record<string, string>, {
+  get(_target, prop: string) {
+    const key = STATUS_I18N_KEY[prop];
+    return key ? i18n.t(key) : prop;
+  },
+});
 
 // ── Couleurs MUI ─────────────────────────────────────────────
 

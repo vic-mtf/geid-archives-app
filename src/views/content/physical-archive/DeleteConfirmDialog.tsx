@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Dialog,
@@ -28,25 +29,24 @@ const DeleteConfirmDialog = React.memo(function DeleteConfirmDialog({
   onClose,
   onConfirm,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={() => !deleting && onClose()} maxWidth="xs" fullWidth>
       <DialogTitle component="div" fontWeight="bold">
-        Confirmer la suppression
+        {t("dialogs.confirmDeletion")}
       </DialogTitle>
       <DialogContent>
-        <Typography variant="body2">
-          Êtes-vous sûr de vouloir supprimer <strong>« {label} »</strong> ?
-        </Typography>
+        <Typography variant="body2" dangerouslySetInnerHTML={{ __html: t("dialogs.deleteMessage", { label }) }} />
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Cette action est définitive et ne peut pas être annulée. Si cet élément contient des sous-éléments, vous devrez les supprimer d&apos;abord.
+          {t("dialogs.deleteWarning")}
         </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit" disabled={deleting}>
-          Annuler
+          {t("common.cancel")}
         </Button>
         <Button onClick={onConfirm} variant="contained" color="error" disabled={deleting}>
-          {deleting ? "Suppression en cours\u2026" : "Supprimer définitivement"}
+          {deleting ? t("dialogs.deleting") : t("dialogs.deletePermanently")}
         </Button>
       </DialogActions>
     </Dialog>
