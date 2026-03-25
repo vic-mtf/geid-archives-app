@@ -147,6 +147,12 @@ export default function ArchiveManagementContent() {
       setQuickFilter(null);
     }
 
+    // Nettoyer deepTarget après consommation pour éviter réapplication
+    window.history.replaceState(
+      { ...(window.history.state ?? {}), usr: { ...(window.history.state?.usr ?? {}), deepTarget: undefined } },
+      ""
+    );
+
     if (target.archiveId) {
       setFocusedId(target.archiveId);
       setDetailOpen(true);

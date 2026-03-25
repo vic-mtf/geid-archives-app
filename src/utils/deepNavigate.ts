@@ -42,7 +42,8 @@ export default function deepNavigate(navigateTo: NavigateFn, target: DeepTarget)
   navigateTo({
     state: {
       navigation: { tabs: { option: target.tab } },
-      deepTarget: target,
+      // _ts unique garantit que useEffect se redéclenche même si le même filtre est cliqué deux fois
+      deepTarget: { ...target, _ts: Date.now() },
     },
   });
 }
