@@ -457,7 +457,9 @@
     "lifecycleReactivatedTitle": "Archive r\u00e9activ\u00e9e",
     "lifecycleSemiActive": "L'archive est maintenant en phase interm\u00e9diaire. Pensez \u00e0 d\u00e9finir sa dur\u00e9e de conservation pour planifier son sort final.",
     "lifecycleSemiActiveTitle": "Passage en interm\u00e9diaire",
-    "lifecyclePermanent": "L'archive a \u00e9t\u00e9 class\u00e9e d\u00e9finitivement en historique. Elle sera conserv\u00e9e \u00e0 titre permanent.",
+    "settingsSaved": "Vos préférences ont été enregistrées. Les modifications sont visibles immédiatement.",
+    "settingsReset": "Le tableau de bord a été réinitialisé aux réglages par défaut.",
+    "lifecyclePermanent": "L'archive a été classée définitivement en historique. Elle sera conservée à titre permanent.",
     "lifecyclePermanentTitle": "Class\u00e9e en historique",
     "lifecycleDestroyed": "L'archive a \u00e9t\u00e9 \u00e9limin\u00e9e. Cette action est irr\u00e9versible \u2014 assurez-vous d'avoir conserv\u00e9 les documents n\u00e9cessaires.",
     "lifecycleDestroyedTitle": "Archive \u00e9limin\u00e9e",
@@ -616,7 +618,8 @@
     "duaThresholdDays": "Seuil d'alerte DUA (jours)",
     "binderCapacityThreshold": "Seuil de capacit\u00e9 des classeurs (%)",
     "autoRefreshSeconds": "Rafra\u00eechissement automatique (secondes)",
-    "defaultUnit": "Unit\u00e9 par d\u00e9faut"
+    "defaultUnit": "Unité par défaut",
+    "reset": "Réinitialiser"
   },
 
   "users": {

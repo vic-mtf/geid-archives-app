@@ -10,7 +10,7 @@
  * 6. Unité par défaut — filtrer par structure organique
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -89,14 +89,33 @@ export default function DashboardSettings() {
   );
 
   const [prefs, setPrefs] = useState<DashboardPrefs | null>((cachedPrefs?.data as DashboardPrefs) ?? null);
+  const initialPrefs = useRef<DashboardPrefs | null>(null);
   const [loading, setLoading] = useState(!cachedPrefs);
   const [saving, setSaving] = useState(false);
+
+  // Comparaison champ par champ (pas de JSON.stringify)
+  const hasChanges = useMemo(() => {
+    if (!prefs || !initialPrefs.current) return false;
+    const a = prefs;
+    const b = initialPrefs.current;
+    if (a.chartType !== b.chartType) return true;
+    if (a.recentCount !== b.recentCount) return true;
+    if (a.autoRefreshSeconds !== b.autoRefreshSeconds) return true;
+    if (a.defaultUnit !== b.defaultUnit) return true;
+    if (a.soundNotifications !== b.soundNotifications) return true;
+    if (a.alertThresholds.duaDays !== b.alertThresholds.duaDays) return true;
+    if (a.alertThresholds.binderCapacity !== b.alertThresholds.binderCapacity) return true;
+    if (a.visibleWidgets.length !== b.visibleWidgets.length) return true;
+    if (a.visibleWidgets.some((w) => !b.visibleWidgets.includes(w))) return true;
+    return false;
+  }, [prefs]);
   const [, execute] = useAxios({ headers }, { manual: true });
 
   // Charger depuis l'API si pas en cache
   useEffect(() => {
     if (cachedPrefs) {
       setPrefs(cachedPrefs.data as DashboardPrefs);
+      initialPrefs.current = structuredClone(cachedPrefs.data as DashboardPrefs);
       setLoading(false);
       return;
     }
@@ -104,6 +123,7 @@ export default function DashboardSettings() {
       .then((res) => {
         const data = res.data as DashboardPrefs;
         setPrefs(data);
+        initialPrefs.current = structuredClone(data);
         dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data }));
       })
       .catch(() => {}).finally(() => setLoading(false));
@@ -121,7 +141,8 @@ export default function DashboardSettings() {
     try {
       await execute({ url: PREFS_CACHE_KEY, method: "PUT", data: prefs });
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
-      enqueueSnackbar("Vos préférences de tableau de bord ont été enregistrées. Les modifications sont visibles immédiatement.", { variant: "success" });
+      initialPrefs.current = structuredClone(prefs);
+      enqueueSnackbar(t("notifications.settingsSaved"), { variant: "success" });
     } catch { enqueueSnackbar(t("notifications.errorSettingsSaveFailed"), { variant: "error" }); }
     finally { setSaving(false); }
   }, [prefs, execute, dispatch, enqueueSnackbar]);
@@ -131,8 +152,9 @@ export default function DashboardSettings() {
       const res = await execute({ url: PREFS_CACHE_KEY, method: "DELETE" });
       const fresh = (res.data as { prefs: DashboardPrefs }).prefs;
       setPrefs(fresh);
+      initialPrefs.current = structuredClone(fresh);
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: fresh }));
-      enqueueSnackbar("Votre tableau de bord a été réinitialisé aux réglages par défaut. Vous pouvez le personnaliser à nouveau.", { variant: "info" });
+      enqueueSnackbar(t("notifications.settingsReset"), { variant: "info" });
     } catch { enqueueSnackbar(t("notifications.errorSettingsResetFailed"), { variant: "error" }); }
   }, [execute, dispatch, enqueueSnackbar]);
 
@@ -154,12 +176,16 @@ export default function DashboardSettings() {
   return (
     <Box height="100%" overflow="auto" sx={{ ...scrollBarSx }}>
       {/* Header avec boutons */}
-      <Box px={2.5} py={1.5} display="flex" alignItems="center" justifyContent="space-between" borderBottom={1} borderColor="divider" bgcolor="action.hover">
-        <Typography variant="body1" fontWeight="bold">Tableau de bord</Typography>
+      <Box px={2.5} py={1.5} display="flex" alignItems="center" justifyContent="space-between"
+        borderBottom={1} borderColor="divider" bgcolor="action.hover"
+        sx={{ position: "sticky", top: 0, zIndex: 1 }}>
+        <Typography variant="body1" fontWeight="bold">{t("nav.dashboard")}</Typography>
         <Box display="flex" gap={1}>
-          <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset}>Réinitialiser</Button>
-          <Button size="small" variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSave} disabled={saving}>
-            {saving ? "…" : "Enregistrer"}
+          <Button size="small" variant="outlined" color="inherit" startIcon={<RestoreOutlinedIcon />} onClick={handleReset}>
+            {t("settings.reset")}
+          </Button>
+          <Button size="small" variant="contained" startIcon={<SaveOutlinedIcon />} onClick={handleSave} disabled={saving || !hasChanges}>
+            {saving ? "…" : t("common.save")}
           </Button>
         </Box>
       </Box>
