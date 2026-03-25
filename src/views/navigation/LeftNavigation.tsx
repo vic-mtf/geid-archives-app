@@ -3,7 +3,6 @@ import {
   Toolbar,
   Box as MuiBox,
   Divider,
-  Typography,
   IconButton,
   useMediaQuery,
   useTheme,
@@ -60,27 +59,16 @@ export default function LeftNavigation() {
       {/* Espace sous le header fixe */}
       <Toolbar variant="dense" />
 
-      {/* En-tête : titre + bouton fermeture (mobile uniquement) */}
-      <MuiBox
-        display="flex"
-        alignItems="center"
-        justifyContent="space-between"
-        px={2}
-        py={1.5}>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          fontWeight={700}
-          letterSpacing={1.2}
-          textTransform="uppercase">
-          Navigation
-        </Typography>
-        {isMobile && (
+      {/* Espacement + bouton fermeture (mobile uniquement) */}
+      {isMobile ? (
+        <MuiBox display="flex" alignItems="center" justifyContent="flex-end" px={1} py={0.5}>
           <IconButton onClick={handleClose} size="small" edge="end">
             <CloseOutlinedIcon fontSize="small" />
           </IconButton>
-        )}
-      </MuiBox>
+        </MuiBox>
+      ) : (
+        <MuiBox py={0.75} />
+      )}
 
       {/* Items de navigation */}
       <TabsOption />
