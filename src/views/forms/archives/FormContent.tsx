@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import InputsDoc from "./InputsDoc";
 import {
   Dialog,
@@ -7,6 +8,8 @@ import {
   DialogActions,
   Typography,
   Button,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 interface FormContentProps {
@@ -29,10 +32,15 @@ export default function FormContent({
   docFields,
   onClose,
 }: FormContentProps) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
     <React.Fragment>
       <Dialog
         open={!!file}
+        fullScreen={fullScreen}
         PaperProps={{
           sx: { overflow: "hidden" },
         }}
@@ -46,7 +54,7 @@ export default function FormContent({
         }}>
         <DialogTitle component='div'>
           <Typography variant='h6' fontWeight='bold' fontSize={18}>
-            Soumettre cet article au service d'archivage
+            {t("forms.submitDialog.title")}
           </Typography>
         </DialogTitle>
         <form onSubmit={handleSendFile(file)}>
@@ -58,10 +66,10 @@ export default function FormContent({
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} color='primary'>
-              Annuler
+              {t("common.cancel")}
             </Button>
             <Button type='submit' variant='outlined' color='primary'>
-              Envoyer l'article
+              {t("forms.submitDialog.sendArticle")}
             </Button>
           </DialogActions>
         </form>

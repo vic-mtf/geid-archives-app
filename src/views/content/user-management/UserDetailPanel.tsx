@@ -29,6 +29,8 @@ import {
   Stack,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import EditOutlinedIcon        from "@mui/icons-material/EditOutlined";
 import VisibilityOutlinedIcon  from "@mui/icons-material/VisibilityOutlined";
@@ -46,6 +48,7 @@ import SwapHorizRoundedIcon    from "@mui/icons-material/SwapHorizRounded";
 import HistoryRoundedIcon      from "@mui/icons-material/HistoryRounded";
 import BarChartRoundedIcon     from "@mui/icons-material/BarChartRounded";
 import { PieChart } from "@mui/x-charts/PieChart";
+import { useTranslation } from "react-i18next";
 import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { STATUS_LABEL } from "@/constants/lifecycle";
@@ -130,6 +133,9 @@ interface Props {
 // ── Composant ────────────────────────────────────────────────
 
 export default function UserDetailPanel({ user, headers, isAdmin, isMobile, roles, onBack, onRefresh, onEditPerms }: Props) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const { enqueueSnackbar } = useSnackbar();
   const level = getPermLevel(user);
   const perms = getArchivePerms(user);
@@ -336,19 +342,19 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       </Box>
 
       {/* Dialog assignation rôle */}
-      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="xs" fullWidth>
-        <DialogTitle component="div" fontWeight="bold">Changer l&apos;unité administrative</DialogTitle>
+      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="xs" fullWidth fullScreen={isSmall}>
+        <DialogTitle component="div" fontWeight="bold">{t("users.changeUnit")}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>
-            <InputLabel>Rôle / Unité</InputLabel>
-            <Select value={newRole} label="Rôle / Unité" onChange={(e) => setNewRole(e.target.value)}>
+            <InputLabel>{t("users.roleUnit")}</InputLabel>
+            <Select value={newRole} label={t("users.roleUnit")} onChange={(e) => setNewRole(e.target.value)}>
               {roles?.map((r) => <MenuItem key={r._id} value={r.name}>{r.name}</MenuItem>)}
             </Select>
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setRoleDialog(false)} color="inherit">Annuler</Button>
-          <Button onClick={handleAssignRole} variant="contained" disabled={!newRole}>Assigner</Button>
+          <Button onClick={() => setRoleDialog(false)} color="inherit">{t("common.cancel")}</Button>
+          <Button onClick={handleAssignRole} variant="contained" disabled={!newRole}>{t("users.assign")}</Button>
         </DialogActions>
       </Dialog>
     </Box>

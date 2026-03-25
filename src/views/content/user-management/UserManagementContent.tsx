@@ -35,6 +35,7 @@ import SecurityOutlinedIcon    from "@mui/icons-material/SecurityOutlined";
 import PersonOutlinedIcon      from "@mui/icons-material/PersonOutlined";
 // Liste avec scroll natif — performant jusqu'à ~1000 utilisateurs
 
+import { useTranslation } from "react-i18next";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
@@ -104,6 +105,7 @@ const PERM_CONFIG = {
 // ── Composant principal ──────────────────────────────────────
 
 export default function UserManagementContent() {
+  const { t } = useTranslation();
   const Authorization = useToken();
   const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const { isAdmin } = useArchivePermissions();
@@ -330,10 +332,10 @@ export default function UserManagementContent() {
       </Box>
 
       {/* ── Dialog modification permissions ─────────────────── */}
-      <Dialog open={permDialog} onClose={() => setPermDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={permDialog} onClose={() => setPermDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
         <DialogTitle component="div">
           <Typography fontWeight="bold">
-            Permissions archives — {selectedUser?.fname} {selectedUser?.lname}
+            {t("users.permissionsTitle", { name: `${selectedUser?.fname} ${selectedUser?.lname}` })}
           </Typography>
         </DialogTitle>
         <DialogContent>
@@ -341,17 +343,17 @@ export default function UserManagementContent() {
             {editPerms.map((perm, i) => (
               <Box key={i} display="flex" gap={1} alignItems="center">
                 <FormControl size="small" sx={{ flex: 1 }}>
-                  <InputLabel>Unité</InputLabel>
-                  <Select value={perm.struct} label="Unité" onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, struct: e.target.value } : p))}>
-                    <MenuItem value="all"><em>Toutes (admin)</em></MenuItem>
+                  <InputLabel>{t("users.unit")}</InputLabel>
+                  <Select value={perm.struct} label={t("users.unit")} onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, struct: e.target.value } : p))}>
+                    <MenuItem value="all"><em>{t("users.allAdmin")}</em></MenuItem>
                     {roles?.map((r) => <MenuItem key={r._id} value={r.name}>{r.name}</MenuItem>)}
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ width: 130 }}>
-                  <InputLabel>Accès</InputLabel>
-                  <Select value={perm.access} label="Accès" onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, access: e.target.value } : p))}>
-                    <MenuItem value="read">Lecture</MenuItem>
-                    <MenuItem value="write">Écriture</MenuItem>
+                  <InputLabel>{t("users.access")}</InputLabel>
+                  <Select value={perm.access} label={t("users.access")} onChange={(e) => setEditPerms((prev) => prev.map((p, j) => j === i ? { ...p, access: e.target.value } : p))}>
+                    <MenuItem value="read">{t("users.read")}</MenuItem>
+                    <MenuItem value="write">{t("users.write")}</MenuItem>
                   </Select>
                 </FormControl>
                 <IconButton size="small" color="error" onClick={() => setEditPerms((prev) => prev.filter((_, j) => j !== i))}>
@@ -360,13 +362,13 @@ export default function UserManagementContent() {
               </Box>
             ))}
             <Button size="small" variant="outlined" onClick={() => setEditPerms((prev) => [...prev, { struct: "", access: "read" }])}>
-              + Ajouter une permission
+              + {t("users.addPermission")}
             </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPermDialog(false)} color="inherit">Annuler</Button>
-          <Button onClick={savePermissions} variant="contained">Enregistrer</Button>
+          <Button onClick={() => setPermDialog(false)} color="inherit">{t("common.cancel")}</Button>
+          <Button onClick={savePermissions} variant="contained">{t("common.save")}</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -12,6 +12,8 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 interface DeleteConfirmDialogProps {
@@ -30,8 +32,10 @@ const DeleteConfirmDialog = React.memo(function DeleteConfirmDialog({
   onConfirm,
 }: DeleteConfirmDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   return (
-    <Dialog open={open} onClose={() => !deleting && onClose()} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={() => !deleting && onClose()} maxWidth="xs" fullWidth fullScreen={fullScreen}>
       <DialogTitle component="div" fontWeight="bold">
         {t("dialogs.confirmDeletion")}
       </DialogTitle>

@@ -8,6 +8,7 @@
 
 import { Box, Chip, LinearProgress, Tooltip, Typography } from "@mui/material";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
+import { useTranslation } from "react-i18next";
 import { normalizeStatus } from "@/constants/lifecycle";
 import { computeExpiresAt } from "./helpers";
 
@@ -17,6 +18,7 @@ interface DuaCellProps {
 }
 
 export default function DuaCell({ row }: DuaCellProps) {
+  const { t } = useTranslation();
   const status = row.status as string | undefined;
   const dua    = row.dua as { value?: number; unit?: string; sortFinal?: string; startDate?: string } | undefined;
   const norm   = normalizeStatus(status, row.validated as boolean | undefined);
@@ -57,7 +59,7 @@ export default function DuaCell({ row }: DuaCellProps) {
   const sortLabel = dua.sortFinal === "conservation" ? "→ Hist." : "→ Elim.";
 
   return (
-    <Tooltip title={`DUA : ${dua.value} ${dua.unit === "years" ? "an(s)" : "mois"} ${sortLabel} — Expire le ${expiresAt.toLocaleDateString("fr-FR")}`}>
+    <Tooltip title={`DUA : ${dua.value} ${dua.unit === "years" ? (dua.value === 1 ? t("dua.yearsSingular") : t("dua.yearsPlural")) : t("dua.monthsUnit")} ${sortLabel} — Expire le ${expiresAt.toLocaleDateString("fr-FR")}`}>
       <Box sx={{ width: { xs: 70, sm: 90 } }}>
         <Box display="flex" justifyContent="space-between">
           <Typography variant="caption" color={expired ? "error" : "text.secondary"} sx={{ fontSize: 10 }}>

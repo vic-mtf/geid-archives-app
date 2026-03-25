@@ -594,7 +594,7 @@ export default function PhysicalArchiveContent() {
       />
 
       {/* Confirmation de déplacement d'archive par drag & drop */}
-      <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth>
+      <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth fullScreen={isMobile}>
         <DialogTitle component="div" fontWeight="bold">
           {t("dialogs.confirmMove")}
         </DialogTitle>

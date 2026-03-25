@@ -544,7 +544,8 @@
     "durationDisplay": "{{value}} {{unit}} \u00b7 Sort : <strong>{{sort}}</strong>",
     "sortConservation": "Historique",
     "sortElimination": "\u00c9limination",
-    "yearsUnit": "an(s)",
+    "yearsSingular": "an",
+    "yearsPlural": "ans",
     "monthsUnit": "mois",
     "remaining1Year": "1 an restant",
     "remainingYears": "{{count}} ans restants",
@@ -589,6 +590,26 @@
     "binderCapacityThreshold": "Seuil de capacit\u00e9 des classeurs (%)",
     "autoRefreshSeconds": "Rafra\u00eechissement automatique (secondes)",
     "defaultUnit": "Unit\u00e9 par d\u00e9faut"
+  },
+
+  "users": {
+    "permissionsTitle": "Permissions archives — {{name}}",
+    "unit": "Unité",
+    "allAdmin": "Toutes (admin)",
+    "access": "Accès",
+    "read": "Lecture",
+    "write": "Écriture",
+    "addPermission": "Ajouter une permission",
+    "changeUnit": "Changer l'unité administrative",
+    "roleUnit": "Rôle / Unité",
+    "assign": "Assigner"
+  },
+
+  "forms": {
+    "submitDialog": {
+      "title": "Soumettre cet article au service d'archivage",
+      "sendArticle": "Envoyer l'article"
+    }
   },
 
   "detailPanel": {

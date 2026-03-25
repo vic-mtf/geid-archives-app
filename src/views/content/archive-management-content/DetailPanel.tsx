@@ -33,6 +33,7 @@ import DeleteOutlineOutlinedIcon  from "@mui/icons-material/DeleteOutlineOutline
 import CloseRoundedIcon           from "@mui/icons-material/CloseRounded";
 import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
 
+import { useTranslation } from "react-i18next";
 import { STATUS_LABEL, normalizeStatus } from "@/constants/lifecycle";
 import scrollBarSx from "@/utils/scrollBarSx";
 import formatDate  from "@/utils/formatTime";
@@ -71,6 +72,7 @@ function DetailRow({ label, value, multiline }: { label: string; value: string; 
 // ── Composant principal ──────────────────────────────────────
 
 export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction }: DetailPanelProps) {
+  const { t } = useTranslation();
   const norm      = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
   const rawStatus = doc.status as string | undefined;
   const dua       = doc.dua as { value?: number; unit?: string; sortFinal?: string; startDate?: string } | undefined;
@@ -219,7 +221,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
               ) : (
                 <>
                   <Typography variant="body2" mb={0.5}>
-                    {dua.value} {dua.unit === "years" ? "an(s)" : "mois"}
+                    {dua.value} {dua.unit === "years" ? (dua.value === 1 ? t("dua.yearsSingular") : t("dua.yearsPlural")) : t("dua.monthsUnit")}
                     {" · "}
                     Sort : <strong>{dua.sortFinal === "conservation" ? "Historique" : "Élimination"}</strong>
                   </Typography>
