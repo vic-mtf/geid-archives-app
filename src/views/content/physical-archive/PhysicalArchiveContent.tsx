@@ -159,8 +159,9 @@ export default function PhysicalArchiveContent() {
 
     const cached = apiCache?.[currentUrl];
     if (cached) {
+      // Données en cache → affichage instantané sans flash
       setLevelData((cached.data as unknown[]) ?? []);
-      setLevelLoading(false);
+      setLevelLoading(false); // Jamais de loading si cache dispo
       if (Date.now() - cached.timestamp > 30_000) {
         executeFetch({ url: currentUrl })
           .then((res) => {
@@ -173,16 +174,18 @@ export default function PhysicalArchiveContent() {
           .catch(() => {});
       }
     } else {
-      setLevelLoading(true);
+      // Retarder le loading de 150ms — si les données arrivent vite, pas de Skeleton
+      const loadingTimer = setTimeout(() => { if (!cancelled) setLevelLoading(true); }, 150);
       executeFetch({ url: currentUrl })
         .then((res) => {
           if (!cancelled) {
+            clearTimeout(loadingTimer);
             const fresh = (res.data as unknown[]) ?? [];
             setLevelData(fresh);
             dispatch(setCacheEntry({ url: currentUrl, data: fresh }));
           }
         })
-        .catch(() => { if (!cancelled) setLevelData([]); })
+        .catch(() => { if (!cancelled) { clearTimeout(loadingTimer); setLevelData([]); } })
         .finally(() => { if (!cancelled) setLevelLoading(false); });
     }
 

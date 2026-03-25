@@ -11,9 +11,9 @@ import {
   Typography,
 } from "@mui/material";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import { motion } from "framer-motion";
 
 import { Virtuoso } from "react-virtuoso";
-import scrollBarSx from "@/utils/scrollBarSx";
 import type { PhysicalLevel } from "@/constants/physical";
 import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
@@ -70,29 +70,30 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
   onRename,
   parentDocumentId,
 }: PhysicalItemsListProps) {
+  const fadeIn = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, transition: { duration: 0.15 } };
+
   if (loading) {
     return (
-      <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
+      <motion.div key="skeleton" {...fadeIn} style={{ flex: 1, overflow: "auto" }}>
         <Stack spacing={0}>
           {[1, 2, 3, 4, 5].map((i) => (
             <Box key={i} px={2} py={0.75} display="flex" alignItems="center" gap={1} borderBottom="1px solid" borderColor="divider">
-              <Skeleton variant="circular" width={20} height={20} />
+              <Skeleton variant="circular" width={20} height={20} animation="wave" />
               <Box flex={1}>
-                <Skeleton variant="text" width="60%" height={20} />
-                <Skeleton variant="text" width="40%" height={14} />
+                <Skeleton variant="text" width="60%" height={20} animation="wave" />
+                <Skeleton variant="text" width="40%" height={14} animation="wave" />
               </Box>
-              <Skeleton variant="text" width={80} height={14} sx={{ display: { xs: "none", sm: "block" } }} />
             </Box>
           ))}
         </Stack>
-      </Box>
+      </motion.div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <Box overflow="auto" flex={1} sx={{ ...scrollBarSx }}>
-        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={1}>
+      <motion.div key="empty" {...fadeIn} style={{ flex: 1, display: "flex" }}>
+        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={1} flex={1}>
           <Box sx={{ color: levelConfig[currentLevel].color, opacity: 0.4 }}>
             {React.cloneElement(levelConfig[currentLevel].icon as React.ReactElement, { sx: { fontSize: 40 } })}
           </Box>
@@ -103,7 +104,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             Utilisez le bouton + pour en créer
           </Typography>
         </Box>
-      </Box>
+      </motion.div>
     );
   }
 
