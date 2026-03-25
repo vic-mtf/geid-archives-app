@@ -154,7 +154,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
           direction="row"
           alignItems="center"
           spacing={0.5}
-          sx={{ px: 2, py: 1, bgcolor: "action.hover", borderBottom: "1px solid", borderColor: "divider" }}
+          sx={{ px: 2, py: 1, bgcolor: "action.hover", borderBottom: "1px solid", borderColor: "divider", position: "sticky", top: 0, zIndex: 1 }}
         >
           {folderHistory.length > 0 && (
             <Button
