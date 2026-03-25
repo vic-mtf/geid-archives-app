@@ -590,6 +590,14 @@
     "configureDua": "D\u00e9finir la dur\u00e9e de conservation"
   },
 
+  "elimination": {
+    "proposedWarning": "Cette archive est proposée à l'élimination suite à l'expiration de sa durée de conservation. Un procès-verbal d'élimination est nécessaire avant toute destruction.",
+    "createPV": "Créer un PV d'élimination",
+    "conserve": "Conserver définitivement",
+    "reactivate": "Réactiver en intermédiaire",
+    "pvRequired": "Directive 23 : un procès-verbal et un bordereau d'élimination sont requis avant toute destruction."
+  },
+
   "files": {
     "cannotOpenFile": "Impossible d'ouvrir le fichier",
     "preparingFile": "Pr\u00e9paration de \u00ab {{fileName}} \u00bb",

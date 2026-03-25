@@ -10,6 +10,7 @@
 
 import React from "react";
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -32,6 +33,10 @@ import RestoreOutlinedIcon        from "@mui/icons-material/RestoreOutlined";
 import DeleteOutlineOutlinedIcon  from "@mui/icons-material/DeleteOutlineOutlined";
 import CloseRoundedIcon           from "@mui/icons-material/CloseRounded";
 import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
+import GavelOutlinedIcon          from "@mui/icons-material/GavelOutlined";
+import ShieldOutlinedIcon         from "@mui/icons-material/ShieldOutlined";
+import ReplayOutlinedIcon         from "@mui/icons-material/ReplayOutlined";
+import WarningAmberOutlinedIcon   from "@mui/icons-material/WarningAmberOutlined";
 
 import { useTranslation } from "react-i18next";
 import { STATUS_LABEL, normalizeStatus } from "@/constants/lifecycle";
@@ -104,6 +109,8 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   ];
 
   // ── Transitions du cycle de vie ────────────────────────────
+  const isProposedElimination = norm === "PROPOSED_ELIMINATION";
+
   const lifecycleActions: { label: string; icon: React.ReactNode; color?: "inherit" | "error" | "warning" | "info" | "success"; action: string }[] = [
     ...(norm === "ACTIVE" && canWrite
       ? [{ label: "Passer en intermédiaire", icon: <ArchiveOutlinedIcon />, action: "to-semi-active", color: "info" as const }]
@@ -119,6 +126,14 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
       : []),
     ...(isAdmin && norm === "DESTROYED"
       ? [{ label: "Restaurer", icon: <RestoreOutlinedIcon />, action: "restore" }]
+      : []),
+    // PROPOSED_ELIMINATION — actions spécifiques
+    ...(isProposedElimination && canWrite
+      ? [
+          { label: t("elimination.createPV"), icon: <GavelOutlinedIcon />, action: "create-elimination-pv", color: "error" as const },
+          { label: t("elimination.conserve"), icon: <ShieldOutlinedIcon />, action: "to-permanent", color: "info" as const },
+          { label: t("elimination.reactivate"), icon: <ReplayOutlinedIcon />, action: "reactivate", color: "success" as const },
+        ]
       : []),
   ];
 
@@ -248,6 +263,25 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
           </>
         )}
 
+        {/* Bannière élimination proposée */}
+        {isProposedElimination && (
+          <>
+            <Divider />
+            <Box px={2} py={1.5}>
+              <Alert
+                severity="warning"
+                icon={<WarningAmberOutlinedIcon fontSize="small" />}
+                sx={{ mb: 1 }}
+              >
+                {t("elimination.proposedWarning")}
+              </Alert>
+              <Typography variant="caption" color="text.secondary">
+                {t("elimination.pvRequired")}
+              </Typography>
+            </Box>
+          </>
+        )}
+
         {/* Transitions du cycle de vie */}
         {lifecycleActions.length > 0 && (
           <>
@@ -290,6 +324,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
                     h.status === "ACTIVE" || h.status === "validated" || h.status === "actif"         ? "success.main"
                     : h.status === "PENDING" || h.status === "pending"                                ? "warning.main"
                     : h.status === "SEMI_ACTIVE" || h.status === "archived" || h.status === "intermédiaire" ? "info.main"
+                    : h.status === "PROPOSED_ELIMINATION"                                             ? "warning.main"
                     : h.status === "PERMANENT" || h.status === "historique"                          ? "secondary.main"
                     : h.status === "DESTROYED" || h.status === "disposed"  || h.status === "détruit" ? "error.main"
                     : "text.disabled";
