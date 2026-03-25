@@ -455,6 +455,7 @@ export default function PhysicalArchiveContent() {
               dispatch(invalidateCacheAction("/api/stuff/archives/physical"));
               dispatch(incrementVersion());
             }}
+            parentDocumentId={[...breadcrumb].reverse().find((b) => b.level === "document")?.id}
           />
         </Box>
 
@@ -475,16 +476,33 @@ export default function PhysicalArchiveContent() {
               Retour
             </Button>
           )}
-          {!selected ? (
-            <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
-              <Stack alignItems="center" gap={1} px={2} textAlign="center">
-                <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
-                <Typography color="text.secondary" variant="body2">
-                  Sélectionnez un élément pour consulter ses informations
-                </Typography>
-              </Stack>
-            </Box>
-          ) : (
+          {!selected ? (() => {
+            // Par défaut afficher les infos du conteneur actif
+            const activeContainer = breadcrumb.length > 0
+              ? (apiCache?.["/api/stuff/archives/physical/containers"]?.data as Array<Record<string, unknown>> | undefined)
+                  ?.find((c) => c._id === breadcrumb[0].id)
+              : undefined;
+            if (activeContainer) {
+              return (
+                <DetailPanel
+                  level="container"
+                  item={activeContainer as unknown as Container}
+                  onDelete={(id, label) => setDeleteTarget({ level: "container", id, label })}
+                  headers={headers}
+                />
+              );
+            }
+            return (
+              <Box display="flex" flex={1} justifyContent="center" alignItems="center" height="100%">
+                <Stack alignItems="center" gap={1} px={2} textAlign="center">
+                  <InfoOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+                  <Typography color="text.secondary" variant="body2">
+                    Sélectionnez un élément pour consulter ses informations
+                  </Typography>
+                </Stack>
+              </Box>
+            );
+          })() : (
             <DetailPanel
               level={selected.level}
               item={selected.item}
@@ -594,7 +612,7 @@ export default function PhysicalArchiveContent() {
           <Box sx={{
             display: "flex", alignItems: "center", gap: 0.75,
             px: 1.5, py: 0.5, borderRadius: 1,
-            bgcolor: "action.selected",
+            bgcolor: "action.active",
             maxWidth: 280,
             opacity: 0.9,
           }}>

@@ -48,6 +48,7 @@ interface PhysicalItemsListProps {
   onRenamingEnd: () => void;
   onSelect: (id: string, label: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string, label: string) => void;
+  parentDocumentId?: string;
   onArchiveContextMenu?: (e: React.MouseEvent, archiveId: string, label: string) => void;
   onRename: (id: string, newValue: string) => Promise<void>;
 }
@@ -67,6 +68,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
   onContextMenu,
   onArchiveContextMenu,
   onRename,
+  parentDocumentId,
 }: PhysicalItemsListProps) {
   if (loading) {
     return (
@@ -191,7 +193,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
         // Wrap avec DnD : archives = draggable, documents = droppable
         if (item.isArchive) {
           return (
-            <DraggableArchive archiveId={item.id} archiveLabel={item.label} disabled={!canWrite}>
+            <DraggableArchive archiveId={item.id} archiveLabel={item.label} sourceDocumentId={parentDocumentId} disabled={!canWrite}>
               {row}
             </DraggableArchive>
           );

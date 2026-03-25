@@ -15,6 +15,7 @@ import type { ArchiveDragData, DocumentDropData } from "./useArchiveDnd";
 interface DraggableArchiveProps {
   archiveId: string;
   archiveLabel: string;
+  sourceDocumentId?: string;
   disabled?: boolean;
   children: React.ReactNode;
 }
@@ -22,10 +23,11 @@ interface DraggableArchiveProps {
 export const DraggableArchive = React.memo(function DraggableArchive({
   archiveId,
   archiveLabel,
+  sourceDocumentId,
   disabled,
   children,
 }: DraggableArchiveProps) {
-  const data: ArchiveDragData = { type: "archive", archiveId, archiveLabel };
+  const data: ArchiveDragData = { type: "archive", archiveId, archiveLabel, sourceDocumentId };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `archive-${archiveId}`,
     data,

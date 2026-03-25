@@ -23,6 +23,7 @@ export interface ArchiveDragData {
   type: "archive";
   archiveId: string;
   archiveLabel: string;
+  sourceDocumentId?: string;
 }
 
 /** Type pour les données de drop (document cible) */
@@ -58,6 +59,9 @@ export default function useArchiveDnd({ canWrite, executeFetch }: UseArchiveDndO
 
     if (!dragData || dragData.type !== "archive") return;
     if (!dropData || dropData.type !== "document") return;
+
+    // Même document → ignorer
+    if (dragData.sourceDocumentId === dropData.documentId) return;
 
     // Ouvrir la confirmation
     setMoveConfirm({

@@ -250,7 +250,7 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
       if (node.isArchive) {
         const fi = getFileIcon(node.fileUrl ?? node.label);
         return (
-          <DraggableArchive key={node.id} archiveId={node.id} archiveLabel={node.label} disabled={!canWrite}>
+          <DraggableArchive key={node.id} archiveId={node.id} archiveLabel={node.label} sourceDocumentId={[...parentPath].reverse().find((p) => p.level === "document")?.id} disabled={!canWrite}>
           <TreeItem
             nodeId={node.id}
             icon={React.cloneElement(fi.icon, { sx: { fontSize: 16, color: fi.color } })}
@@ -436,9 +436,18 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         py: 0.5,
         px: 0.75,
       }}>
-      {nodes.length === 0 && initialized ? (
-        <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-          <Typography variant="body2" color="text.secondary">Aucun conteneur</Typography>
+      {(() => {
+        if (nodes.length === 0 && initialized) return true;
+        if (activeContainerId) {
+          const c = nodes.find((n) => n.id === activeContainerId);
+          if (c?.loaded && (!c.children || c.children.length === 0)) return true;
+        }
+        return false;
+      })() ? (
+        <Box display="flex" justifyContent="center" alignItems="center" py={4} flex={1}>
+          <Typography variant="body2" color="text.secondary" textAlign="center" px={2}>
+            {nodes.length === 0 ? "Aucun conteneur" : "Ce conteneur est vide. Commencez par ajouter une étagère."}
+          </Typography>
         </Box>
       ) : (
         <TreeView
@@ -472,14 +481,15 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         >
           {(() => {
             if (!activeContainerId) return renderTree(nodes);
-            // Afficher directement les enfants du conteneur actif (pas la racine)
             const container = nodes.find((n) => n.id === activeContainerId);
             if (!container) return renderTree(nodes);
-            if (!container.loaded || !container.children?.length) {
-              // Pas encore chargé — afficher un placeholder pour déclencher le load
-              return renderTree([container]);
+            // Chargé mais vide → message
+            if (container.loaded && (!container.children || container.children.length === 0)) {
+              return null; // Le message vide est affiché en dehors du TreeView
             }
-            return renderTree(container.children, [{ id: container.id, label: container.label, level: container.level }]);
+            // Pas encore chargé → placeholder pour le load
+            if (!container.loaded) return renderTree([container]);
+            return renderTree(container.children ?? [], [{ id: container.id, label: container.label, level: container.level }]);
           })()}
         </TreeView>
       )}
