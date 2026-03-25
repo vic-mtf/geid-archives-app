@@ -29,6 +29,7 @@ import useArchivePermissions from "@/hooks/useArchivePermissions";
 import type { Archive, ArchiveDocument, NavigationState } from "@/types";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { useSnackbar }       from "notistack";
+import { useTranslation }   from "react-i18next";
 import { useLocation }       from "react-router-dom";
 import type { DeepTarget }   from "@/utils/deepNavigate";
 import { STATUS_LABEL, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
@@ -49,6 +50,7 @@ export default function ArchiveManagementContent() {
   const Authorization = useToken();
   const dispatch      = useDispatch<AppDispatch>();
   const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
   const { canWrite, isAdmin } = useArchivePermissions();
   const theme    = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -111,7 +113,7 @@ export default function ArchiveManagementContent() {
         });
         setDetailOpen(false);
       } catch {
-        enqueueSnackbar("Le changement n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error", title: "Action impossible" });
+        enqueueSnackbar(t("notifications.errorActionFailed"), { variant: "error", title: t("notifications.errorActionFailedTitle") });
       }
     };
     root?.addEventListener("__lifecycle_archive", handler);
@@ -341,7 +343,7 @@ export default function ArchiveManagementContent() {
     } catch {
       enqueueSnackbar(
         "Certaines suppressions ont échoué. Les archives concernées n'ont pas été modifiées. Vérifiez vos droits et réessayez.",
-        { variant: "error", title: "Suppression partielle" }
+        { variant: "error", title: t("notifications.errorDeletePartialTitle") }
       );
     }
   }, [selectedElements, execDelete, dispatch, enqueueSnackbar]);

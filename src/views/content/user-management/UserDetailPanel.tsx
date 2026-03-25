@@ -161,7 +161,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       );
       onRefresh();
     } catch {
-      enqueueSnackbar("Le changement de statut du compte n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error" });
+      enqueueSnackbar(t("notifications.errorStatusChangeFailed"), { variant: "error" });
     }
   }, [user._id, execToggle, enqueueSnackbar, onRefresh]);
 
@@ -177,7 +177,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       setRoleDialog(false);
       onRefresh();
     } catch {
-      enqueueSnackbar("Le changement d'unité administrative n'a pas pu être effectué. Vérifiez que l'unité existe et réessayez.", { variant: "error" });
+      enqueueSnackbar(t("notifications.errorUnitChangeFailed"), { variant: "error" });
     }
   }, [user._id, newRole, execRole, enqueueSnackbar, onRefresh]);
 

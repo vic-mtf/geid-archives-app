@@ -139,8 +139,10 @@ export default function ArchiveCreateDialog() {
         }
       );
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error((body as { message?: string }).message ?? `Erreur ${res.status}`);
+        if (res.status === 401) throw new Error(t("notifications.errorSessionExpired"));
+        if (res.status === 403) throw new Error(t("notifications.errorNoPermission"));
+        if (res.status === 413) throw new Error(t("notifications.errorFileTooLarge"));
+        throw new Error(t("notifications.archiveCreateFailed"));
       }
       dispatch(incrementVersion());
       enqueueSnackbar(
@@ -149,7 +151,12 @@ export default function ArchiveCreateDialog() {
       );
       handleClose();
     } catch (err: unknown) {
-      setError((err as Error).message ?? t("notifications.archiveCreateError"));
+      const msg = (err as Error).message;
+      if (!navigator.onLine) {
+        setError(t("notifications.errorNoConnection"));
+      } else {
+        setError(msg || t("notifications.archiveCreateFailed"));
+      }
     } finally {
       setLoading(false);
     }

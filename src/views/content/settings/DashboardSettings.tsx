@@ -33,6 +33,7 @@ import SaveOutlinedIcon          from "@mui/icons-material/SaveOutlined";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { setCacheEntry } from "@/redux/data";
@@ -78,6 +79,7 @@ export default function DashboardSettings() {
   const Authorization = useToken();
   const headers = useMemo(() => ({ Authorization: Authorization ?? "" }), [Authorization]);
   const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -120,7 +122,7 @@ export default function DashboardSettings() {
       await execute({ url: PREFS_CACHE_KEY, method: "PUT", data: prefs });
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: prefs }));
       enqueueSnackbar("Vos préférences de tableau de bord ont été enregistrées. Les modifications sont visibles immédiatement.", { variant: "success" });
-    } catch { enqueueSnackbar("L'enregistrement de vos préférences n'a pas pu être effectué. Vérifiez votre connexion et réessayez.", { variant: "error" }); }
+    } catch { enqueueSnackbar(t("notifications.errorSettingsSaveFailed"), { variant: "error" }); }
     finally { setSaving(false); }
   }, [prefs, execute, dispatch, enqueueSnackbar]);
 
@@ -131,7 +133,7 @@ export default function DashboardSettings() {
       setPrefs(fresh);
       dispatch(setCacheEntry({ url: PREFS_CACHE_KEY, data: fresh }));
       enqueueSnackbar("Votre tableau de bord a été réinitialisé aux réglages par défaut. Vous pouvez le personnaliser à nouveau.", { variant: "info" });
-    } catch { enqueueSnackbar("La réinitialisation n'a pas pu être effectuée. Vérifiez votre connexion et réessayez.", { variant: "error" }); }
+    } catch { enqueueSnackbar(t("notifications.errorSettingsResetFailed"), { variant: "error" }); }
   }, [execute, dispatch, enqueueSnackbar]);
 
   const update = useCallback(<K extends keyof DashboardPrefs>(key: K, val: DashboardPrefs[K]) => {

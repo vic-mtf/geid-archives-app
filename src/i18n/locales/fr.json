@@ -426,7 +426,12 @@
 
     "archiveCreated": "\"{{name}}\" a bien été transmise au service d'archivage et enregistrée dans votre espace personnel. Elle est maintenant en attente de validation.",
     "archiveCreatedTitle": "Archive d\u00e9pos\u00e9e avec succ\u00e8s",
-    "archiveCreateError": "Une erreur est survenue. R\u00e9essayez.",
+    "archiveCreateError": "Une erreur est survenue. Réessayez.",
+    "archiveCreateFailed": "L'archive n'a pas pu être créée. Vérifiez que tous les champs sont correctement remplis et réessayez.",
+    "errorSessionExpired": "Votre session a expiré. Veuillez vous reconnecter pour continuer.",
+    "errorNoPermission": "Vous n'avez pas les droits nécessaires pour effectuer cette action. Contactez votre administrateur si vous pensez qu'il s'agit d'une erreur.",
+    "errorFileTooLarge": "Le fichier est trop volumineux. La taille maximale autorisée est de 50 Mo.",
+    "errorNoConnection": "Vous n'êtes pas connecté à internet. Vérifiez votre connexion et réessayez.",
 
     "archiveUpdated": "Les modifications ont \u00e9t\u00e9 enregistr\u00e9es. La fiche de l'archive est maintenant \u00e0 jour.",
     "archiveUpdatedTitle": "Archive mise \u00e0 jour",
@@ -489,7 +494,24 @@
     "physicalCreateFailedTitle": "Impossible de cr\u00e9er le {{level}}",
 
     "physicalDeleted": "Le {{level}} \u00ab {{label}} \u00bb a bien \u00e9t\u00e9 supprim\u00e9. Les \u00e9l\u00e9ments qui y \u00e9taient rattach\u00e9s ne sont plus li\u00e9s \u00e0 cet emplacement.",
-    "physicalDeleteFailed": "La suppression n'a pas pu \u00eatre effectu\u00e9e. Cet \u00e9l\u00e9ment contient peut-\u00eatre des sous-\u00e9l\u00e9ments qui doivent \u00eatre supprim\u00e9s en premier."
+    "physicalDeleteFailed": "La suppression n'a pas pu \u00eatre effectu\u00e9e. Cet \u00e9l\u00e9ment contient peut-\u00eatre des sous-\u00e9l\u00e9ments qui doivent \u00eatre supprim\u00e9s en premier.",
+
+    "errorActionFailed": "Cette action n'a pas pu être effectuée. Vérifiez votre connexion et réessayez.",
+    "errorActionFailedTitle": "Action impossible",
+    "errorPermissionsFailed": "La modification des droits d'accès n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.",
+    "errorStatusChangeFailed": "Le changement de statut du compte n'a pas pu être effectué. Vérifiez votre connexion et réessayez.",
+    "errorUnitChangeFailed": "Le changement d'unité administrative n'a pas pu être effectué. Vérifiez que l'unité existe et réessayez.",
+    "errorSettingsSaveFailed": "L'enregistrement de vos préférences n'a pas pu être effectué. Vérifiez votre connexion et réessayez.",
+    "errorSettingsResetFailed": "La réinitialisation n'a pas pu être effectuée. Vérifiez votre connexion et réessayez.",
+    "errorTransferTitle": "Transfert impossible",
+    "errorTransferFailed": "Le fichier n'a pas pu être transmis au service d'archivage. Vérifiez votre connexion et réessayez.",
+    "errorLinkFailed": "Le rattachement n'a pas pu être effectué. Vérifiez vos droits et réessayez.",
+    "errorLinkFailedTitle": "Rattachement impossible",
+    "errorUnlinkFailed": "Le détachement a échoué. Vérifiez vos droits et réessayez.",
+    "errorUnlinkFailedTitle": "Détachement impossible",
+    "errorDeletePartialTitle": "Suppression partielle",
+    "errorMoveFailed": "Le déplacement a échoué. Vérifiez vos droits et réessayez.",
+    "errorDeleteFailed": "La suppression a échoué. Vérifiez vos droits et réessayez."
   },
 
   "dialogs": {

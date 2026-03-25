@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Button } from "@mui/material";
 import useAxios from "@/hooks/useAxios";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { incrementVersion } from "@/redux/data";
@@ -31,6 +32,7 @@ export default function ArchivesFrom() {
   const [fieldsError, setFieldsError] = useState<string[]>([]);
   const findError = (field: string) => !!~fieldsError?.indexOf(field);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { t } = useTranslation();
   const type = useRef<string | null | undefined>(undefined);
   const subType = useRef<string | null | undefined>(undefined);
   const designation = useRef<string | null | undefined>(undefined);
@@ -86,7 +88,7 @@ export default function ArchivesFrom() {
             closeSnackbar();
             enqueueSnackbar(
               `Le transfert de "${name}" a échoué. Vérifiez votre connexion et réessayez.`,
-              { variant: "error", title: "Erreur de transfert" }
+              { variant: "error", title: t("notifications.errorTransferTitle") }
             );
           });
       }, 3000);

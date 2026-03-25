@@ -23,6 +23,7 @@ import LinkOffIcon         from "@mui/icons-material/LinkOff";
 import InfoOutlinedIcon    from "@mui/icons-material/InfoOutlined";
 import { useDispatch } from "react-redux";
 import { useSnackbar } from "notistack";
+import { useTranslation } from "react-i18next";
 import type { AppDispatch } from "@/redux/store";
 import { incrementVersion } from "@/redux/data";
 import useAxios from "@/hooks/useAxios";
@@ -41,6 +42,7 @@ export default function LinkToPhysicalRecordDialog() {
   const Authorization = useToken();
   const dispatch      = useDispatch<AppDispatch>();
   const { enqueueSnackbar } = useSnackbar();
+  const { t } = useTranslation();
 
   const [doc,          setDoc]          = useState<ArchiveDocument | null>(null);
   const [level,        setLevel]        = useState<Level>("container");
@@ -173,8 +175,8 @@ export default function LinkToPhysicalRecordDialog() {
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Le rattachement n'a pas pu être effectué. L'archive n'a pas été modifiée. Vérifiez vos droits et réessayez.", {
-        variant: "error", title: "Rattachement impossible",
+      enqueueSnackbar(t("notifications.errorLinkFailed"), {
+        variant: "error", title: t("notifications.errorLinkFailedTitle"),
       });
     } finally {
       setLinking(false);
@@ -194,7 +196,7 @@ export default function LinkToPhysicalRecordDialog() {
       dispatch(incrementVersion());
       handleClose();
     } catch {
-      enqueueSnackbar("Le détachement a échoué. Vérifiez vos droits et réessayez.", { variant: "error", title: "Détachement impossible" });
+      enqueueSnackbar(t("notifications.errorUnlinkFailed"), { variant: "error", title: t("notifications.errorUnlinkFailedTitle") });
     } finally {
       setLinking(false);
     }

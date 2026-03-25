@@ -157,7 +157,7 @@ export default function UserManagementContent() {
       refetchUsers();
       setPermDialog(false);
     } catch {
-      enqueueSnackbar("La modification des droits d'accès n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.", { variant: "error" });
+      enqueueSnackbar(t("notifications.errorPermissionsFailed"), { variant: "error" });
     }
   }, [selectedUser, editPerms, executePut, enqueueSnackbar, refetchUsers]);
 
