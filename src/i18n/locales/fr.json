@@ -424,7 +424,7 @@
     "archiveSubmitPending": "Pr\u00e9paration et envoi en cours\u2026 vous pouvez annuler.",
     "archiveSubmitPendingTitle": "Envoi de \"{{name}}\"",
 
-    "archiveCreated": "\"{{name}}\" a bien \u00e9t\u00e9 transmise au service d'archivage. Elle est maintenant en attente de validation par un archiviste.",
+    "archiveCreated": "\"{{name}}\" a bien été transmise au service d'archivage et enregistrée dans votre espace personnel. Elle est maintenant en attente de validation.",
     "archiveCreatedTitle": "Archive d\u00e9pos\u00e9e avec succ\u00e8s",
     "archiveCreateError": "Une erreur est survenue. R\u00e9essayez.",
 
