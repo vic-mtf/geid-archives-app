@@ -309,10 +309,10 @@ export default function DashboardContent() {
                   {prefs?.chartType !== "list" && <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
                     {(prefs?.chartType === "bar") ? (
                       <BarChart
-                        series={[{ data: pieData.map((d) => d.value) }]}
-                        xAxis={[{ data: pieData.map((d) => d.label), scaleType: "band" }]}
-                        colors={pieData.map((d) => d.color)}
+                        series={pieData.map((d) => ({ data: [d.value], label: d.label, color: d.color }))}
+                        xAxis={[{ data: [""], scaleType: "band" }]}
                         height={240}
+                        layout="horizontal"
                       />
                     ) : (
                       <PieChart
