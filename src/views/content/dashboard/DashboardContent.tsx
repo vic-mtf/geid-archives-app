@@ -23,6 +23,7 @@ import {
   Typography,
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
+import { BarChart } from "@mui/x-charts/BarChart";
 import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
 import MenuBookRoundedIcon       from "@mui/icons-material/MenuBookRounded";
 import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
@@ -184,8 +185,9 @@ export default function DashboardContent() {
     { id: 0, value: statusCounts.ACTIVE,      label: t("status.activesFemPlural"),   color: "#4caf50" },
     { id: 1, value: statusCounts.PENDING,     label: t("status.pendingPlural"),      color: "#ff9800" },
     { id: 2, value: statusCounts.SEMI_ACTIVE, label: t("status.semiActivePlural"),   color: "#2196f3" },
-    { id: 3, value: statusCounts.PERMANENT,   label: t("status.permanentPlural"),    color: "#9c27b0" },
-    { id: 4, value: statusCounts.DESTROYED,   label: t("status.destroyedFemPlural"), color: "#f44336" },
+    { id: 3, value: statusCounts.PROPOSED_ELIMINATION, label: t("status.proposedEliminationPlural"), color: "#ed6c02" },
+    { id: 4, value: statusCounts.PERMANENT,   label: t("status.permanentPlural"),    color: "#9c27b0" },
+    { id: 5, value: statusCounts.DESTROYED,   label: t("status.destroyedFemPlural"), color: "#f44336" },
   ].filter((d) => d.value > 0), [statusCounts, t]);
 
   // ── Rendu ─────────────────────────────────────────────────────
@@ -304,20 +306,29 @@ export default function DashboardContent() {
                 <EmptyPlaceholder label={t("dashboard.noArchive")} />
               ) : (
                 <Box flex={1} display="flex" flexDirection="column">
-                  <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
-                    <PieChart
-                      series={[{
-                        data: pieData,
-                        innerRadius: 50,
-                        outerRadius: 95,
-                        paddingAngle: 3,
-                        cornerRadius: 5,
-                      }]}
-                      height={240}
-                    />
-                  </Box>
+                  {prefs?.chartType !== "list" && <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
+                    {(prefs?.chartType === "bar") ? (
+                      <BarChart
+                        series={[{ data: pieData.map((d) => d.value) }]}
+                        xAxis={[{ data: pieData.map((d) => d.label), scaleType: "band" }]}
+                        colors={pieData.map((d) => d.color)}
+                        height={240}
+                      />
+                    ) : (
+                      <PieChart
+                        series={[{
+                          data: pieData,
+                          innerRadius: prefs?.chartType === "pie" ? 0 : 50,
+                          outerRadius: 95,
+                          paddingAngle: 3,
+                          cornerRadius: 5,
+                        }]}
+                        height={240}
+                      />
+                    )}
+                  </Box>}
                   <Stack spacing={0.75}>
-                    {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PERMANENT", "DESTROYED"] as const).map((key) => {
+                    {(["PENDING", "ACTIVE", "SEMI_ACTIVE", "PROPOSED_ELIMINATION", "PERMANENT", "DESTROYED"] as const).map((key) => {
                       const count = statusCounts[key] ?? 0;
                       const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
                       return (
