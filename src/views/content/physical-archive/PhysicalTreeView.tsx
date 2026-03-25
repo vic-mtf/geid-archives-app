@@ -26,6 +26,35 @@ import InlineEditableLabel from "./InlineEditableLabel";
 import getFileIcon from "@/utils/getFileIcon";
 import openArchiveFile from "@/utils/openArchiveFile";
 import { DraggableArchive } from "./DndWrappers";
+import { useDroppable } from "@dnd-kit/core";
+import type { DocumentDropData } from "./useArchiveDnd";
+
+/** Label droppable pour les documents dans le tree */
+function DroppableDocLabel({ documentId, documentLabel, children }: {
+  documentId: string;
+  documentLabel: string;
+  children: React.ReactNode;
+}) {
+  const data: DocumentDropData = { type: "document", documentId, documentLabel };
+  const { setNodeRef, isOver } = useDroppable({ id: `tree-doc-${documentId}`, data });
+  return (
+    <Box
+      ref={setNodeRef}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        flex: 1,
+        borderRadius: 0.5,
+        bgcolor: isOver ? "primary.50" : "transparent",
+        outline: isOver ? "2px dashed" : "none",
+        outlineColor: "primary.main",
+        transition: "background-color 0.1s",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -252,42 +281,48 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         );
       }
 
+      const isDocNode = node.level === "document";
+      const labelContent = (
+        <Box
+          display="flex"
+          alignItems="center"
+          gap={0.75}
+          py={0.25}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(nodePath);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onContextMenu?.(e, node.id, node.label, node.level);
+          }}
+        >
+          {LEVEL_ICON[node.level]}
+          <InlineEditableLabel
+            value={node.label}
+            editable={canWrite ?? false}
+            forceEdit={renamingId === node.id}
+            onEditEnd={onRenamingEnd}
+            onSave={async (newValue) => {
+              await onRename?.(node.id, node.level, newValue);
+              setNodes((prev) => updateNode(prev, node.id, { label: newValue }));
+            }}
+            variant="body2"
+            noWrap
+            sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}
+          />
+          {loadingId === node.id && <CircularProgress size={12} sx={{ ml: 0.5 }} />}
+        </Box>
+      );
+
       const treeItemEl = (
         <TreeItem
           key={node.id}
           nodeId={node.id}
-          label={
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={0.75}
-              py={0.25}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect?.(nodePath);
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onContextMenu?.(e, node.id, node.label, node.level);
-              }}
-            >
-              {LEVEL_ICON[node.level]}
-              <InlineEditableLabel
-                value={node.label}
-                editable={canWrite ?? false}
-                forceEdit={renamingId === node.id}
-                onEditEnd={onRenamingEnd}
-                onSave={async (newValue) => {
-                  await onRename?.(node.id, node.level, newValue);
-                  setNodes((prev) => updateNode(prev, node.id, { label: newValue }));
-                }}
-                variant="body2"
-                noWrap
-                sx={{ fontSize: { xs: "0.8rem", sm: "0.85rem" } }}
-              />
-              {loadingId === node.id && <CircularProgress size={12} sx={{ ml: 0.5 }} />}
-            </Box>
+          label={isDocNode && canWrite
+            ? <DroppableDocLabel documentId={node.id} documentLabel={node.label}>{labelContent}</DroppableDocLabel>
+            : labelContent
           }
           sx={{
             "& > .MuiTreeItem-content": selectedId === node.id

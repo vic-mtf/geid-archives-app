@@ -1,12 +1,11 @@
 /**
  * useArchiveDnd — Hook pour le drag & drop d'archives entre documents.
  *
- * Gère le déplacement d'une archive numérique d'un document vers un autre
- * via l'API PUT /api/stuff/archives/:id.
+ * Au drop, affiche une confirmation avant de déplacer.
  * Le drag n'est actif que si l'utilisateur a les droits d'écriture.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useSnackbar } from "notistack";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/redux/store";
@@ -34,11 +33,21 @@ export interface DocumentDropData {
   recordId?: string;
 }
 
+/** État de la confirmation de déplacement */
+export interface MoveConfirmState {
+  archiveId: string;
+  archiveLabel: string;
+  documentId: string;
+  documentLabel: string;
+  recordId?: string;
+}
+
 export default function useArchiveDnd({ canWrite, executeFetch }: UseArchiveDndOptions) {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch<AppDispatch>();
+  const [moveConfirm, setMoveConfirm] = useState<MoveConfirmState | null>(null);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     if (!canWrite) return;
 
     const { active, over } = event;
@@ -50,21 +59,30 @@ export default function useArchiveDnd({ canWrite, executeFetch }: UseArchiveDndO
     if (!dragData || dragData.type !== "archive") return;
     if (!dropData || dropData.type !== "document") return;
 
-    // Ne pas déplacer si on drop sur le même document parent
-    // (géré côté UI — pas de drop zone sur le parent actuel)
+    // Ouvrir la confirmation
+    setMoveConfirm({
+      archiveId: dragData.archiveId,
+      archiveLabel: dragData.archiveLabel,
+      documentId: dropData.documentId,
+      documentLabel: dropData.documentLabel,
+      recordId: dropData.recordId,
+    });
+  }, [canWrite]);
 
+  const confirmMove = useCallback(async () => {
+    if (!moveConfirm) return;
     try {
       await executeFetch({
-        url: `/api/stuff/archives/${dragData.archiveId}`,
+        url: `/api/stuff/archives/${moveConfirm.archiveId}`,
         method: "PUT",
         data: {
-          document: dropData.documentId,
-          record: dropData.recordId ?? null,
+          document: moveConfirm.documentId,
+          record: moveConfirm.recordId ?? null,
         },
       });
       dispatch(incrementVersion());
       enqueueSnackbar(
-        `L'archive « ${dragData.archiveLabel} » a été déplacée vers le document « ${dropData.documentLabel} ».`,
+        `L'archive « ${moveConfirm.archiveLabel} » a été déplacée vers le document « ${moveConfirm.documentLabel} ».`,
         { variant: "success" }
       );
     } catch {
@@ -72,8 +90,12 @@ export default function useArchiveDnd({ canWrite, executeFetch }: UseArchiveDndO
         "Le déplacement a échoué. Vérifiez vos droits et réessayez.",
         { variant: "error" }
       );
+    } finally {
+      setMoveConfirm(null);
     }
-  }, [canWrite, executeFetch, dispatch, enqueueSnackbar]);
+  }, [moveConfirm, executeFetch, dispatch, enqueueSnackbar]);
 
-  return { handleDragEnd };
+  const cancelMove = useCallback(() => setMoveConfirm(null), []);
+
+  return { handleDragEnd, moveConfirm, confirmMove, cancelMove };
 }

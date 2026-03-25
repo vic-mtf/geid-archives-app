@@ -11,6 +11,10 @@ import {
   Skeleton,
   Stack,
   Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Typography,
   useMediaQuery,
   useTheme,
@@ -113,7 +117,7 @@ export default function PhysicalArchiveContent() {
 
   // Drag & drop d'archives entre documents
   const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const { handleDragEnd } = useArchiveDnd({ headers, canWrite, executeFetch });
+  const { handleDragEnd, moveConfirm, confirmMove, cancelMove } = useArchiveDnd({ headers, canWrite, executeFetch });
   const [activeDrag, setActiveDrag] = useState<{ label: string; fileUrl?: string } | null>(null);
   const handleDragStart = useCallback((e: DragStartEvent) => {
     const data = e.active.data.current as ArchiveDragData | undefined;
@@ -565,6 +569,23 @@ export default function PhysicalArchiveContent() {
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
       />
+
+      {/* Confirmation de déplacement d'archive par drag & drop */}
+      <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth>
+        <DialogTitle component="div" fontWeight="bold">
+          Confirmer le déplacement
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Déplacer l'archive <strong>« {moveConfirm?.archiveLabel} »</strong> vers
+            le document <strong>« {moveConfirm?.documentLabel} »</strong> ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelMove} color="inherit">Annuler</Button>
+          <Button onClick={confirmMove} variant="contained">Déplacer</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
     <DragOverlay dropAnimation={null}>
       {activeDrag && (() => {
