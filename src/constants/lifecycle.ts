@@ -65,7 +65,7 @@ export const STATUS_COLOR: Record<
   PENDING:                "warning",
   ACTIVE:                 "success",
   SEMI_ACTIVE:            "info",
-  PROPOSED_ELIMINATION:   "warning",
+  PROPOSED_ELIMINATION:   "error",
   PERMANENT:              "secondary",
   DESTROYED:              "error",
   // Legacy

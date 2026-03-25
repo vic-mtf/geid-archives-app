@@ -6,6 +6,7 @@ interface InputField {
   label: string;
   helperText?: string;
   placeholder?: string;
+  required?: boolean;
 }
 
 export interface InputFieldsProps<T extends FieldValues = FieldValues> {
@@ -16,11 +17,12 @@ export interface InputFieldsProps<T extends FieldValues = FieldValues> {
 export default function InputFields<T extends FieldValues = FieldValues>({ register, formState: { errors } }: InputFieldsProps<T>) {
   return (
     <>
-      {fields.map(({ name, label, helperText, placeholder }) => (
+      {fields.map(({ name, label, helperText, placeholder, required }) => (
         <InputControl
           {...register(name as Path<T>)}
           key={name}
           label={label}
+          required={required}
           fullWidth
           placeholder={placeholder}
           helperText={!errors[name] ? helperText : undefined}
@@ -39,12 +41,14 @@ const fields: InputField[] = [
     label: "Numéro de classification",
     helperText: "Code issu du plan de classement officiel (ex : 2024-ADM-001)",
     placeholder: "2024-ADM-001",
+    required: true,
   },
   {
     name: "refNumber",
     label: "Numéro de référence",
     helperText: "Référence interne du document dans votre système (ex : REF-DRH-042)",
     placeholder: "REF-DRH-042",
+    required: true,
   },
   {
     name: "profile",

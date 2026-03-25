@@ -33,6 +33,7 @@ import deepNavigate from "@/utils/deepNavigate";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 
 interface DashboardBottomRowProps {
+  visible: Set<string>;
   duaExpired: Archive[];
   duaSoon: Archive[];
   binderList: Binder[];
@@ -52,6 +53,7 @@ interface DashboardBottomRowProps {
 }
 
 const DashboardBottomRow = React.memo(function DashboardBottomRow({
+  visible,
   duaExpired,
   duaSoon,
   binderList,
@@ -72,7 +74,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
   return (
     <Grid container spacing={2}>
       {/* DUA alertes */}
-      {(duaExpired.length > 0 || duaSoon.length > 0) && (
+      {visible.has("dua") && (duaExpired.length > 0 || duaSoon.length > 0) && (
         <Grid item xs={12} sm={6} md={3}>
           <Card variant="outlined" sx={{ height: "100%", borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
             <CardContent>
@@ -115,7 +117,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
       )}
 
       {/* Capacité des classeurs */}
-      {!bindersLoading && binderList.length > 0 && (
+      {visible.has("binders") && !bindersLoading && binderList.length > 0 && (
         <Grid item xs={12} sm={6} md={3}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent>
@@ -153,7 +155,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
       )}
 
       {/* Inventaire physique */}
-      <Grid item xs={12} sm={6} md={3}>
+      {visible.has("inventory") && <Grid item xs={12} sm={6} md={3}>
         <Card variant="outlined" sx={{ height: "100%" }}>
           <CardActionArea sx={{ height: "100%" }} onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })}>
             <CardContent>
@@ -190,10 +192,10 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
             </CardContent>
           </CardActionArea>
         </Card>
-      </Grid>
+      </Grid>}
 
       {/* Utilisateurs */}
-      {canWrite && (
+      {visible.has("users") && canWrite && (
         <Grid item xs={12} sm={6} md={3}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardActionArea sx={{ height: "100%" }} onClick={() => deepNavigate(navigateTo, { tab: "userManagement" })}>
@@ -235,8 +237,8 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
         </Grid>
       )}
 
-      {/* Accès rapide — quand il manque des cartes */}
-      {!(duaExpired.length > 0 || duaSoon.length > 0) && (
+      {/* Accès rapide */}
+      {visible.has("quickAccess") && (
         <Grid item xs={12} sm={6} md={canWrite ? 3 : 6}>
           <Card variant="outlined" sx={{ height: "100%" }}>
             <CardContent>

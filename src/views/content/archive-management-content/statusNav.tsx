@@ -11,7 +11,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import ArchiveRoundedIcon            from "@mui/icons-material/ArchiveRounded";
 import MenuBookRoundedIcon           from "@mui/icons-material/MenuBookRounded";
 import DeleteSweepRoundedIcon        from "@mui/icons-material/DeleteSweepRounded";
-import ReportProblemOutlinedIcon     from "@mui/icons-material/ReportProblemOutlined";
+import GavelRoundedIcon              from "@mui/icons-material/GavelRounded";
 import i18n from "@/i18n/i18n";
 import type { NormalizedStatus } from "@/constants/lifecycle";
 
@@ -29,8 +29,8 @@ const STATUS_NAV_CONFIG: { key: StatusFilter; labelKey: string; icon: React.Reac
   { key: "PENDING",     labelKey: "status.pendingPlural",    icon: <PendingActionsRoundedIcon fontSize="small" />,     color: "warning.main"   },
   { key: "ACTIVE",      labelKey: "status.activePlural",     icon: <CheckCircleOutlineRoundedIcon fontSize="small" />, color: "success.main"   },
   { key: "SEMI_ACTIVE", labelKey: "status.semiActivePlural", icon: <ArchiveRoundedIcon fontSize="small" />,            color: "info.main"      },
-  { key: "PROPOSED_ELIMINATION", labelKey: "status.proposedEliminationPlural", icon: <ReportProblemOutlinedIcon fontSize="small" />, color: "warning.main" },
   { key: "PERMANENT",   labelKey: "status.permanentSingular",icon: <MenuBookRoundedIcon fontSize="small" />,           color: "secondary.main" },
+  { key: "PROPOSED_ELIMINATION", labelKey: "status.proposedEliminationPlural", icon: <GavelRoundedIcon fontSize="small" />, color: "#c62828" },
   { key: "DESTROYED",   labelKey: "status.destroyedPlural",  icon: <DeleteSweepRoundedIcon fontSize="small" />,        color: "error.main"     },
 ];
 

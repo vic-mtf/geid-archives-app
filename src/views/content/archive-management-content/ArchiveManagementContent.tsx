@@ -22,6 +22,7 @@ import type { RootState, AppDispatch } from "@/redux/store";
 import { updateData, incrementVersion } from "@/redux/data";
 import { Box as MuiBox, Drawer, useMediaQuery, useTheme } from "@mui/material";
 import ResizeDivider from "@/views/content/physical-archive/ResizeDivider";
+import usePanelWidth from "@/hooks/usePanelWidth";
 import { DataGrid, GridRowSelectionModel, GridRowParams, useGridApiRef } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import useAxios              from "@/hooks/useAxios";
@@ -56,7 +57,7 @@ export default function ArchiveManagementContent() {
   const theme    = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
-  const [sidebarWidth, setSidebarWidth] = useState(200);
+  const [sidebarWidth, setSidebarWidth] = usePanelWidth("archives.sidebar", 200);
 
   const dataVersion      = useSelector((store: RootState) => store.data.dataVersion);
   const selectedElements = useSelector(
@@ -106,7 +107,8 @@ export default function ArchiveManagementContent() {
           ACTIVE:      { title: "Archive réactivée",          msg: "L'archive est de nouveau active. Elle reprend son cycle de vie normal." },
           SEMI_ACTIVE: { title: "Passage en intermédiaire",   msg: "L'archive est maintenant en phase intermédiaire. Pensez à définir sa durée de conservation pour planifier son sort final." },
           PERMANENT:   { title: "Classée en historique",      msg: "L'archive a été classée définitivement en historique. Elle sera conservée à titre permanent." },
-          DESTROYED:   { title: "Archive éliminée",           msg: "L'archive a été éliminée. Cette action est irréversible — assurez-vous d'avoir conservé les documents nécessaires." },
+          DESTROYED:           { title: "Archive éliminée",           msg: "L'archive a été éliminée. Cette action est irréversible — assurez-vous d'avoir conservé les documents nécessaires." },
+          PROPOSED_ELIMINATION: { title: "Élimination proposée",    msg: "L'archive est proposée à l'élimination. Un procès-verbal doit être créé et approuvé avant destruction." },
         };
         const lm = lifecycleMsgs[targetStatus];
         enqueueSnackbar(lm?.msg ?? `Statut mis à jour : ${STATUS_LABEL[targetStatus] ?? targetStatus}`, {
@@ -158,6 +160,11 @@ export default function ArchiveManagementContent() {
     );
 
     if (target.archiveId) {
+      // Réinitialiser les filtres pour que l'archive ciblée soit visible
+      if (!target.statusFilter && !target.quickFilter) {
+        setStatusFilter("ALL");
+        setQuickFilter(null);
+      }
       setFocusedId(target.archiveId);
       setDetailOpen(true);
 

@@ -65,6 +65,13 @@ export function dispatchArchiveAction(
     case "restore":
       root.dispatchEvent(new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PERMANENT" } }));
       break;
+    case "to-proposed-elimination":
+      root.dispatchEvent(new CustomEvent("__lifecycle_archive", { detail: { id, targetStatus: "PROPOSED_ELIMINATION" } }));
+      break;
+    case "create-elimination-pv":
+      // Naviguer vers l'onglet Élimination avec ouverture du dialog de création
+      root.dispatchEvent(new CustomEvent("__navigate_to_elimination_create", { detail: { preSelectedArchives: [id] } }));
+      break;
     case "delete":
       root.dispatchEvent(new CustomEvent("__delete_archive_docs", { detail: { ids: [id] } }));
       return true;

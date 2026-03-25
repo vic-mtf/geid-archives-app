@@ -34,6 +34,11 @@ import WarningAmberRoundedIcon   from "@mui/icons-material/WarningAmberRounded";
 import ArchiveRoundedIcon        from "@mui/icons-material/ArchiveRounded";
 import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
 import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
+import DeleteOutlineRoundedIcon  from "@mui/icons-material/DeleteOutlineRounded";
+import GavelRoundedIcon          from "@mui/icons-material/GavelRounded";
+import FolderOpenOutlinedIcon    from "@mui/icons-material/FolderOpenOutlined";
+import TopicOutlinedIcon         from "@mui/icons-material/TopicOutlined";
+import PeopleOutlineRoundedIcon  from "@mui/icons-material/PeopleOutlineRounded";
 
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
@@ -78,15 +83,15 @@ export default function DashboardContent() {
   // ── Préférences utilisateur du dashboard ────────────────────
   const { data: prefs } = useApiCache<{
     visibleWidgets: string[];
+    visibleStats: string[];
     chartType: string;
     recentCount: number;
     alertThresholds: { duaDays: number; binderCapacity: number };
     autoRefreshSeconds: number;
-    defaultUnit: string;
   }>("/api/stuff/archives/prefs/dashboard", headers);
 
   // Raccourcis pour les préférences (avec valeurs par défaut)
-  const visible  = useMemo(() => new Set(prefs?.visibleWidgets ?? ["stats", "recent", "distribution", "dua", "binders", "inventory", "users", "quickAccess"]), [prefs]);
+  const visible  = useMemo(() => new Set(prefs?.visibleWidgets ?? ["alerts", "stats", "recent", "distribution", "dua", "binders", "inventory", "users", "quickAccess"]), [prefs]);
   const recentMax       = prefs?.recentCount ?? 8;
   const duaThreshold    = prefs?.alertThresholds?.duaDays ?? 30;
   const binderThreshold = prefs?.alertThresholds?.binderCapacity ?? 90;
@@ -135,7 +140,7 @@ export default function DashboardContent() {
 
   const statusCounts = useMemo(() => {
     const c: Record<string, number> = {
-      PENDING: 0, ACTIVE: 0, SEMI_ACTIVE: 0, PERMANENT: 0, DESTROYED: 0,
+      PENDING: 0, ACTIVE: 0, SEMI_ACTIVE: 0, PROPOSED_ELIMINATION: 0, PERMANENT: 0, DESTROYED: 0,
     };
     fullList.forEach((doc) => {
       const k = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
@@ -180,12 +185,36 @@ export default function DashboardContent() {
   const totalCount  = fullList.length;
   const anyLoading  = archivesLoading;
 
+  // ── Cartes de synthèse dynamiques ─────────────────────────
+  const DEFAULT_STATS = ["totalArchives", "pending", "active", "semiActive", "permanent", "containers"];
+  const statCardDefs: Record<string, { label: string; value: number; icon: React.ReactNode; color: string; tab: string; statusFilter?: string; highlight?: boolean }> = {
+    totalArchives:       { label: t("dashboard.totalArchives"), value: totalCount,                        icon: <ManageHistoryRoundedIcon />,  color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
+    pending:             { label: t("dashboard.pending"),       value: statusCounts.PENDING,              icon: <HourglassTopOutlinedIcon />,  color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
+    active:              { label: t("dashboard.active"),        value: statusCounts.ACTIVE,               icon: <CheckCircleOutlineIcon />,    color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
+    semiActive:          { label: t("dashboard.semiActive"),    value: statusCounts.SEMI_ACTIVE,          icon: <ArchiveRoundedIcon />,        color: "info.main",    tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
+    permanent:           { label: t("dashboard.historic"),      value: statusCounts.PERMANENT ?? 0,       icon: <MenuBookRoundedIcon />,       color: "#9c27b0",      tab: "archiveManager", statusFilter: "PERMANENT" },
+    destroyed:           { label: t("status.destroyedFemPlural"), value: statusCounts.DESTROYED ?? 0,     icon: <DeleteOutlineRoundedIcon />,  color: "error.main",   tab: "archiveManager", statusFilter: "DESTROYED" },
+    proposedElimination: { label: t("status.proposedEliminationPlural"), value: statusCounts.PROPOSED_ELIMINATION ?? 0, icon: <GavelRoundedIcon />, color: "#c62828", tab: "archiveManager", statusFilter: "PROPOSED_ELIMINATION" },
+    containers:          { label: t("dashboard.containers"),    value: containerList.length,              icon: <WarehouseOutlinedIcon />,     color: "#5C6BC0",      tab: "physicalArchive" },
+    binders:             { label: t("dashboard.binders"),       value: binderList.length,                 icon: <FolderOpenOutlinedIcon />,    color: "#795548",      tab: "physicalArchive" },
+    records:             { label: t("dashboard.folders"),       value: recordList.length,                 icon: <TopicOutlinedIcon />,         color: "#00897b",      tab: "physicalArchive" },
+    duaExpired:          { label: t("dua.expired"),             value: duaExpired.length,                 icon: <AlarmRoundedIcon />,          color: "error.main",   tab: "archiveManager", highlight: duaExpired.length > 0 },
+    users:               { label: t("dashboard.users"),         value: globalStats?.users?.active ?? 0,   icon: <PeopleOutlineRoundedIcon />,  color: "#546e7a",      tab: "userManagement" },
+    eliminationPvs:      { label: t("elimination.pvList"),      value: 0,                                 icon: <GavelRoundedIcon />,          color: "#c62828",      tab: "elimination" },
+  };
+
+  const activeStats = useMemo(() =>
+    (prefs?.visibleStats ?? DEFAULT_STATS).map((id) => statCardDefs[id]).filter(Boolean),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [prefs?.visibleStats, statusCounts, totalCount, containerList.length, binderList.length, recordList.length, duaExpired.length, globalStats, t]
+  );
+
   // ── Données PieChart ────────────────────────────────────────
   const pieData = useMemo(() => [
     { id: 0, value: statusCounts.ACTIVE,      label: t("status.activesFemPlural"),   color: "#4caf50" },
     { id: 1, value: statusCounts.PENDING,     label: t("status.pendingPlural"),      color: "#ff9800" },
     { id: 2, value: statusCounts.SEMI_ACTIVE, label: t("status.semiActivePlural"),   color: "#2196f3" },
-    { id: 3, value: statusCounts.PROPOSED_ELIMINATION, label: t("status.proposedEliminationPlural"), color: "#ed6c02" },
+    { id: 3, value: statusCounts.PROPOSED_ELIMINATION, label: t("status.proposedEliminationPlural"), color: "#c62828" },
     { id: 4, value: statusCounts.PERMANENT,   label: t("status.permanentPlural"),    color: "#9c27b0" },
     { id: 5, value: statusCounts.DESTROYED,   label: t("status.destroyedFemPlural"), color: "#f44336" },
   ].filter((d) => d.value > 0), [statusCounts, t]);
@@ -195,7 +224,7 @@ export default function DashboardContent() {
     <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, overflowY: "auto", height: "100%", width: "100%" }}>
 
       {/* ── Alertes prioritaires ──────────────────────────── */}
-      {(statusCounts.PENDING > 0 || duaExpired.length > 0 || criticalBinders.length > 0) && (
+      {visible.has("alerts") && (statusCounts.PENDING > 0 || duaExpired.length > 0 || criticalBinders.length > 0) && (
         <Stack spacing={1} mb={2}>
           {statusCounts.PENDING > 0 && (
             <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
@@ -218,17 +247,10 @@ export default function DashboardContent() {
         </Stack>
       )}
 
-      {/* ── Rangée 1 : Cartes stats principales ──────────── */}
-      {visible.has("stats") && <Grid container spacing={2} mb={2.5}>
-        {[
-          { label: t("dashboard.totalArchives"), value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
-          { label: t("dashboard.pending"), value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
-          { label: t("dashboard.active"), value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
-          { label: t("dashboard.semiActive"), value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
-          { label: t("dashboard.historic"), value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager", statusFilter: "PERMANENT" },
-          { label: t("dashboard.containers"), value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
-        ].map((s) => (
-          <Grid item xs={6} sm={4} md={2} key={s.label}>
+      {/* ── Rangée 1 : Cartes stats dynamiques (max 6) ──── */}
+      {visible.has("stats") && activeStats.length > 0 && <Grid container spacing={2} mb={2.5}>
+        {activeStats.map((s) => (
+          <Grid item xs={6} sm={4} md={12 / Math.min(activeStats.length, 6)} key={s.label}>
             <StatCard
               label={s.label}
               value={s.value}
@@ -309,10 +331,19 @@ export default function DashboardContent() {
                   {prefs?.chartType !== "list" && <Box sx={{ height: { xs: 200, md: 240 }, width: "100%", mb: 1.5 }}>
                     {(prefs?.chartType === "bar") ? (
                       <BarChart
-                        series={pieData.map((d) => ({ data: [d.value], label: d.label, color: d.color }))}
-                        xAxis={[{ data: [""], scaleType: "band" }]}
+                        series={[{ data: pieData.map((d) => d.value) }]}
+                        xAxis={[{
+                          scaleType: "band" as const,
+                          data: pieData.map((d) => d.label),
+                          colorMap: {
+                            type: "ordinal" as const,
+                            colors: pieData.map((d) => d.color),
+                          },
+                          tickLabelStyle: { angle: -35, textAnchor: "end" as const, fontSize: 11 },
+                        }]}
                         height={240}
-                        layout="horizontal"
+                        margin={{ bottom: 60 }}
+                        hideLegend
                       />
                     ) : (
                       <PieChart
@@ -352,6 +383,7 @@ export default function DashboardContent() {
 
       {/* ── Rangée 3 : DUA + Classeurs + Inventaire + Users ─ */}
       <DashboardBottomRow
+        visible={visible}
         duaExpired={duaExpired}
         duaSoon={duaSoon}
         binderList={binderList}

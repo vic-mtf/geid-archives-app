@@ -5,6 +5,7 @@ import Typology from "./Typology";
 interface InputsDocProps {
   type?: React.MutableRefObject<string | null | undefined>;
   designation?: React.MutableRefObject<string | null | undefined>;
+  refNumber?: React.MutableRefObject<string | null | undefined>;
   subType?: React.MutableRefObject<string | null | undefined>;
   description?: React.MutableRefObject<string | null | undefined>;
   findError: (field: string) => boolean;
@@ -13,6 +14,7 @@ interface InputsDocProps {
 export default function InputsDoc({
   type,
   designation,
+  refNumber,
   subType,
   description,
   findError,
@@ -33,6 +35,15 @@ export default function InputsDoc({
         }
         message={findError("title") && !designation?.current ? message : undefined}
         onChange={(e) => { if (designation) designation.current = e.target.value; }}
+      />
+
+      <InputControl
+        fullWidth
+        margin='dense'
+        label='N° de référence'
+        placeholder='Référence interne du document'
+        helperText="Facultatif — numéro ou code de référence interne"
+        onChange={(e) => { if (refNumber) refNumber.current = e.target.value; }}
       />
 
       <Typology

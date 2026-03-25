@@ -42,6 +42,7 @@ import WorkOutlineRoundedIcon  from "@mui/icons-material/WorkOutlineRounded";
 import VerifiedOutlinedIcon    from "@mui/icons-material/VerifiedOutlined";
 import ArrowBackRoundedIcon    from "@mui/icons-material/ArrowBackRounded";
 import AdminPanelSettingsIcon  from "@mui/icons-material/AdminPanelSettings";
+import avatarColor from "@/utils/avatarColor";
 import BlockOutlinedIcon       from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import SwapHorizRoundedIcon    from "@mui/icons-material/SwapHorizRounded";
@@ -95,6 +96,7 @@ interface ActivityItem {
 
 function avatarUrl(user: UserItem): string | undefined {
   if (!user.imageUrl) return undefined;
+  if (user.imageUrl.startsWith("http")) return user.imageUrl;
   return `${(import.meta.env.VITE_SERVER_BASE_URL as string) ?? ""}/${user.imageUrl}`;
 }
 
@@ -200,7 +202,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
         )}
         <Avatar
           src={avatarUrl(user)}
-          sx={{ width: { xs: 52, sm: 68 }, height: { xs: 52, sm: 68 }, fontSize: "1.3rem", fontWeight: 700, bgcolor: "primary.main", border: "3px solid", borderColor: "primary.light" }}>
+          sx={{ width: { xs: 52, sm: 68 }, height: { xs: 52, sm: 68 }, fontSize: "1.3rem", fontWeight: 700, ...avatarColor(user._id), border: "3px solid", borderColor: "divider" }}>
           {user.fname?.[0]?.toUpperCase()}{user.lname?.[0]?.toUpperCase()}
         </Avatar>
         <Box flex={1} minWidth={0}>

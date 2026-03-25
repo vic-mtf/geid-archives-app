@@ -356,6 +356,7 @@ function TocPage() {
     { num: "5.4", title: "Archive historique", sub: true },
     { num: "5.5", title: "Archive détruite", sub: true },
     { num: "5.6", title: "L'historique des transitions", sub: true },
+    { num: "5.7", title: "Élimination proposée", sub: true },
     { num: "6",   title: "La Durée d'Utilité Administrative (DUA)" },
     { num: "6.1", title: "Cadre réglementaire", sub: true },
     { num: "6.2", title: "Configurer une DUA", sub: true },
@@ -576,6 +577,19 @@ function Chapter2() {
         pour une réussite, orange pour un avertissement, rouge pour une erreur. Elles disparaissent
         automatiquement après quelques secondes.
       </P2>
+
+      <H2>2.5 — Expiration de la session</H2>
+      <P2>
+        Votre session expire automatiquement après une période d'inactivité prolongée. Lorsque
+        cela se produit, l'application détecte l'expiration et vous déconnecte proprement. Un
+        message vous informe de la situation et vous invite à vous reconnecter pour reprendre
+        votre travail.
+      </P2>
+      <Info label="SESSION EXPIRÉE">
+        Si vous êtes déconnecté de manière inattendue, reconnectez-vous simplement avec vos
+        identifiants habituels. Les données non enregistrées avant l'expiration ne sont pas
+        récupérables. Pensez à sauvegarder régulièrement votre travail en cours.
+      </Info>
       <Ftr />
     </Page>
   );
@@ -655,6 +669,18 @@ function Chapter3() {
         de classeurs, de documents physiques et d'archives numériques rattachées à des supports
         physiques. Cliquer sur cette carte ouvre directement la section Archivage physique.
       </P2>
+
+      <H2>3.8 — Personnaliser le tableau de bord</H2>
+      <P2>
+        Le tableau de bord est entièrement personnalisable pour s'adapter à vos besoins quotidiens.
+        Depuis les paramètres du tableau de bord, vous pouvez configurer les éléments suivants.
+      </P2>
+      <Bullet>Cartes de synthèse : choisissez jusqu'à six compteurs parmi les douze disponibles et réorganisez-les par glisser-déposer selon vos priorités.</Bullet>
+      <Bullet>Sections du tableau de bord : activez ou désactivez individuellement chaque bloc — alertes, activité récente, répartition par statut, conservation, classeurs, inventaire, utilisateurs et raccourcis.</Bullet>
+      <Bullet>Type de graphique : choisissez le mode de visualisation parmi donut, camembert, barres horizontales ou liste détaillée.</Bullet>
+      <Bullet>Seuils d'alerte personnalisables : définissez le nombre de jours avant expiration d'une DUA et le pourcentage de remplissage des classeurs déclenchant une alerte.</Bullet>
+      <Bullet>Profondeur de l'historique : réglez le nombre d'archives récentes affichées, de trois à vingt éléments.</Bullet>
+      <Succ>Le tableau de bord se met à jour en temps réel. Chaque modification effectuée dans l'application est immédiatement reflétée dans les compteurs et les graphiques.</Succ>
       <Ftr />
     </Page>
   );
@@ -968,7 +994,30 @@ function Chapter5() {
         </P2>
         <Warn>La destruction est une action définitive. Avant de l'effectuer, vérifiez que la DUA est bien expirée, que le sort final décidé est l'élimination, et que le document ne fait pas l'objet d'un contentieux en cours ou d'une demande de communication.</Warn>
 
-        <H2>5.7 — Les transitions autorisées</H2>
+        <H2>5.7 — Élimination proposée</H2>
+        <P2>
+          Lorsque la DUA d'une archive arrive à échéance et que le sort final configuré est
+          « élimination », l'archive ne passe pas directement en état détruit. Elle transite
+          d'abord vers un état intermédiaire appelé « Élimination proposée ». Ce mécanisme
+          garantit qu'aucune archive n'est détruite automatiquement sans intervention humaine.
+        </P2>
+        <H3>Le procès-verbal d'élimination</H3>
+        <P2>
+          Pour détruire les archives en élimination proposée, un procès-verbal d'élimination (PV)
+          doit être rédigé et approuvé selon un circuit de validation rigoureux.
+        </P2>
+        <NumBullet n={1}>Brouillon — Le PV est créé par un archiviste avec la liste des archives concernées et la justification de leur élimination.</NumBullet>
+        <NumBullet n={2}>Visa du producteur — Le service producteur examine le PV et confirme que les archives peuvent être éliminées.</NumBullet>
+        <NumBullet n={3}>Visa de la DANTIC — L'autorité compétente en gestion documentaire valide la conformité du PV.</NumBullet>
+        <NumBullet n={4}>Approuvé — Le PV a reçu tous les visas nécessaires et est prêt à être exécuté.</NumBullet>
+        <NumBullet n={5}>Exécuté — La destruction effective des archives est réalisée. Cette action est irréversible.</NumBullet>
+        <Info label="RÉACTIVATION">
+          Tant que le PV n'est pas exécuté, les archives restent consultables et intactes. Il est
+          possible de réactiver une archive en élimination proposée ou de la basculer en conservation
+          définitive si un intérêt historique est identifié après coup.
+        </Info>
+
+        <H2>5.8 — Les transitions autorisées</H2>
         <P2>
           Toutes les transitions entre états ne sont pas possibles. Le tableau ci-dessous résume
           les parcours autorisés.
@@ -994,7 +1043,7 @@ function Chapter5() {
           ))}
         </View>
 
-        <H2>5.8 — L'historique des transitions</H2>
+        <H2>5.9 — L'historique des transitions</H2>
         <P2>
           Chaque transition de statut est enregistrée dans l'historique de l'archive avec la date
           et l'heure exactes de l'opération, l'identité de l'utilisateur qui l'a effectuée, l'état
@@ -1002,7 +1051,7 @@ function Chapter5() {
           chaque archive et constitue un audit trail complet pour toute vérification ultérieure.
         </P2>
 
-        <H2>5.9 — Bonnes pratiques relatives au cycle de vie</H2>
+        <H2>5.10 — Bonnes pratiques relatives au cycle de vie</H2>
         <Bullet>Ne pas laisser des archives en état En attente trop longtemps. Un délai de traitement supérieur à une semaine signale un dysfonctionnement dans le processus de validation.</Bullet>
         <Bullet>Configurer systématiquement la DUA dès qu'une archive passe en état Intermédiaire, pour activer les alertes automatiques.</Bullet>
         <Bullet>Ne jamais passer directement un document de En attente à Détruit. Respecter l'ordre logique des états.</Bullet>

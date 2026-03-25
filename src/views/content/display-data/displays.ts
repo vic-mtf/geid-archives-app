@@ -1,5 +1,6 @@
 import ArchiveManagementContent from "../archive-management-content/ArchiveManagementContent";
 import DashboardContent from "../dashboard/DashboardContent";
+import EliminationContent from "../elimination/EliminationContent";
 import HelpContent from "../help/HelpContent";
 import PhysicalArchiveContent from "../physical-archive/PhysicalArchiveContent";
 import UserManagementContent from "../user-management/UserManagementContent";
@@ -9,6 +10,7 @@ import { ComponentType } from "react";
 const displays: Record<string, ComponentType> = {
   dashboard:       DashboardContent,
   archiveManager:  ArchiveManagementContent,
+  elimination:     EliminationContent,
   physicalArchive: PhysicalArchiveContent,
   userManagement:  UserManagementContent,
   settings:        SettingsContent,

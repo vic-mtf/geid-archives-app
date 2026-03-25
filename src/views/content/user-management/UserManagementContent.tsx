@@ -42,6 +42,7 @@ import useArchivePermissions from "@/hooks/useArchivePermissions";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { useSnackbar } from "notistack";
 import UserDetailPanel from "./UserDetailPanel";
+import avatarColor from "@/utils/avatarColor";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -77,6 +78,8 @@ interface RoleItem {
 
 function avatarUrl(user: UserItem): string | undefined {
   if (!user.imageUrl) return undefined;
+  // imageUrl peut être une URL complète ou un chemin relatif
+  if (user.imageUrl.startsWith("http")) return user.imageUrl;
   const base = (import.meta.env.VITE_SERVER_BASE_URL as string) ?? "";
   return `${base}/${user.imageUrl}`;
 }
@@ -186,7 +189,7 @@ export default function UserManagementContent() {
           borderBottom: "1px solid",
           borderColor: "divider",
         }}>
-        {/* Avatar avec photo de profil */}
+        {/* Avatar avec photo de profil ou couleur par ID */}
         <Avatar
           src={avatarUrl(user)}
           sx={{
@@ -194,7 +197,7 @@ export default function UserManagementContent() {
             height: 44,
             fontSize: "0.95rem",
             fontWeight: 600,
-            bgcolor: level === "admin" ? "primary.main" : level === "write" ? "success.main" : level === "read" ? "info.main" : "grey.400",
+            ...avatarColor(user._id),
           }}>
           {user.fname?.[0]?.toUpperCase()}{user.lname?.[0]?.toUpperCase()}
         </Avatar>

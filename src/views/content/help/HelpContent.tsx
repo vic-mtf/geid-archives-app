@@ -42,6 +42,7 @@ import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
 import { useLocation }          from "react-router-dom";
 import Fuse                     from "fuse.js";
+import useToken                 from "@/hooks/useToken";
 
 // ── Structure des sections du manuel ─────────────────────────
 
@@ -61,13 +62,13 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "connexion", number: "2", title: "Connexion et interface",
-    keywords: ["connexion", "login", "interface", "navigation", "onglet", "menu"],
-    body: "Pour accéder à GEID Archives vous devez disposer d'un compte créé par votre administrateur. Saisissez votre identifiant et mot de passe sur la page d'accueil. L'interface principale est organisée autour d'un menu de navigation à gauche donnant accès aux quatre sections principales.",
+    keywords: ["connexion", "login", "interface", "navigation", "onglet", "menu", "session", "expiration", "déconnexion"],
+    body: "Pour accéder à GEID Archives vous devez disposer d'un compte créé par votre administrateur. Saisissez votre identifiant et mot de passe sur la page d'accueil. L'interface principale est organisée autour d'un menu de navigation à gauche donnant accès aux quatre sections principales. La session expire automatiquement après une période d'inactivité. L'application détecte cette expiration et vous déconnecte proprement en vous informant de vous reconnecter.",
   },
   {
     id: "tableau-de-bord", number: "3", title: "Le tableau de bord",
-    keywords: ["tableau de bord", "dashboard", "statistiques", "indicateurs", "alertes", "activité récente"],
-    body: "Le tableau de bord est la première page qui s'affiche après connexion. Il présente une synthèse en temps réel de l'état du système. Vous y trouverez les compteurs d'archives par statut, les alertes prioritaires, l'activité récente et l'état de l'inventaire physique.",
+    keywords: ["tableau de bord", "dashboard", "statistiques", "indicateurs", "alertes", "activité récente", "personnaliser", "configurer", "graphique", "donut", "camembert", "barres", "seuils", "glisser-déposer"],
+    body: "Le tableau de bord est la première page qui s'affiche après connexion. Il présente une synthèse en temps réel de l'état du système. Vous y trouverez les compteurs d'archives par statut, les alertes prioritaires, l'activité récente et l'état de l'inventaire physique. Le tableau de bord est entièrement personnalisable : cartes de synthèse configurables, sections activables, type de graphique au choix et seuils d'alerte réglables.",
   },
   {
     id: "archives-numeriques", number: "4", title: "Les archives numériques",
@@ -108,6 +109,11 @@ const SECTIONS: ManualSection[] = [
     id: "etat-detruit", number: "5.5", title: "Archive détruite",
     keywords: ["détruite", "destroyed", "suppression", "fin de vie", "élimination"],
     body: "L'état détruit signale qu'une archive a été éliminée conformément aux règles de gestion documentaire. Cette action est irréversible. Elle est réservée aux administrateurs et ne peut s'appliquer qu'après validation de la procédure d'élimination.",
+  },
+  {
+    id: "elimination-proposee", number: "5.6", title: "Élimination proposée",
+    keywords: ["élimination proposée", "PV", "procès-verbal", "destruction", "DUA expirée", "sort final", "réactiver", "conserver", "visa", "DANTIC", "brouillon", "approuvé", "exécuté"],
+    body: "Lorsqu'une DUA expire et que le sort final est l'élimination, l'archive passe automatiquement en état Élimination proposée. Aucune destruction automatique n'a lieu. Un procès-verbal d'élimination doit être créé et approuvé selon un circuit de validation précis avant que les archives ne soient définitivement détruites. Il est également possible de réactiver ou conserver une archive en élimination proposée si la situation l'exige.",
   },
   {
     id: "dua", number: "6", title: "La Durée d'Utilité Administrative",
@@ -332,6 +338,7 @@ function StatusBadge({ label, color }: { label: string; color: "warning" | "succ
 
 export default function HelpContent() {
   const location = useLocation();
+  const token = useToken();
   const anchor   = (location.state as Record<string, unknown> | null)?.helpAnchor as string | undefined;
   const scrolled = useRef(false);
   const docRef   = useRef<HTMLDivElement>(null);
@@ -408,7 +415,7 @@ export default function HelpContent() {
       // Fallback : téléchargement via l'API serveur
       try {
         const res = await fetch("/api/stuff/archives/manual/pdf", {
-          headers: { Authorization: document.cookie.match(/token=([^;]+)/)?.[1] ?? "" },
+          headers: { Authorization: token ?? "" },
         });
         if (!res.ok) throw new Error("server pdf failed");
         const blob = await res.blob();
@@ -424,7 +431,7 @@ export default function HelpContent() {
     } finally {
       setPdfLoading(false);
     }
-  }, []);
+  }, [token]);
 
   const toc = useMemo(() => SECTIONS.filter(s => !s.number.includes(".")), []);
 
@@ -626,6 +633,20 @@ export default function HelpContent() {
         </Table>
         </Box>
 
+        <SubTitle>Expiration de la session</SubTitle>
+        <Paragraph>
+          Votre session expire automatiquement après une période d'inactivité prolongée. Lorsque
+          cela se produit, l'application détecte l'expiration et vous déconnecte proprement. Un
+          message vous informe de la situation et vous invite à vous reconnecter pour reprendre
+          votre travail. Les données non enregistrées avant l'expiration ne sont pas récupérables,
+          pensez donc à sauvegarder régulièrement votre travail en cours.
+        </Paragraph>
+        <InfoBox>
+          Si vous êtes déconnecté de manière inattendue, cela signifie probablement que votre
+          session a expiré. Reconnectez-vous simplement avec vos identifiants habituels pour
+          reprendre votre activité.
+        </InfoBox>
+
         <Divider sx={{ my: 3 }} />
 
         {/* ══════════════════════════════════════════════════
@@ -668,6 +689,41 @@ export default function HelpContent() {
           document, la date d'ajout et le statut actuel sous forme de pastille colorée. Cliquez
           sur une ligne pour accéder directement à la gestion des archives.
         </Paragraph>
+
+        <SubTitle>Personnaliser le tableau de bord</SubTitle>
+        <Paragraph>
+          Le tableau de bord est entièrement personnalisable pour s'adapter à vos besoins
+          quotidiens. Vous pouvez configurer les éléments suivants depuis les paramètres du
+          tableau de bord.
+        </Paragraph>
+        <Step number={1}>
+          Cartes de synthèse : choisissez jusqu'à six compteurs parmi les douze disponibles
+          (archives par statut, inventaire physique, utilisateurs, etc.) et réorganisez-les par
+          glisser-déposer selon vos priorités.
+        </Step>
+        <Step number={2}>
+          Sections du tableau de bord : activez ou désactivez individuellement chaque bloc
+          d'information — alertes, activité récente, répartition par statut, conservation,
+          classeurs, inventaire, utilisateurs et raccourcis.
+        </Step>
+        <Step number={3}>
+          Type de graphique : choisissez le mode de visualisation qui vous convient le mieux
+          parmi donut, camembert, barres horizontales ou liste détaillée.
+        </Step>
+        <Step number={4}>
+          Seuils d'alerte : définissez à partir de combien de jours avant l'expiration d'une
+          DUA le système doit vous alerter, ainsi que le pourcentage de remplissage des classeurs
+          déclenchant une alerte de capacité.
+        </Step>
+        <Step number={5}>
+          Profondeur de l'historique : réglez le nombre d'archives récentes affichées dans la
+          liste d'activité, de trois à vingt éléments selon vos préférences.
+        </Step>
+        <InfoBox severity="success">
+          Le tableau de bord se met à jour en temps réel. Chaque modification effectuée dans
+          l'application est immédiatement reflétée dans les compteurs et les graphiques, sans
+          avoir besoin de rafraîchir la page.
+        </InfoBox>
 
         <Divider sx={{ my: 3 }} />
 
@@ -861,6 +917,54 @@ export default function HelpContent() {
           que la DUA est bien expirée et que le sort final retenu est bien l'élimination avant de
           procéder. En cas de doute, consultez votre responsable de service.
         </InfoBox>
+
+        <SectionTitle id="elimination-proposee" number="5.6">Élimination proposée</SectionTitle>
+        <Paragraph>
+          Lorsque la Durée d'Utilité Administrative (DUA) d'une archive arrive à échéance et que
+          le sort final configuré est « élimination », l'archive ne passe pas directement en état
+          détruit. Elle transite d'abord vers un état intermédiaire appelé « Élimination proposée ».
+          Ce mécanisme de sécurité garantit qu'aucune archive n'est détruite automatiquement sans
+          intervention humaine.
+        </Paragraph>
+
+        <SubTitle>Le procès-verbal d'élimination</SubTitle>
+        <Paragraph>
+          Pour détruire définitivement les archives en élimination proposée, un procès-verbal
+          d'élimination (PV) doit être rédigé et approuvé. Ce PV suit un circuit de validation
+          rigoureux en cinq étapes.
+        </Paragraph>
+        <Step number={1}>
+          Brouillon — Le PV est créé par un archiviste. Il liste les archives concernées et
+          justifie leur élimination.
+        </Step>
+        <Step number={2}>
+          Visa du producteur — Le service qui a produit les documents examine le PV et confirme
+          que les archives peuvent être éliminées.
+        </Step>
+        <Step number={3}>
+          Visa de la DANTIC — L'autorité compétente en matière de gestion documentaire examine
+          et valide la conformité du PV.
+        </Step>
+        <Step number={4}>
+          Approuvé — Le PV a reçu tous les visas nécessaires et est prêt à être exécuté.
+        </Step>
+        <Step number={5}>
+          Exécuté — La destruction effective des archives est réalisée. Cette action est
+          irréversible et les archives sont définitivement supprimées du système.
+        </Step>
+
+        <InfoBox>
+          Seule l'exécution du PV d'élimination entraîne la destruction définitive des archives.
+          Tant que le PV n'est pas exécuté, les archives restent consultables et intactes.
+        </InfoBox>
+
+        <SubTitle>Réactiver ou conserver une archive en élimination proposée</SubTitle>
+        <Paragraph>
+          Si après examen une archive en élimination proposée s'avère encore nécessaire ou
+          présente un intérêt historique non identifié auparavant, il est possible de la
+          réactiver vers un état antérieur ou de la basculer en conservation définitive. Cette
+          décision doit être prise avant l'exécution du PV d'élimination.
+        </Paragraph>
 
         <Divider sx={{ my: 3 }} />
 

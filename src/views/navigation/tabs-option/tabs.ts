@@ -1,5 +1,6 @@
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
+import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
@@ -25,6 +26,12 @@ const tabs: Tab[] = [
     label: "Archives",
     icon: ManageHistoryIcon,
     id: "archiveManager",
+  },
+  {
+    label: "Élimination",
+    icon: GavelRoundedIcon,
+    id: "elimination",
+    requiresWrite: true,
   },
   {
     label: "Archivage physique",

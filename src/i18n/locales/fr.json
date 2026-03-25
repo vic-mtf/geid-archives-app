@@ -590,14 +590,6 @@
     "configureDua": "D\u00e9finir la dur\u00e9e de conservation"
   },
 
-  "elimination": {
-    "proposedWarning": "Cette archive est proposée à l'élimination suite à l'expiration de sa durée de conservation. Un procès-verbal d'élimination est nécessaire avant toute destruction.",
-    "createPV": "Créer un PV d'élimination",
-    "conserve": "Conserver définitivement",
-    "reactivate": "Réactiver en intermédiaire",
-    "pvRequired": "Directive 23 : un procès-verbal et un bordereau d'élimination sont requis avant toute destruction."
-  },
-
   "files": {
     "cannotOpenFile": "Impossible d'ouvrir le fichier",
     "preparingFile": "Pr\u00e9paration de \u00ab {{fileName}} \u00bb",
@@ -666,6 +658,98 @@
       "toPermanent": "Classer en historique",
       "toDestroyed": "\u00c9liminer",
       "restore": "Restaurer"
+    }
+  },
+  "elimination": {
+    "proposedWarning": "Cette archive est proposée à l'élimination suite à l'expiration de sa durée de conservation. Un procès-verbal d'élimination est nécessaire avant toute destruction.",
+    "createPV": "Créer un PV d'élimination",
+    "conserve": "Conserver définitivement",
+    "reactivate": "Réactiver en intermédiaire",
+    "pvRequired": "Directive 23 : un procès-verbal et un bordereau d'élimination sont requis avant toute destruction.",
+    "newPv": "Nouveau PV",
+    "pvList": "Procès-verbaux d'élimination",
+    "noPvs": "Aucun procès-verbal",
+    "noPvsDesc": "Les archives proposées à l'élimination apparaîtront ici. Créez un PV pour regrouper les archives à détruire.",
+    "status": {
+      "DRAFT": "Brouillon",
+      "PENDING_PRODUCER": "Attente service versant",
+      "PENDING_DANTIC": "Attente DANTIC",
+      "APPROVED": "Approuv\u00e9",
+      "REJECTED": "Rejet\u00e9",
+      "EXECUTED": "Ex\u00e9cut\u00e9"
+    },
+    "filter": {
+      "all": "Tous les PV",
+      "DRAFT": "Brouillons",
+      "PENDING_PRODUCER": "Attente service versant",
+      "PENDING_DANTIC": "Attente DANTIC",
+      "APPROVED": "Approuv\u00e9s",
+      "REJECTED": "Rejet\u00e9s",
+      "EXECUTED": "Ex\u00e9cut\u00e9s"
+    },
+    "stats": {
+      "total": "{{count}} proc\u00e8s-verbaux",
+      "pending": "{{count}} en attente d\u2019approbation"
+    },
+    "columns": {
+      "archiveCount": "Archives"
+    },
+    "createDialog": {
+      "title": "Cr\u00e9er un proc\u00e8s-verbal d\u2019\u00e9limination",
+      "motif": "Motif de l\u2019\u00e9limination",
+      "unit": "Unit\u00e9 administrative",
+      "selectArchives": "Archives propos\u00e9es \u00e0 l\u2019\u00e9limination",
+      "selectAll": "Tout s\u00e9lectionner",
+      "unselectAll": "Tout d\u00e9s\u00e9lectionner",
+      "noArchives": "Aucune archive propos\u00e9e \u00e0 l\u2019\u00e9limination pour le moment.",
+      "selectedCount": "{{count}} archive s\u00e9lectionn\u00e9e",
+      "submit": "Cr\u00e9er le PV"
+    },
+    "detail": {
+      "motif": "Motif",
+      "creator": "Cr\u00e9\u00e9 par",
+      "date": "Date de cr\u00e9ation",
+      "unit": "Unit\u00e9 administrative",
+      "archiveCount": "Nombre d\u2019archives",
+      "archives": "Archives concern\u00e9es",
+      "approvalTimeline": "Circuit d\u2019approbation",
+      "stepProducer": "Service versant",
+      "stepDantic": "DANTIC",
+      "awaitingApproval": "En attente",
+      "rejectedInfo": "Ce proc\u00e8s-verbal a \u00e9t\u00e9 rejet\u00e9. Vous pouvez cr\u00e9er un nouveau PV avec les m\u00eames archives si n\u00e9cessaire."
+    },
+    "action": {
+      "submit": "Soumettre",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "execute": "Ex\u00e9cuter l\u2019\u00e9limination",
+      "downloadPdf": "T\u00e9l\u00e9charger le bordereau"
+    },
+    "confirmExecute": {
+      "title": "Confirmer l\u2019\u00e9limination d\u00e9finitive",
+      "message": "Cette action est irr\u00e9versible. Les {{count}} archives concern\u00e9es seront d\u00e9finitivement d\u00e9truites et ne pourront plus \u00eatre r\u00e9cup\u00e9r\u00e9es.",
+      "confirm": "Confirmer l\u2019\u00e9limination"
+    },
+    "noteDialog": {
+      "approveTitle": "Ajouter une note d\u2019approbation",
+      "rejectTitle": "Motif du rejet",
+      "notePlaceholder": "Note (facultative)"
+    },
+    "success": {
+      "create": "Le proc\u00e8s-verbal d\u2019\u00e9limination a \u00e9t\u00e9 cr\u00e9\u00e9 avec succ\u00e8s.",
+      "submit": "Le proc\u00e8s-verbal a \u00e9t\u00e9 soumis pour approbation.",
+      "approveProducer": "Le proc\u00e8s-verbal a \u00e9t\u00e9 approuv\u00e9 par le service versant.",
+      "approveDantic": "Le proc\u00e8s-verbal a \u00e9t\u00e9 approuv\u00e9 par la DANTIC.",
+      "reject": "Le proc\u00e8s-verbal a \u00e9t\u00e9 rejet\u00e9.",
+      "execute": "L\u2019\u00e9limination a \u00e9t\u00e9 ex\u00e9cut\u00e9e. Les archives ont \u00e9t\u00e9 d\u00e9finitivement d\u00e9truites."
+    },
+    "error": {
+      "create": "La cr\u00e9ation du proc\u00e8s-verbal a \u00e9chou\u00e9. V\u00e9rifiez les informations et r\u00e9essayez.",
+      "submit": "La soumission du proc\u00e8s-verbal a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez.",
+      "approveProducer": "L\u2019approbation a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez.",
+      "approveDantic": "L\u2019approbation DANTIC a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez.",
+      "reject": "Le rejet a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez.",
+      "execute": "L\u2019ex\u00e9cution de l\u2019\u00e9limination a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez."
     }
   }
 }

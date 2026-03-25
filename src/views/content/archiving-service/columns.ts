@@ -57,24 +57,6 @@ const baseColumns: GridColDef[] = [
     type: "dateTime",
     width: 160,
   },
-  {
-    field: "__validate__",
-    headerName: "",
-    width: 100,
-    sortable: false,
-    filterable: false,
-    renderCell: (params) =>
-      createElement(Button, {
-        size: "small",
-        variant: "outlined",
-        color: "primary",
-        onClick: (e: ReactMouseEvent<HTMLButtonElement>) => {
-          e.stopPropagation();
-          openValidateForm(params.row._id as string);
-        },
-        children: "Valider",
-      }),
-  },
 ];
 
 // Colonne Valider (ajoutée uniquement si l'utilisateur a accès en écriture)

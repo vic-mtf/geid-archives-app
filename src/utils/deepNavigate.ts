@@ -31,6 +31,8 @@ export interface DeepTarget {
   statusFilter?: string;
   /** Filtre rapide à appliquer (dua_expired, this_month) */
   quickFilter?: string;
+  /** ID d'un PV d'élimination à ouvrir */
+  eliminationPvId?: string;
 }
 
 /**

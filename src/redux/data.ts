@@ -23,7 +23,7 @@ export interface ApiCacheEntry {
   timestamp: number;
 }
 
-const initialState: DataSliceState & { apiCache: Record<string, ApiCacheEntry> } = {
+const initialState: DataSliceState & { apiCache: Record<string, ApiCacheEntry>; panelWidths: Record<string, number> } = {
   loaded: false,
   docs: [],
   dialog: {
@@ -38,6 +38,7 @@ const initialState: DataSliceState & { apiCache: Record<string, ApiCacheEntry> }
   },
   dataVersion: 0,
   apiCache: {},
+  panelWidths: {},
 };
 
 const data = createSlice({
@@ -68,6 +69,10 @@ const data = createSlice({
         timestamp: Date.now(),
       };
     },
+    // Sauvegarde la largeur d'un panneau ajustable (par clé unique)
+    setPanelWidth(state, action: PayloadAction<{ key: string; width: number }>) {
+      (state as typeof initialState).panelWidths[action.payload.key] = action.payload.width;
+    },
     // Invalide le cache pour les URLs qui matchent un préfixe
     invalidateCache(state, action: PayloadAction<string>) {
       const prefix = action.payload;
@@ -79,14 +84,14 @@ const data = createSlice({
   },
 });
 
-export const { updateData, removeData, incrementVersion, setCacheEntry, invalidateCache } = data.actions;
+export const { updateData, removeData, incrementVersion, setCacheEntry, invalidateCache, setPanelWidth } = data.actions;
 
 // Persistance en sessionStorage — les documents restent en cache
 // même si la connexion est coupée temporairement
 const dataPersistConfig = {
   key: "__ROOT_GEID_DATA_CACHE",
   storage,
-  whitelist: ["docs", "loaded", "apiCache"], // Persiste les documents + le cache API
+  whitelist: ["docs", "loaded", "apiCache", "panelWidths"], // Persiste les documents + cache API + largeurs panneaux
 };
 
 export default persistReducer(dataPersistConfig, data.reducer);

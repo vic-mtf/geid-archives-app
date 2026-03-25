@@ -1,9 +1,9 @@
 /**
  * ResizeDivider — Séparateur vertical ajustable via CSS Grid.
  *
- * La colonne fait 1px dans le grid parent. Le divider remplit cette colonne.
- * Aucun changement de taille — seule la couleur change.
- * La zone de clic est élargie via un pseudo-element invisible.
+ * La colonne fait 1px dans le grid parent.
+ * Pendant le drag : appelle onResize throttlé à 60fps (rAF).
+ * Au mouseUp : un dernier appel onResize pour la valeur finale.
  */
 
 import React, { useCallback, useRef } from "react";
@@ -23,19 +23,22 @@ const ResizeDivider = React.memo(function ResizeDivider({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onResizeRef = useRef(onResize);
   onResizeRef.current = onResize;
+  const rafRef = useRef<number | null>(null);
 
-  const applyPosition = useCallback((clientX: number) => {
+  const clamp = useCallback((clientX: number): number | null => {
     const el = containerRef.current;
     const parent = el?.parentElement;
-    if (!parent) return;
+    if (!parent) return null;
     const rect = parent.getBoundingClientRect();
-    const children = Array.from(parent.children) as HTMLElement[];
-    const detailEl = children[children.length - 1];
-    const detailWidth = detailEl && detailEl !== el ? detailEl.getBoundingClientRect().width : 0;
     const raw = clientX - rect.left;
-    const maxLeft = rect.width - 1 - minRight - detailWidth;
-    const clamped = Math.max(minLeft, Math.min(maxLeft, raw));
-    onResizeRef.current(clamped);
+    // Largeur du panneau détail (dernier enfant visible du grid)
+    const children = Array.from(parent.children) as HTMLElement[];
+    const lastChild = children[children.length - 1];
+    const detailW = lastChild && lastChild !== el
+      ? lastChild.getBoundingClientRect().width
+      : 0;
+    const maxLeft = rect.width - 1 - minRight - detailW;
+    return Math.max(minLeft, Math.min(maxLeft, raw));
   }, [minLeft, minRight]);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -44,49 +47,54 @@ const ResizeDivider = React.memo(function ResizeDivider({
     if (!el) return;
 
     el.classList.add("active");
-    applyPosition(e.clientX);
 
-    const onMove = (ev: MouseEvent) => applyPosition(ev.clientX);
-    const onUp = () => {
+    const onMove = (ev: MouseEvent) => {
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const v = clamp(ev.clientX);
+        if (v !== null) onResizeRef.current(v);
+      });
+    };
+
+    const onUp = (ev: MouseEvent) => {
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
       el.classList.remove("active");
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
+      const v = clamp(ev.clientX);
+      if (v !== null) onResizeRef.current(v);
     };
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
-  }, [applyPosition]);
+  }, [clamp]);
 
   return (
     <Box
       ref={containerRef}
       onMouseDown={onMouseDown}
       sx={{
-        // Remplit la colonne grid de 1px
         width: "100%",
         bgcolor: "divider",
         cursor: "col-resize",
         position: "relative",
+        zIndex: 10,
         display: { xs: "none", md: "block" },
-        // Zone de clic élargie (invisible, 12px)
         "&::after": {
           content: '""',
           position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: -6,
+          top: 0, bottom: 0, left: -6,
           width: 13,
           cursor: "col-resize",
-          zIndex: 1,
+          zIndex: 10,
         },
-        "&:hover, &.active": {
-          bgcolor: "primary.main",
-        },
-        transition: "background-color 0.15s",
+        "&:hover, &.active": { bgcolor: "primary.main", width: 3 },
+        transition: "background-color 0.15s, width 0.15s",
       }}
     />
   );

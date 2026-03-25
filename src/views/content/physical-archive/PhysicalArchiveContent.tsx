@@ -50,6 +50,7 @@ import ArchiveContextMenu, { type ArchiveMenuState } from "./ArchiveContextMenu"
 import PhysicalItemsList from "./PhysicalItemsList";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import ResizeDivider from "./ResizeDivider";
+import usePanelWidth from "@/hooks/usePanelWidth";
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, type DragStartEvent } from "@dnd-kit/core";
 import useArchiveDnd, { type ArchiveDragData } from "./useArchiveDnd";
 import getFileIcon from "@/utils/getFileIcon";
@@ -75,7 +76,7 @@ export default function PhysicalArchiveContent() {
   const { t } = useTranslation();
 
   // Largeur du tree (ajustable par drag)
-  const [treeWidth, setTreeWidth] = useState(280);
+  const [treeWidth, setTreeWidth] = usePanelWidth("physical.tree", 280);
 
   // Formulaire de création
   const [formOpen, setFormOpen] = useState(false);

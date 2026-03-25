@@ -121,6 +121,9 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
     ...(norm === "SEMI_ACTIVE" && canWrite
       ? [{ label: "Classer en historique", icon: <HistoryEduOutlinedIcon />, action: "to-permanent" }]
       : []),
+    ...(norm === "SEMI_ACTIVE" && canWrite
+      ? [{ label: "Proposer à l'élimination", icon: <GavelOutlinedIcon />, action: "to-proposed-elimination", color: "error" as const }]
+      : []),
     ...(isAdmin && (norm === "SEMI_ACTIVE" || norm === "PERMANENT")
       ? [{ label: "Éliminer", icon: <DeleteForeverOutlinedIcon />, action: "to-destroyed", color: "error" as const }]
       : []),

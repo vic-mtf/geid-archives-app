@@ -15,7 +15,7 @@ interface FileItem {
   [key: string]: unknown;
 }
 
-export default function ArchivesFrom() {
+export default function ArchivesForm() {
   const [file, setFile] = useState<FileItem | null>(null);
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const dispatch = useDispatch<AppDispatch>();

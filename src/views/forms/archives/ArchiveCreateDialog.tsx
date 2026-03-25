@@ -34,9 +34,11 @@ import Typology from "./Typology";
 function FilePreview({ file }: { file: File }) {
   const fi = getFileIcon(file.name);
   const ext = getFileExtension(file.name)?.toUpperCase() ?? "";
-  const size = file.size < 1024 * 1024
-    ? `${(file.size / 1024).toFixed(0)} Ko`
-    : `${(file.size / (1024 * 1024)).toFixed(1)} Mo`;
+  const size = file.size < 1024
+    ? `${file.size} octets`
+    : file.size < 1024 * 1024
+      ? `${(file.size / 1024).toFixed(0)} Ko`
+      : `${(file.size / (1024 * 1024)).toFixed(1)} Mo`;
   return (
     <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.5}>
       <Box sx={{
@@ -75,6 +77,7 @@ export default function ArchiveCreateDialog() {
 
   // Form fields
   const designation  = useRef<string>("");
+  const refNumber    = useRef<string>("");
   const description  = useRef<string>("");
   const typeRef      = useRef<string | null | undefined>(undefined);
   const subTypeRef   = useRef<string | null | undefined>(undefined);
@@ -87,6 +90,7 @@ export default function ArchiveCreateDialog() {
       setFile(null);
       setError(null);
       designation.current = "";
+      refNumber.current = "";
       description.current = "";
       typeRef.current = undefined;
       subTypeRef.current = undefined;
@@ -128,6 +132,7 @@ export default function ArchiveCreateDialog() {
     formData.append("description", description.current.trim());
     formData.append("type",        typeRef.current);
     if (subTypeRef.current) formData.append("subtype", subTypeRef.current);
+    if (refNumber.current?.trim()) formData.append("refNumber", refNumber.current.trim());
 
     try {
       const res = await fetch(
@@ -219,6 +224,14 @@ export default function ArchiveCreateDialog() {
             placeholder={t("forms.archiveCreate.designationPlaceholder")}
             onChange={(e) => { designation.current = e.target.value; }}
             helperText={t("forms.archiveCreate.designationHelper")}
+          />
+
+          <TextField
+            label={t("forms.archiveCreate.refNumberLabel", "N° de référence")}
+            fullWidth
+            size="small"
+            placeholder={t("forms.archiveCreate.refNumberPlaceholder", "Référence interne du document")}
+            onChange={(e) => { refNumber.current = e.target.value; }}
           />
 
           <Typology type={typeRef} subType={subTypeRef} />
