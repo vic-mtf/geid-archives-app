@@ -139,7 +139,10 @@ export default function ArchiveManagementContent() {
     const target = location.state?.deepTarget as DeepTarget | undefined;
     if (!target) return;
 
-    if (target.statusFilter) {
+    if (target.quickFilter) {
+      setQuickFilter(target.quickFilter as "dua_expired" | "this_month");
+      setStatusFilter("ALL");
+    } else if (target.statusFilter) {
       setStatusFilter(target.statusFilter as StatusFilter);
       setQuickFilter(null);
     }

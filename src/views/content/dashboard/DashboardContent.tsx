@@ -5,7 +5,7 @@
  * pour naviguer directement vers la section concernée.
  */
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   Alert,
   Box,
@@ -89,11 +89,6 @@ export default function DashboardContent() {
   const binderThreshold = prefs?.alertThresholds?.binderCapacity ?? 90;
   // Option 6 — mises à jour automatiques
   useRealtimeRefresh();
-
-  const goTo = useCallback(
-    (tab: string) => navigateTo({ state: { navigation: { tabs: { option: tab } } } }),
-    [navigateTo]
-  );
 
   // ── API avec cache (stale-while-revalidate) ─────────────────
 
@@ -206,13 +201,13 @@ export default function DashboardContent() {
           )}
           {duaExpired.length > 0 && (
             <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
-              action={<Chip label="Voir" size="small" onClick={() => goTo("archiveManager")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              action={<Chip label="Voir" size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", quickFilter: "dua_expired" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
               <strong>{duaExpired.length}</strong> durées de conservation dépassées nécessitent une action.
             </Alert>
           )}
           {criticalBinders.length > 0 && (
             <Alert severity="warning" icon={<WarningAmberRoundedIcon fontSize="inherit" />}
-              action={<Chip label="Physique" size="small" onClick={() => goTo("physicalArchive")} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              action={<Chip label="Physique" size="small" onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
               <strong>{criticalBinders.length}</strong> classeurs à plus de 90 % de capacité.
             </Alert>
           )}
@@ -223,10 +218,10 @@ export default function DashboardContent() {
       {visible.has("stats") && <Grid container spacing={2} mb={2.5}>
         {[
           { label: "Total archives", value: totalCount, icon: <ManageHistoryRoundedIcon />, color: "primary.main", tab: "archiveManager" },
-          { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", highlight: statusCounts.PENDING > 0 },
-          { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager" },
-          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager" },
-          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager" },
+          { label: "En attente", value: statusCounts.PENDING, icon: <HourglassTopOutlinedIcon />, color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
+          { label: "Actives", value: statusCounts.ACTIVE, icon: <CheckCircleOutlineIcon />, color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
+          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, icon: <ArchiveRoundedIcon />, color: "info.main", tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
+          { label: "Historique", value: statusCounts.PERMANENT ?? 0, icon: <MenuBookRoundedIcon />, color: "#9c27b0", tab: "archiveManager", statusFilter: "PERMANENT" },
           { label: "Conteneurs", value: containerList.length, icon: <WarehouseOutlinedIcon />, color: "#5C6BC0", tab: "physicalArchive" },
         ].map((s) => (
           <Grid item xs={6} sm={4} md={2} key={s.label}>
@@ -236,7 +231,7 @@ export default function DashboardContent() {
               loading={anyLoading}
               icon={s.icon}
               color={s.color}
-              onClick={() => goTo(s.tab)}
+              onClick={() => deepNavigate(navigateTo, { tab: s.tab, ...(s.statusFilter ? { statusFilter: s.statusFilter } : {}) })}
               highlight={s.highlight}
             />
           </Grid>
@@ -253,7 +248,7 @@ export default function DashboardContent() {
             <CardContent sx={{ pb: 1, height: "100%", display: "flex", flexDirection: "column" }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="body1" fontWeight="bold">Activité récente</Typography>
-                <Chip label="Tout voir" size="small" variant="outlined" onClick={() => goTo("archiveManager")} clickable />
+                <Chip label="Tout voir" size="small" variant="outlined" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager" })} clickable />
               </Stack>
               <Divider sx={{ mb: 1 }} />
               {anyLoading ? (
@@ -325,7 +320,7 @@ export default function DashboardContent() {
                       const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
                       return (
                         <Box key={key} display="flex" alignItems="center" gap={1} sx={{ cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, borderRadius: 0.5, px: 0.5 }}
-                          onClick={() => goTo("archiveManager")}>
+                          onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: key })}>
                           <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: `${STATUS_COLOR[key]}.main`, flexShrink: 0 }} />
                           <Typography variant="caption" flex={1}>{STATUS_LABEL[key]}</Typography>
                           <Typography variant="caption" fontWeight="bold">{count}</Typography>
@@ -356,7 +351,6 @@ export default function DashboardContent() {
         canWrite={canWrite}
         statsLoading={statsLoading}
         globalStats={globalStats ?? null}
-        goTo={goTo}
       />
     </Box>
   );

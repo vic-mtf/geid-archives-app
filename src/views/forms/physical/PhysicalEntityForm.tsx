@@ -35,6 +35,7 @@ import { useSnackbar } from "notistack";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import useAxios from "@/hooks/useAxios";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { FieldValues } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
@@ -297,6 +298,8 @@ export default function PhysicalEntityForm({
   const config = levels[level];
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm({
     resolver: yupResolver(config.schema),
@@ -391,13 +394,14 @@ export default function PhysicalEntityForm({
     ? "au document"
     : parentLevelLabel[level];
 
-  // Sections du guide par niveau
+  // Sections du guide par niveau — IDs correspondant aux sections de HelpContent
   const guideSection: Partial<Record<PhysicalLevel, string>> = {
-    container: "conteneur",
-    shelf: "etagere",
-    floor: "etage",
-    binder: "classeur",
-    record: "dossier-physique",
+    container: "hierarchie-physique",
+    shelf: "hierarchie-physique",
+    floor: "hierarchie-physique",
+    binder: "hierarchie-physique",
+    record: "rattachement",
+    document: "rattachement",
   };
 
   return (
@@ -412,10 +416,16 @@ export default function PhysicalEntityForm({
               sx={{ color: "text.disabled", "&:hover": { color: "primary.main" } }}
               onClick={() => {
                 // Naviguer vers l'onglet aide avec la section correspondante
-                const event = new CustomEvent("__navigate_help", {
-                  detail: { section: guideSection[level] },
-                });
-                document.getElementById("root")?.dispatchEvent(event);
+                const sectionId = guideSection[level];
+                const state = {
+                  ...(location.state ?? {}),
+                  navigation: {
+                    ...((location.state as Record<string, unknown>)?.navigation ?? {}),
+                    tabs: { option: "help" },
+                  },
+                  helpAnchor: sectionId ?? null,
+                };
+                navigate(location.pathname, { state });
               }}>
               <HelpOutlineIcon fontSize="small" />
             </IconButton>

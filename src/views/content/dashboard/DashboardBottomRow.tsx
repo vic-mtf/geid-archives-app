@@ -28,6 +28,8 @@ import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
+import deepNavigate from "@/utils/deepNavigate";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 
 interface DashboardBottomRowProps {
   duaExpired: Archive[];
@@ -46,7 +48,6 @@ interface DashboardBottomRowProps {
     archives: { total: number; pending: number };
     physical: { records: number; documents: number };
   } | null;
-  goTo: (tab: string) => void;
 }
 
 const DashboardBottomRow = React.memo(function DashboardBottomRow({
@@ -62,9 +63,9 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
   canWrite,
   statsLoading,
   globalStats,
-  goTo,
 }: DashboardBottomRowProps) {
   const theme = useTheme();
+  const navigateTo = useNavigateSetState();
 
   return (
     <Grid container spacing={2}>
@@ -85,7 +86,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                   </Typography>
                   <List dense disablePadding>
                     {duaExpired.slice(0, 3).map((doc) => (
-                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
+                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", archiveId: doc._id })}>
                         <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
                       </ListItemButton>
                     ))}
@@ -99,7 +100,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                   </Typography>
                   <List dense disablePadding>
                     {duaSoon.slice(0, 3).map((doc) => (
-                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => goTo("archiveManager")}>
+                      <ListItemButton key={doc._id} dense sx={{ borderRadius: 1, py: 0.25 }} onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", archiveId: doc._id })}>
                         <ListItemText primary={doc.designation ?? "—"} primaryTypographyProps={{ noWrap: true, variant: "caption" }} />
                       </ListItemButton>
                     ))}
@@ -152,7 +153,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
       {/* Inventaire physique */}
       <Grid item xs={12} sm={6} md={3}>
         <Card variant="outlined" sx={{ height: "100%" }}>
-          <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("physicalArchive")}>
+          <CardActionArea sx={{ height: "100%" }} onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })}>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                 <LayersOutlinedIcon fontSize="small" color="action" />
@@ -193,7 +194,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
       {canWrite && (
         <Grid item xs={12} sm={6} md={3}>
           <Card variant="outlined" sx={{ height: "100%" }}>
-            <CardActionArea sx={{ height: "100%" }} onClick={() => goTo("userManagement")}>
+            <CardActionArea sx={{ height: "100%" }} onClick={() => deepNavigate(navigateTo, { tab: "userManagement" })}>
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
                   <PeopleOutlineRoundedIcon fontSize="small" color="action" />
@@ -245,7 +246,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                   { label: "Archivage physique", desc: "Conteneurs, classeurs, dossiers", tab: "physicalArchive" },
                   { label: "Documentation", desc: "Manuel utilisateur", tab: "help" },
                 ].map(({ label, tab, desc }) => (
-                  <Box key={tab} onClick={() => goTo(tab)}
+                  <Box key={tab} onClick={() => deepNavigate(navigateTo, { tab })}
                     sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 1, py: 0.75, borderRadius: 1, cursor: "pointer", "&:hover": { bgcolor: "action.hover" }, border: "1px solid", borderColor: "divider" }}>
                     <Box>
                       <Typography variant="caption" fontWeight={500}>{label}</Typography>

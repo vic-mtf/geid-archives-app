@@ -29,6 +29,8 @@ export interface DeepTarget {
   userId?: string;
   /** Filtre de statut à appliquer (PENDING, ACTIVE, etc.) */
   statusFilter?: string;
+  /** Filtre rapide à appliquer (dua_expired, this_month) */
+  quickFilter?: string;
 }
 
 /**

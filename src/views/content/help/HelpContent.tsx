@@ -320,7 +320,16 @@ export default function HelpContent() {
   const [suggestions, setSuggestions] = useState<ManualSection[]>([]);
   const [pdfLoading,  setPdfLoading]  = useState(false);
 
-  // Scroll automatique depuis ancre externe
+  // Reset du flag quand l'ancre change (permet la re-navigation)
+  const prevAnchor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (anchor !== prevAnchor.current) {
+      scrolled.current = false;
+      prevAnchor.current = anchor;
+    }
+  }, [anchor]);
+
+  // Scroll automatique depuis ancre externe (location.state.helpAnchor)
   useEffect(() => {
     if (anchor && !scrolled.current) {
       scrolled.current = true;
@@ -328,6 +337,22 @@ export default function HelpContent() {
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [anchor]);
+
+  // Écoute de l'événement __navigate_help (fallback pour les composants
+  // qui ne peuvent pas utiliser react-router directement)
+  useEffect(() => {
+    const root = document.getElementById("root");
+    if (!root) return;
+    const handler = (e: Event) => {
+      const section = (e as CustomEvent<{ section?: string }>).detail?.section;
+      if (section) {
+        const el = document.getElementById(section);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    root.addEventListener("__navigate_help", handler);
+    return () => root.removeEventListener("__navigate_help", handler);
+  }, []);
 
   // Recherche Fuse
   useEffect(() => {
