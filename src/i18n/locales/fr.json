@@ -429,6 +429,7 @@
     "archiveCreateError": "Une erreur est survenue. Réessayez.",
     "archiveCreateFailed": "L'archive n'a pas pu être créée. Vérifiez que tous les champs sont correctement remplis et réessayez.",
     "errorSessionExpired": "Votre session a expiré. Veuillez vous reconnecter pour continuer.",
+    "sessionExpiredTitle": "Session expirée",
     "errorNoPermission": "Vous n'avez pas les droits nécessaires pour effectuer cette action. Contactez votre administrateur si vous pensez qu'il s'agit d'une erreur.",
     "errorFileTooLarge": "Le fichier est trop volumineux. La taille maximale autorisée est de 50 Mo.",
     "errorNoConnection": "Vous n'êtes pas connecté à internet. Vérifiez votre connexion et réessayez.",

@@ -12,15 +12,31 @@ export const axios = _AXIOS.create({
   ...(proxyEnv ? { proxy: Object.fromEntries(new URLSearchParams(proxyEnv)) as unknown as false } : {}),
 });
 
-// Intercepteur : log des erreurs en développement
-if (import.meta.env.VITE_DEBUG === "true") {
-  axios.interceptors.response.use(
-    (res) => res,
-    (err) => {
-      console.error("[GEID API]", err?.response?.status, err?.config?.url, err?.response?.data);
-      return Promise.reject(err);
+// Intercepteur global : détection de session expirée (401)
+axios.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err?.response?.status === 401) {
+      // Déclencher la déconnexion automatique (une seule fois)
+      if (!sessionExpiredTriggered) {
+        sessionExpiredTriggered = true;
+        document.getElementById("root")?.dispatchEvent(
+          new CustomEvent("_session_expired")
+        );
+      }
     }
-  );
+    if (import.meta.env.VITE_DEBUG === "true") {
+      console.error("[GEID API]", err?.response?.status, err?.config?.url);
+    }
+    return Promise.reject(err);
+  }
+);
+
+let sessionExpiredTriggered = false;
+
+/** Réinitialise le flag (appelé après reconnexion) */
+export function resetSessionExpiredFlag() {
+  sessionExpiredTriggered = false;
 }
 
 const useAxios = makeUseAxios({ axios });
