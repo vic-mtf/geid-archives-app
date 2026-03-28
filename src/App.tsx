@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { useTranslation } from "react-i18next";
+import { Box } from "@mui/material";
 import BoxGradient from "./components/BoxGradient";
 import router from "./router/router";
 import Cover from "./views/cover/Cover";
@@ -37,14 +38,15 @@ export default function App() {
     return () => root?.removeEventListener("_session_expired", handler);
   }, [dispatch, enqueueSnackbar, t]);
 
-  return (
+  return connected && opened ? (
+    <Box sx={{ display: "flex", flex: 1, width: "100%", height: "100%", overflow: "hidden" }}>
+      <NetworkStatus />
+      <RouterProvider router={router} />
+    </Box>
+  ) : (
     <BoxGradient>
       <NetworkStatus />
-      {connected && opened ? (
-        <RouterProvider router={router} />
-      ) : (
-        <Cover setOpened={setOpened} />
-      )}
+      <Cover setOpened={setOpened} />
     </BoxGradient>
   );
 }

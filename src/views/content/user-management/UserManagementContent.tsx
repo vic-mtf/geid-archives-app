@@ -98,11 +98,12 @@ function getPermLevel(user: UserItem): "admin" | "write" | "read" | "none" {
   return "read";
 }
 
+import i18n from "@/i18n/i18n";
 const PERM_CONFIG = {
-  admin: { label: "Administrateur", color: "primary" as const, short: "Admin" },
-  write: { label: "Écriture", color: "success" as const, short: "Écriture" },
-  read:  { label: "Lecture seule", color: "info" as const, short: "Lecture" },
-  none:  { label: "Aucun droit", color: "default" as const, short: "Aucun" },
+  admin: { label: () => i18n.t("users.permAdmin"), color: "primary" as const, short: () => i18n.t("users.permAdminShort") },
+  write: { label: () => i18n.t("users.permWrite"), color: "success" as const, short: () => i18n.t("users.permWriteShort") },
+  read:  { label: () => i18n.t("users.permRead"), color: "info" as const, short: () => i18n.t("users.permReadShort") },
+  none:  { label: () => i18n.t("users.permNone"), color: "default" as const, short: () => i18n.t("users.permNoneShort") },
 };
 
 // ── Composant principal ──────────────────────────────────────
@@ -214,7 +215,7 @@ export default function UserManagementContent() {
 
         {/* Badge permission — taille fixe */}
         <Chip
-          label={cfg.short}
+          label={cfg.short()}
           color={cfg.color}
           size="small"
           variant="outlined"
@@ -295,7 +296,7 @@ export default function UserManagementContent() {
           ) : filteredUsers.length === 0 ? (
             <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" py={6} gap={1}>
               <PersonOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
-              <Typography color="text.secondary" variant="body2">Aucun utilisateur trouvé</Typography>
+              <Typography color="text.secondary" variant="body2">{t("users.noUserFound")}</Typography>
             </Box>
           ) : (
             <Box sx={{ height: "100%", overflow: "auto", ...scrollBarSx }}>
@@ -317,7 +318,7 @@ export default function UserManagementContent() {
           <Box display="flex" flex={1} justifyContent="center" alignItems="center">
             <Stack alignItems="center" gap={1}>
               <PersonOutlinedIcon sx={{ fontSize: 48, color: "text.disabled" }} />
-              <Typography color="text.secondary" variant="body2">Sélectionnez un utilisateur</Typography>
+              <Typography color="text.secondary" variant="body2">{t("users.selectUser")}</Typography>
             </Stack>
           </Box>
         ) : (

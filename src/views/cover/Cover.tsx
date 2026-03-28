@@ -83,7 +83,7 @@ export default function Cover({ setOpened }: CoverProps) {
               orientation="vertical"
               sx={{
                 bgcolor: "text.primary",
-                borderWidth: 1,
+                borderRightWidth: 2,
                 display: { xs: "none", sm: "block" },
               }}
             />

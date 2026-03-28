@@ -33,7 +33,8 @@ import scrollBarSx from "@/utils/scrollBarSx";
 import { useSnackbar }       from "notistack";
 import { useTranslation }   from "react-i18next";
 import { useLocation }       from "react-router-dom";
-import type { DeepTarget }   from "@/utils/deepNavigate";
+import deepNavigate, { type DeepTarget } from "@/utils/deepNavigate";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { STATUS_LABEL, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 import archiveColumns          from "./columns";
 import DetailPanel             from "./DetailPanel";
@@ -57,6 +58,7 @@ export default function ArchiveManagementContent() {
   const theme    = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
+  const navigateTo = useNavigateSetState();
   const [sidebarWidth, setSidebarWidth] = usePanelWidth("archives.sidebar", 200);
 
   const dataVersion      = useSelector((store: RootState) => store.data.dataVersion);
@@ -137,6 +139,16 @@ export default function ArchiveManagementContent() {
     root?.addEventListener("__tree_archive_select", handler);
     return () => root?.removeEventListener("__tree_archive_select", handler);
   }, []);
+
+  // Écouter "Créer un PV" → naviguer vers l'onglet Élimination avec dialog ouvert
+  useEffect(() => {
+    const root = document.getElementById("root");
+    const handler = () => {
+      deepNavigate(navigateTo, { tab: "elimination", eliminationPvId: "__create__" });
+    };
+    root?.addEventListener("__navigate_to_elimination_create", handler);
+    return () => root?.removeEventListener("__navigate_to_elimination_create", handler);
+  }, [navigateTo]);
 
   // Écouter le deep navigate — ouvrir une archive, appliquer un filtre, scroll + flash
   const apiRef = useGridApiRef();

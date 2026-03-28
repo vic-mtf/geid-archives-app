@@ -43,8 +43,16 @@ import { STATUS_LABEL, normalizeStatus } from "@/constants/lifecycle";
 import scrollBarSx from "@/utils/scrollBarSx";
 import formatDate  from "@/utils/formatTime";
 import openArchiveFile from "@/utils/openArchiveFile";
+import useToken from "@/hooks/useToken";
 import StatusChip  from "./StatusChip";
 import { computeExpiresAt } from "./helpers";
+
+const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif", "avif", "pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt"]);
+function hasThumb(fileUrl: string | undefined): boolean {
+  if (!fileUrl) return false;
+  const ext = fileUrl.split(".").pop()?.toLowerCase() ?? "";
+  return THUMB_EXTS.has(ext);
+}
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -98,14 +106,14 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   // ── Actions rapides (barre d'icônes) ───────────────────────
   const quickActions: { title: string; icon: React.ReactNode; action: string; color?: "error" | "warning" | "success" | "info" }[] = [
     ...(norm === "PENDING" && canWrite
-      ? [{ title: "Valider", icon: <VerifiedOutlinedIcon />, action: "verify", color: "success" as const }]
+      ? [{ title: t("archives.actions.validate"), icon: <VerifiedOutlinedIcon />, action: "verify", color: "success" as const }]
       : []),
-    ...(canWrite && norm !== "DESTROYED" ? [{ title: "Modifier", icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
-    ...(canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") ? [{ title: "Dossier physique", icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
+    ...(canWrite && norm !== "DESTROYED" ? [{ title: t("archives.actions.edit"), icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
+    ...(canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") ? [{ title: t("archives.actions.linkPhysical"), icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
-      ? [{ title: "Définir la durée de conservation", icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
+      ? [{ title: t("archives.actions.configureDua"), icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
       : []),
-    ...(isAdmin && norm !== "DESTROYED" ? [{ title: "Supprimer", icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
+    ...(isAdmin && norm !== "DESTROYED" ? [{ title: t("archives.actions.delete"), icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
   ];
 
   // ── Transitions du cycle de vie ────────────────────────────
@@ -113,22 +121,22 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
 
   const lifecycleActions: { label: string; icon: React.ReactNode; color?: "inherit" | "error" | "warning" | "info" | "success"; action: string }[] = [
     ...(norm === "ACTIVE" && canWrite
-      ? [{ label: "Passer en intermédiaire", icon: <ArchiveOutlinedIcon />, action: "to-semi-active", color: "info" as const }]
+      ? [{ label: t("archives.actions.toSemiActive"), icon: <ArchiveOutlinedIcon />, action: "to-semi-active", color: "info" as const }]
       : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
-      ? [{ label: "Réactiver", icon: <UnarchiveOutlinedIcon />, action: "reactivate", color: "success" as const }]
+      ? [{ label: t("archives.actions.reactivate"), icon: <UnarchiveOutlinedIcon />, action: "reactivate", color: "success" as const }]
       : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
-      ? [{ label: "Classer en historique", icon: <HistoryEduOutlinedIcon />, action: "to-permanent" }]
+      ? [{ label: t("archives.actions.toPermanent"), icon: <HistoryEduOutlinedIcon />, action: "to-permanent" }]
       : []),
     ...(norm === "SEMI_ACTIVE" && canWrite
-      ? [{ label: "Proposer à l'élimination", icon: <GavelOutlinedIcon />, action: "to-proposed-elimination", color: "error" as const }]
+      ? [{ label: t("archives.actions.proposeElimination"), icon: <GavelOutlinedIcon />, action: "to-proposed-elimination", color: "error" as const }]
       : []),
     ...(isAdmin && (norm === "SEMI_ACTIVE" || norm === "PERMANENT")
-      ? [{ label: "Éliminer", icon: <DeleteForeverOutlinedIcon />, action: "to-destroyed", color: "error" as const }]
+      ? [{ label: t("archives.actions.eliminate"), icon: <DeleteForeverOutlinedIcon />, action: "to-destroyed", color: "error" as const }]
       : []),
     ...(isAdmin && norm === "DESTROYED"
-      ? [{ label: "Restaurer", icon: <RestoreOutlinedIcon />, action: "restore" }]
+      ? [{ label: t("archives.actions.restore"), icon: <RestoreOutlinedIcon />, action: "restore" }]
       : []),
     // PROPOSED_ELIMINATION — actions spécifiques
     ...(isProposedElimination && canWrite
@@ -171,6 +179,9 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
           <CloseRoundedIcon fontSize="small" />
         </IconButton>
       </Box>
+
+      {/* Aperçu miniature (images, PDF, Office) */}
+      {hasThumb(doc.fileUrl as string) && <ThumbnailPreview archiveId={doc._id as string} />}
 
       {/* Barre d'actions rapides */}
       {quickActions.length > 0 && (
@@ -352,6 +363,45 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
           </>
         )}
       </Box>
+    </Box>
+  );
+}
+
+// ── Aperçu miniature ─────────────────────────────────────────
+
+function ThumbnailPreview({ archiveId }: { archiveId: string }) {
+  const token = useToken();
+  const [src, setSrc] = React.useState<string | null>(null);
+  const [error, setError] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!archiveId || !token) return;
+    let revoked = false;
+    fetch(`/api/stuff/archives/thumbnail/${archiveId}`, {
+      headers: { Authorization: token },
+    })
+      .then((res) => {
+        if (res.status === 204 || !res.ok) { setError(true); return null; }
+        return res.blob();
+      })
+      .then((blob) => {
+        if (blob && !revoked) setSrc(URL.createObjectURL(blob));
+      })
+      .catch(() => setError(true));
+    return () => { revoked = true; };
+  }, [archiveId, token]);
+
+  React.useEffect(() => () => { if (src) URL.revokeObjectURL(src); }, [src]);
+
+  if (error || !src) return null;
+
+  return (
+    <Box px={2} py={1} borderBottom={1} borderColor="divider" display="flex" justifyContent="center" bgcolor="action.hover">
+      <Box
+        component="img"
+        src={src}
+        sx={{ maxWidth: "100%", maxHeight: 140, borderRadius: 1, objectFit: "contain" }}
+      />
     </Box>
   );
 }

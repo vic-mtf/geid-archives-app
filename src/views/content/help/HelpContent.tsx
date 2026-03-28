@@ -426,7 +426,7 @@ export default function HelpContent() {
         a.click();
         URL.revokeObjectURL(url);
       } catch {
-        alert("La génération du PDF a échoué. Veuillez réessayer ou contacter l'administrateur.");
+        console.error("[HelpContent] PDF generation failed");
       }
     } finally {
       setPdfLoading(false);

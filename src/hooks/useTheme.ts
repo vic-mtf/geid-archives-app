@@ -118,6 +118,7 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
               onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
             },
             styleOverrides: {
+              paper: ({ theme: t }: any) => ({ border: `1px solid ${t.palette.divider}` }),
               root: {
                 "& .MuiBackdrop-root": { backdropFilter: "none" },
               },
@@ -135,14 +136,11 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
           MuiDialog: {
             defaultProps: {
               TransitionComponent: MuiDialogTransition,
-              PaperProps: {
-                sx: {
-                  position: "relative",
-                  overflow: "hidden",
-                },
-              },
             },
             styleOverrides: {
+              paper: ({ theme: t }) => ({
+                border: `1px solid ${t.palette.divider}`,
+              }),
               root: ({ theme: t }) => ({
                 "& .MuiBackdrop-root": {
                   backgroundColor: t.palette.background.paper + opacityHex,
@@ -201,6 +199,16 @@ const useTheme = (defaultMode?: ThemeMode): Theme => {
               root: {
                 backgroundImage: "none",
               },
+            },
+          },
+          MuiPopover: {
+            styleOverrides: {
+              paper: ({ theme: t }: any) => ({ border: `1px solid ${t.palette.divider}` }),
+            },
+          },
+          MuiAutocomplete: {
+            styleOverrides: {
+              paper: ({ theme: t }: any) => ({ border: `1px solid ${t.palette.divider}` }),
             },
           },
           MuiListItemButton: {

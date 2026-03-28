@@ -78,8 +78,13 @@ export default function EliminationContent() {
   useEffect(() => {
     const deep = (location.state as Record<string, unknown> | null)?.deepTarget as DeepTarget | undefined;
     if (deep?.eliminationPvId) {
-      setFocusedId(deep.eliminationPvId);
-      setDetailOpen(true);
+      if (deep.eliminationPvId === "__create__") {
+        // Ouvrir le dialog de création de PV
+        setCreateOpen(true);
+      } else {
+        setFocusedId(deep.eliminationPvId);
+        setDetailOpen(true);
+      }
       // Nettoyer le deepTarget pour éviter les re-déclenchements
       window.history.replaceState(
         { ...(window.history.state ?? {}), usr: { ...(window.history.state?.usr ?? {}), deepTarget: undefined } },

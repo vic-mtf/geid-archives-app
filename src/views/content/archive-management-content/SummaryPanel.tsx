@@ -21,6 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { useTranslation } from "react-i18next";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 
@@ -61,21 +62,22 @@ const SummaryPanel = React.memo(function SummaryPanel({
   onExportCSV,
   onSelectArchive,
 }: SummaryPanelProps) {
+  const { t } = useTranslation();
   return (
     <MuiBox flex={1} overflow="auto" sx={{ ...scrollBarSx }}>
       {/* En-tête */}
       <MuiBox px={2} py={1.5} borderBottom={1} borderColor="divider">
-        <Typography variant="subtitle2" fontWeight={700}>Résumé</Typography>
+        <Typography variant="subtitle2" fontWeight={700}>{t("common.summary")}</Typography>
       </MuiBox>
 
       {/* Stats rapides */}
       <MuiBox px={2} py={1.5}>
         {[
-          { label: "Total", value: totalCount, color: "primary.main" },
-          { label: "En attente", value: statusCounts.PENDING, color: "warning.main" },
-          { label: "Actives", value: statusCounts.ACTIVE, color: "success.main" },
-          { label: "Intermédiaires", value: statusCounts.SEMI_ACTIVE, color: "info.main" },
-          { label: "Durée de conservation dépassées", value: duaExpiredCount, color: "error.main" },
+          { label: t("dashboard.totalArchives"), value: totalCount, color: "primary.main" },
+          { label: t("dashboard.pending"), value: statusCounts.PENDING, color: "warning.main" },
+          { label: t("dashboard.active"), value: statusCounts.ACTIVE, color: "success.main" },
+          { label: t("dashboard.semiActive"), value: statusCounts.SEMI_ACTIVE, color: "info.main" },
+          { label: t("dua.expired"), value: duaExpiredCount, color: "error.main" },
         ].map(({ label, value, color }) => (
           <MuiBox key={label} display="flex" justifyContent="space-between" alignItems="center" py={0.5}>
             <MuiBox display="flex" alignItems="center" gap={1}>

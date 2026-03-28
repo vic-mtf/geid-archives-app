@@ -31,6 +31,7 @@
     "quickActions": "Actions rapides",
     "lastArchives": "Dernières archives",
     "total": "Total",
+    "summary": "Résumé",
     "privacyPolicy": "Politique de confidentialité",
     "termsOfUse": "Conditions d'utilisation",
     "applications": "Applications",
@@ -107,6 +108,19 @@
   },
 
   "archives": {
+    "actions": {
+      "validate": "Valider",
+      "edit": "Modifier",
+      "linkPhysical": "Dossier physique",
+      "configureDua": "Définir la durée de conservation",
+      "delete": "Supprimer",
+      "toSemiActive": "Passer en intermédiaire",
+      "reactivate": "Réactiver",
+      "toPermanent": "Classer en historique",
+      "proposeElimination": "Proposer à l'élimination",
+      "eliminate": "Éliminer",
+      "restore": "Restaurer"
+    },
     "columns": {
       "designation": "D\u00e9signation",
       "type": "Type",
@@ -625,6 +639,16 @@
   },
 
   "users": {
+    "permAdmin": "Administrateur",
+    "permAdminShort": "Admin",
+    "permWrite": "Écriture",
+    "permWriteShort": "Écriture",
+    "permRead": "Lecture seule",
+    "permReadShort": "Lecture",
+    "permNone": "Aucun droit",
+    "permNoneShort": "Aucun",
+    "noUserFound": "Aucun utilisateur trouvé",
+    "selectUser": "Sélectionnez un utilisateur",
     "permissionsTitle": "Permissions archives — {{name}}",
     "unit": "Unité",
     "allAdmin": "Toutes (admin)",
