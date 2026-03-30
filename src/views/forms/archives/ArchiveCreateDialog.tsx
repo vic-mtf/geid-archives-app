@@ -167,9 +167,9 @@ export default function ArchiveCreateDialog() {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({
-            fileId: wsFile._id, fileName: wsFile.name,
+            doc: wsFile._id,
             designation: data.designation, description: data.description,
-            type: typeRef.current, subtype: subTypeRef.current || undefined,
+            type: { type: typeRef.current, subType: subTypeRef.current || undefined },
             refNumber: data.refNumber?.trim() || undefined,
           }),
         });
