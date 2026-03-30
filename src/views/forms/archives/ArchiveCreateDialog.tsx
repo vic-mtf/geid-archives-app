@@ -247,6 +247,7 @@ export default function ArchiveCreateDialog() {
 
             <TextField
               {...register("designation")}
+              value={watchDesignation || ""}
               label={t("forms.archiveCreate.designationLabel")}
               fullWidth size="small" required
               InputLabelProps={{ shrink: !!watchDesignation }}
@@ -257,6 +258,7 @@ export default function ArchiveCreateDialog() {
 
             <TextField
               {...register("refNumber")}
+              value={watchRefNumber || ""}
               label={t("forms.archiveCreate.refNumberLabel")}
               fullWidth size="small" required
               InputLabelProps={{ shrink: !!watchRefNumber }}
@@ -270,6 +272,7 @@ export default function ArchiveCreateDialog() {
 
             <TextField
               {...register("description")}
+              value={watchDescription || ""}
               label={t("forms.archiveCreate.descriptionLabel")}
               fullWidth size="small" multiline rows={3} required
               InputLabelProps={{ shrink: !!watchDescription }}
