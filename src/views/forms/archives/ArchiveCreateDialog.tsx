@@ -47,7 +47,7 @@ const EVENT_NAME = "__open_archive_create";
 const schema = yup.object({
   designation: yup.string().trim().required("Veuillez renseigner la designation."),
   description: yup.string().trim().required("Veuillez renseigner la description."),
-  refNumber: yup.string(),
+  refNumber: yup.string().trim().required("Veuillez renseigner le numero de reference."),
 });
 
 type FormData = yup.InferType<typeof schema>;
@@ -75,10 +75,14 @@ export default function ArchiveCreateDialog() {
   // Key pour forcer le re-mount de Typology quand les defaults changent
   const [typologyKey, setTypologyKey] = useState(0);
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onTouched",
   });
+
+  const watchDesignation = watch("designation");
+  const watchDescription = watch("description");
+  const watchRefNumber = watch("refNumber");
 
   const resetAll = useCallback(() => {
     setFile(null); setWsFile(null); setDragging(false);
@@ -246,6 +250,7 @@ export default function ArchiveCreateDialog() {
               {...register("designation")}
               label={t("forms.archiveCreate.designationLabel")}
               fullWidth size="small" required
+              InputLabelProps={{ shrink: !!watchDesignation }}
               placeholder={t("forms.archiveCreate.designationPlaceholder")}
               error={!!errors.designation}
               helperText={errors.designation?.message || t("forms.archiveCreate.designationHelper")}
@@ -254,8 +259,11 @@ export default function ArchiveCreateDialog() {
             <TextField
               {...register("refNumber")}
               label={t("forms.archiveCreate.refNumberLabel")}
-              fullWidth size="small"
+              fullWidth size="small" required
+              InputLabelProps={{ shrink: !!watchRefNumber }}
               placeholder={t("forms.archiveCreate.refNumberPlaceholder")}
+              error={!!errors.refNumber}
+              helperText={errors.refNumber?.message}
             />
 
             <Typology key={typologyKey} type={typeRef} subType={subTypeRef} defaultType={defaultType} defaultSubType={defaultSubType} />
@@ -265,6 +273,7 @@ export default function ArchiveCreateDialog() {
               {...register("description")}
               label={t("forms.archiveCreate.descriptionLabel")}
               fullWidth size="small" multiline rows={3} required
+              InputLabelProps={{ shrink: !!watchDescription }}
               placeholder={t("forms.archiveCreate.descriptionPlaceholder")}
               error={!!errors.description}
               helperText={errors.description?.message}
