@@ -109,8 +109,8 @@ export default function ArchiveCreateDialog() {
         setWsFile(f); setFile(null); setFileError("");
         // Pre-remplir : designation depuis metadata ou nom du fichier (sans extension)
         const nameWithoutExt = (f.name || "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
-        setValue("designation", f.designation || nameWithoutExt);
-        if (f.description) setValue("description", f.description);
+        setValue("designation", f.designation || nameWithoutExt, { shouldDirty: true, shouldTouch: true });
+        if (f.description) setValue("description", f.description, { shouldDirty: true, shouldTouch: true });
         if (f.docType) { setDefaultType(f.docType); typeRef.current = f.docType; }
         if (f.docSubType) { setDefaultSubType(f.docSubType); subTypeRef.current = f.docSubType; }
         setTypologyKey((k) => k + 1);
