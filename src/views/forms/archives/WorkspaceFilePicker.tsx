@@ -143,11 +143,8 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
       BackdropProps={{ sx: { bgcolor: (th: any) => th.palette.background.paper + th.customOptions.opacity, backdropFilter: (th: any) => `blur(${th.customOptions.blur})` } }}
       PaperProps={{ sx: { height: fullScreen ? "100%" : 480, display: "flex", flexDirection: "column", border: 1, borderColor: "divider" } }}
     >
-      <DialogTitle sx={{ pb: 0.5, display: "flex", alignItems: "center", gap: 0.5 }}>
-        <FolderRoundedIcon color="warning" sx={{ fontSize: 22 }} />
-        <Typography variant="h6" fontSize={16} fontWeight="bold" flex={1}>
-          {t("forms.workspace.title")}
-        </Typography>
+      <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0.5 }}>
+        {t("forms.workspace.title")}
       </DialogTitle>
 
       {/* Barre de navigation */}

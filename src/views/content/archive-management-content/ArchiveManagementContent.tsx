@@ -315,6 +315,22 @@ export default function ArchiveManagementContent() {
     setDetailOpen(true);
   }, []);
 
+  const handleRowDoubleClick = useCallback((params: GridRowParams) => {
+    const row = params.row;
+    const id = row._id || row.id;
+    if (!id) return;
+    const url = `/api/stuff/archives/file/${id}`;
+    const fileName = row.fileName || row.designation || "document";
+    document.getElementById("root")?.dispatchEvent(
+      new CustomEvent("_open_file_preview", {
+        detail: {
+          file: { _id: id, name: fileName, fileUrl: url, size: row.size },
+          files: rows.map((r: any) => ({ _id: r._id || r.id, name: r.fileName || r.designation, fileUrl: `/api/stuff/archives/file/${r._id || r.id}` })),
+        },
+      })
+    );
+  }, [rows]);
+
   const handleSelectionChange = useCallback(
     (selectionModel: GridRowSelectionModel) => {
       dispatch(
@@ -459,6 +475,7 @@ export default function ArchiveManagementContent() {
               rowSelectionModel={selectedElements as string[]}
               onRowSelectionModelChange={handleSelectionChange}
               onRowClick={handleRowClick}
+              onRowDoubleClick={handleRowDoubleClick}
               showCellVerticalBorder={false}
               showColumnVerticalBorder={false}
               pageSizeOptions={[25, 50, 100]}

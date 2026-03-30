@@ -9,6 +9,7 @@ import GlobalSearchDialog from "./search/GlobalSearchDialog";
 import ArchiveSourcePicker from "./archives/ArchiveSourcePicker";
 import WorkspaceFilePicker from "./archives/WorkspaceFilePicker";
 import FileLoadingSnackbar from "./archives/FileLoadingSnackbar";
+import FileViewer from "@/views/preview/FileViewer";
 
 export default function Forms() {
   return (
@@ -24,6 +25,7 @@ export default function Forms() {
       <ArchiveSourcePicker />
       <WorkspaceFilePicker />
       <FileLoadingSnackbar />
+      <FileViewer />
     </>
   );
 }
