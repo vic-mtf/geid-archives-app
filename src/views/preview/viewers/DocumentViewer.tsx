@@ -56,7 +56,7 @@ interface PageInfo {
 
 interface DocInfo { pageCount: number; pages: PageInfo[]; }
 
-function extractArchiveId(fileUrl: string): string {
+function extractFilePath(fileUrl: string): string {
   const marker = "/api/stuff/archives/file/";
   const idx = fileUrl.indexOf(marker);
   if (idx >= 0) return fileUrl.substring(idx + marker.length);
@@ -92,7 +92,7 @@ const DocumentViewer = React.memo(function DocumentViewer({ fileUrl, extension }
   const [searchResults, setSearchResults] = useState<number[]>([]);
   const [searchIndex, setSearchIndex] = useState(0);
 
-  const filePath = useMemo(() => extractArchiveId(fileUrl), [fileUrl]);
+  const filePath = useMemo(() => extractFilePath(fileUrl), [fileUrl]);
 
   // Charger doc info
   useEffect(() => {
@@ -170,18 +170,48 @@ const DocumentViewer = React.memo(function DocumentViewer({ fileUrl, extension }
     setCurrentPage(closest);
   }, [docInfo]);
 
-  // Keyboard
+  // Keyboard : fleches, page up/down, home/end, zoom
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.ctrlKey && e.key === "f") { e.preventDefault(); setSearchOpen(true); }
-      else if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(); }
-      else if (e.key === "-") { e.preventDefault(); zoomOut(); }
+      if (e.ctrlKey && e.key === "f") { e.preventDefault(); setSearchOpen(true); return; }
+      if (e.key === "+" || e.key === "=") { e.preventDefault(); zoomIn(); return; }
+      if (e.key === "-") { e.preventDefault(); zoomOut(); return; }
+      // Navigation par fleches
+      if (e.key === "ArrowDown") { e.preventDefault(); scrollRef.current?.scrollBy({ top: 200, behavior: "smooth" }); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); scrollRef.current?.scrollBy({ top: -200, behavior: "smooth" }); return; }
+      if (e.key === "ArrowRight") { e.preventDefault(); scrollToPage(Math.min((docInfo?.pageCount || 1), currentPage + 1)); return; }
+      if (e.key === "ArrowLeft") { e.preventDefault(); scrollToPage(Math.max(1, currentPage - 1)); return; }
+      if (e.key === "PageDown") { e.preventDefault(); scrollToPage(Math.min((docInfo?.pageCount || 1), currentPage + 1)); return; }
+      if (e.key === "PageUp") { e.preventDefault(); scrollToPage(Math.max(1, currentPage - 1)); return; }
+      if (e.key === "Home") { e.preventDefault(); scrollToPage(1); return; }
+      if (e.key === "End") { e.preventDefault(); scrollToPage(docInfo?.pageCount || 1); return; }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+  }, [zoomIn, zoomOut, scrollToPage, currentPage, docInfo]);
+
+  // Pinch-to-zoom tactile
+  const lastPinchDist = useRef(0);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist.current = Math.sqrt(dx * dx + dy * dy);
+    }
+  }, []);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastPinchDist.current > 0) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const ratio = dist / lastPinchDist.current;
+      if (ratio > 1.05) { zoomIn(); lastPinchDist.current = dist; }
+      else if (ratio < 0.95) { zoomOut(); lastPinchDist.current = dist; }
+    }
   }, [zoomIn, zoomOut]);
+  const handleTouchEnd = useCallback(() => { lastPinchDist.current = 0; }, []);
 
   if (loading) {
     return (
@@ -211,10 +241,13 @@ const DocumentViewer = React.memo(function DocumentViewer({ fileUrl, extension }
       <Box
         ref={scrollRef}
         onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         sx={{
           flex: 1, overflowY: "auto", overflowX: "auto",
           display: "flex", flexDirection: "column", alignItems: "center",
-          gap: 1, py: 2, px: 1, ...scrollBarSx,
+          gap: 1, py: 2, px: 1, ...scrollBarSx, touchAction: "pan-y",
         }}
       >
         {(docInfo.pages || []).map((pageData) => (
