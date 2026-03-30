@@ -1032,8 +1032,8 @@ function Chapter5() {
             ["En attente",    "→ Active (validation) / Annuler", "Archiviste"],
             ["Active",        "→ Intermédiaire / → Historique",  "Archiviste"],
             ["Intermédiaire", "→ Historique / → Détruite",       "Archiviste"],
-            ["Historique",    "Aucune (état terminal)",          "—"],
-            ["Détruite",      "Aucune (état terminal)",          "—"],
+            ["Historique",    "Aucune (état terminal)",          "Non"],
+            ["Détruite",      "Aucune (état terminal)",          "Non"],
           ].map(([dep, trans, role], i) => (
             <View key={dep} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
               <View style={[s.tableCell, { flex: 1.2 }]}><Text style={s.tableCellTxt}>{dep}</Text></View>
@@ -1527,26 +1527,26 @@ function Chapter11() {
           <View style={[s.tableHeadCell, { flex: 1 }]}><Text style={s.tableHeadTxt}>Admin</Text></View>
         </View>
         {[
-          ["Soumettre une archive",                 "✓", "✓", "✓"],
-          ["Consulter la liste des archives",        "✓", "✓", "✓"],
-          ["Consulter le tableau de bord",           "✓", "✓", "✓"],
-          ["Valider une archive",                    "—", "✓", "✓"],
-          ["Modifier les métadonnées",               "—", "✓", "✓"],
-          ["Configurer la DUA",                      "—", "✓", "✓"],
-          ["Gérer les transitions de cycle de vie",  "—", "✓", "✓"],
-          ["Rattacher archives numériques/physiques","—", "✓", "✓"],
-          ["Consulter l'archivage physique",         "✓", "✓", "✓"],
-          ["Créer/modifier structure physique",      "—", "—", "✓"],
-          ["Supprimer des archives",                 "—", "—", "✓"],
-          ["Gérer les utilisateurs",                 "—", "—", "✓"],
-          ["Exporter la liste CSV",                  "✓", "✓", "✓"],
-          ["Utiliser la recherche globale",          "✓", "✓", "✓"],
+          ["Soumettre une archive",                 "Oui", "Oui", "Oui"],
+          ["Consulter la liste des archives",        "Oui", "Oui", "Oui"],
+          ["Consulter le tableau de bord",           "Oui", "Oui", "Oui"],
+          ["Valider une archive",                    "Non", "Oui", "Oui"],
+          ["Modifier les métadonnées",               "Non", "Oui", "Oui"],
+          ["Configurer la DUA",                      "Non", "Oui", "Oui"],
+          ["Gérer les transitions de cycle de vie",  "Non", "Oui", "Oui"],
+          ["Rattacher archives numériques/physiques","Non", "Oui", "Oui"],
+          ["Consulter l'archivage physique",         "Oui", "Oui", "Oui"],
+          ["Créer/modifier structure physique",      "Non", "Non", "Oui"],
+          ["Supprimer des archives",                 "Non", "Non", "Oui"],
+          ["Gérer les utilisateurs",                 "Non", "Non", "Oui"],
+          ["Exporter la liste CSV",                  "Oui", "Oui", "Oui"],
+          ["Utiliser la recherche globale",          "Oui", "Oui", "Oui"],
         ].map(([action, ...cols], i) => (
           <View key={action} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
             <View style={[s.tableCell, { flex: 2.5 }]}><Text style={s.tableCellTxt}>{action}</Text></View>
             {cols.map((v, j) => (
               <View key={j} style={[s.tableCell, { flex: j === 0 ? 0.7 : j === 1 ? 0.9 : 1 }]}>
-                <Text style={v === "✓" ? s.tableCheck : s.tableCross}>{v}</Text>
+                <Text style={v === "Oui" ? s.tableCheck : s.tableCross}>{v}</Text>
               </View>
             ))}
           </View>
