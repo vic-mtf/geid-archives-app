@@ -320,12 +320,17 @@ export default function ArchiveManagementContent() {
     const id = row._id || row.id;
     if (!id) return;
     const url = `/api/stuff/archives/file/${id}`;
-    const fileName = row.fileName || row.designation || "document";
+    // Extraire le vrai nom de fichier (avec extension) depuis fileUrl
+    const realFileName = row.fileUrl ? row.fileUrl.split("/").pop() : null;
+    const fileName = realFileName || row.designation || "document";
     document.getElementById("root")?.dispatchEvent(
       new CustomEvent("_open_file_preview", {
         detail: {
           file: { _id: id, name: fileName, fileUrl: url, size: row.size },
-          files: rows.map((r: any) => ({ _id: r._id || r.id, name: r.fileName || r.designation, fileUrl: `/api/stuff/archives/file/${r._id || r.id}` })),
+          files: rows.map((r: any) => {
+            const rName = r.fileUrl ? r.fileUrl.split("/").pop() : r.designation;
+            return { _id: r._id || r.id, name: rName, fileUrl: `/api/stuff/archives/file/${r._id || r.id}` };
+          }),
         },
       })
     );

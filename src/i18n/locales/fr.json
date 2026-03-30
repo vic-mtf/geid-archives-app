@@ -779,5 +779,25 @@
       "reject": "Le rejet a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez.",
       "execute": "L\u2019ex\u00e9cution de l\u2019\u00e9limination a \u00e9chou\u00e9. V\u00e9rifiez vos droits et r\u00e9essayez."
     }
+  },
+  "viewer": {
+    "noPreview": "Aucun aper\u00e7u disponible pour ce fichier.",
+    "download": "T\u00e9l\u00e9charger",
+    "delete": "Supprimer",
+    "converting": "Pr\u00e9paration du document...",
+    "loading": "Chargement...",
+    "previousFile": "Fichier pr\u00e9c\u00e9dent",
+    "nextFile": "Fichier suivant",
+    "zoomIn": "Agrandir",
+    "zoomOut": "R\u00e9duire",
+    "fitToScreen": "Ajuster \u00e0 l'\u00e9cran",
+    "rotate": "Rotation",
+    "firstPage": "Premi\u00e8re page",
+    "lastPage": "Derni\u00e8re page",
+    "previousPage": "Page pr\u00e9c\u00e9dente",
+    "nextPage": "Page suivante"
+  },
+  "search": {
+    "placeholder": "Rechercher..."
   }
 }
