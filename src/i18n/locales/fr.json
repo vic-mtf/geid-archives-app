@@ -260,7 +260,7 @@
     "archiveCreate": {
       "title": "Ajouter une archive",
       "subtitle": "T\u00e9l\u00e9versez un fichier et renseignez ses m\u00e9tadonn\u00e9es",
-      "dropZone": "Glissez un fichier ici ou <strong>cliquez pour parcourir</strong>",
+      "dropZone": "Glissez un fichier ici ou cliquez pour parcourir",
       "dropZoneHint": "PDF, Word, Excel, images\u2026 (max. 50 Mo)",
       "designationLabel": "D\u00e9signation *",
       "designationPlaceholder": "Ex : Rapport annuel RH 2024",

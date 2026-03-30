@@ -1,129 +1,121 @@
 /**
- * WorkspaceFilePicker — Sélecteur de fichiers depuis l'espace personnel.
+ * WorkspaceFilePicker — Selecteur de fichiers depuis l'espace personnel (MinIO).
  *
- * Affiche les fichiers avec une icône adaptée au type (PDF, Word, image, vidéo…)
- * et la taille du fichier. Navigation par dossiers avec retour arrière.
+ * Navigation par dossiers, icones FileTypeIcon (comme workspaces),
+ * dossiers FolderRounded avec couleur. Fetch via /api/stuff/workspace/.
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import scrollBarSx from "@/utils/scrollBarSx";
 import {
-  Avatar,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   List,
-  ListItemAvatar,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
-  Stack,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import useAxios from "@/hooks/useAxios";
+import FileTypeIcon from "@/components/FileTypeIcon";
 import getFileExtension from "@/utils/getFileExtention";
-import getFileIcon from "@/utils/getFileIcon";
 
 const EVENT_NAME = "__open_workspace_file_picker";
 
 interface WorkspaceItem {
+  _id?: string;
   name: string;
   isDirectory?: boolean;
   size?: number;
-  doc?: { _id: string };
+  color?: string;
   [key: string]: unknown;
 }
-
-// ── Icône et couleur depuis @/utils/getFileIcon ─────────────
 
 function formatSize(bytes?: number): string {
   if (!bytes || bytes <= 0) return "";
   if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} Ko`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
-
-// ── Composant ───────────────────────────────────────────────
-
-// Catégories racines de l'espace personnel
-const ROOT_CATEGORIES: WorkspaceItem[] = [
-  { name: "documents", isDirectory: true },
-  { name: "images", isDirectory: true },
-  { name: "videos", isDirectory: true },
-];
 
 const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
   const { t } = useTranslation();
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
-  const [folder, setFolder] = useState<string | null>(null); // null = racine
-  const [folderHistory, setFolderHistory] = useState<string[]>([]);
+  const [mode, setMode] = useState<"archive" | "create">("archive");
+  const [currentPath, setCurrentPath] = useState("");
   const [selectedFile, setSelectedFile] = useState<WorkspaceItem | null>(null);
+  const [data, setData] = useState<WorkspaceItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
-  const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  const isRoot = folder === null;
-  const dataParam = folder ? JSON.stringify({ path: folder }) : "";
-  const [{ data, loading }] = useAxios<WorkspaceItem[]>(
-    { url: `/api/stuff/workspace/${encodeURIComponent(dataParam)}`, headers },
-    { manual: !open || isRoot }
-  );
+  // Fetch dossier
+  const loadFolder = useCallback(async (path: string) => {
+    setLoading(true);
+    setSelectedFile(null);
+    try {
+      const query = JSON.stringify({ path });
+      const res = await fetch(`/api/stuff/workspace/${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const items = await res.json();
+      setData(Array.isArray(items) ? items : []);
+    } catch {
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
-  const items = useMemo(() => {
-    if (isRoot) return ROOT_CATEGORIES;
-    if (!Array.isArray(data)) return [];
-    return [...data].sort((a, b) => {
-      if (a.isDirectory && !b.isDirectory) return -1;
-      if (!a.isDirectory && b.isDirectory) return 1;
-      return a.name.localeCompare(b.name);
-    });
-  }, [data, isRoot]);
-
-  const [mode, setMode] = useState<"archive" | "create">("archive");
-
+  // Events
   useEffect(() => {
     const root = document.getElementById("root");
-    const openArchive = () => { setOpen(true); setMode("archive"); setFolder(null); setFolderHistory([]); setSelectedFile(null); };
-    const openCreate = () => { setOpen(true); setMode("create"); setFolder(null); setFolderHistory([]); setSelectedFile(null); };
+    const openArchive = () => { setOpen(true); setMode("archive"); setCurrentPath(""); loadFolder(""); };
+    const openCreate = () => { setOpen(true); setMode("create"); setCurrentPath(""); loadFolder(""); };
     root?.addEventListener(EVENT_NAME, openArchive);
     root?.addEventListener("__open_workspace_file_picker_for_create", openCreate);
     return () => { root?.removeEventListener(EVENT_NAME, openArchive); root?.removeEventListener("__open_workspace_file_picker_for_create", openCreate); };
-  }, []);
+  }, [loadFolder]);
 
-  const handleClose = useCallback(() => {
-    setOpen(false);
-    setSelectedFile(null);
-  }, []);
+  const handleClose = useCallback(() => { setOpen(false); setSelectedFile(null); }, []);
 
-  const openFolder = useCallback((name: string) => {
-    setFolderHistory((prev) => [...prev, folder ?? ""]);
-    setFolder((prev) => prev ? `${prev}/${name}` : name);
-    setSelectedFile(null);
-  }, [folder]);
+  const enterFolder = useCallback((folderName: string) => {
+    const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+    setCurrentPath(newPath);
+    loadFolder(newPath);
+  }, [currentPath, loadFolder]);
 
   const goBack = useCallback(() => {
-    setFolderHistory((prev) => {
-      const copy = [...prev];
-      const parent = copy.pop();
-      setFolder(parent === "" ? null : parent ?? null);
-      return copy;
-    });
-    setSelectedFile(null);
-  }, []);
+    const parts = currentPath.split("/").filter(Boolean);
+    parts.pop();
+    const newPath = parts.join("/");
+    setCurrentPath(newPath);
+    loadFolder(newPath);
+  }, [currentPath, loadFolder]);
+
+  const goRoot = useCallback(() => {
+    setCurrentPath("");
+    loadFolder("");
+  }, [loadFolder]);
 
   const handleConfirm = useCallback(() => {
     if (!selectedFile) return;
@@ -135,122 +127,124 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
     setSelectedFile(null);
   }, [selectedFile, mode]);
 
-  // Breadcrumb
-  const breadcrumbParts = isRoot ? [t("forms.workspace.personalSpace")] : [t("forms.workspace.personalSpace"), ...folder!.split("/")];
-  const fileCount = items.filter((i) => !i.isDirectory).length;
-  const folderCount = items.filter((i) => i.isDirectory).length;
+  const pathParts = useMemo(() => currentPath ? currentPath.split("/").filter(Boolean) : [], [currentPath]);
+
+  const sorted = useMemo(() => {
+    const dirs = data.filter((i) => i.isDirectory).sort((a, b) => a.name.localeCompare(b.name));
+    const files = data.filter((i) => !i.isDirectory).sort((a, b) => a.name.localeCompare(b.name));
+    return [...dirs, ...files];
+  }, [data]);
+
+  const fileCount = sorted.filter((i) => !i.isDirectory).length;
+  const folderCount = sorted.filter((i) => i.isDirectory).length;
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}
-      BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }}
-      PaperProps={{ sx: { height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column", border: 1, borderColor: "divider" } }}>
-      <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0, flexShrink: 0 }}>
-        {t("forms.workspace.title")}
+      BackdropProps={{ sx: { bgcolor: (th: any) => th.palette.background.paper + th.customOptions.opacity, backdropFilter: (th: any) => `blur(${th.customOptions.blur})` } }}
+      PaperProps={{ sx: { height: fullScreen ? "100%" : 480, display: "flex", flexDirection: "column", border: 1, borderColor: "divider" } }}
+    >
+      <DialogTitle sx={{ pb: 0.5, display: "flex", alignItems: "center", gap: 0.5 }}>
+        <FolderRoundedIcon color="warning" sx={{ fontSize: 22 }} />
+        <Typography variant="h6" fontSize={16} fontWeight="bold" flex={1}>
+          {t("forms.workspace.title")}
+        </Typography>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 0, ...scrollBarSx }}>
-        {/* Barre de navigation */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={0.5}
-          sx={{ px: 2, py: 1, bgcolor: "action.hover", borderBottom: "1px solid", borderColor: "divider", position: "sticky", top: 0, zIndex: 1 }}
-        >
-          {folderHistory.length > 0 && (
-            <Button
-              size="small"
-              onClick={goBack}
-              startIcon={<ArrowBackOutlinedIcon />}
-              sx={{ minWidth: 0, mr: 1 }}
+      {/* Barre de navigation */}
+      <Box sx={{ display: "flex", alignItems: "center", px: 2, py: 0.5, gap: 0.5, borderBottom: 1, borderColor: "divider" }}>
+        {pathParts.length > 0 && (
+          <IconButton size="small" onClick={goBack} sx={{ mr: 0.5 }}>
+            <ArrowBackOutlinedIcon fontSize="small" />
+          </IconButton>
+        )}
+        <IconButton size="small" onClick={goRoot} disabled={pathParts.length === 0}>
+          <HomeOutlinedIcon fontSize="small" />
+        </IconButton>
+        {pathParts.length > 0 && <NavigateNextOutlinedIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
+        {pathParts.map((part, i) => (
+          <Box key={i} sx={{ display: "flex", alignItems: "center" }}>
+            <Typography
+              variant="body2"
+              sx={{
+                cursor: i < pathParts.length - 1 ? "pointer" : "default",
+                fontWeight: i === pathParts.length - 1 ? 600 : 400,
+                color: i === pathParts.length - 1 ? "text.primary" : "text.secondary",
+                "&:hover": i < pathParts.length - 1 ? { textDecoration: "underline" } : {},
+                fontSize: 13,
+              }}
+              onClick={() => {
+                if (i < pathParts.length - 1) {
+                  const newPath = pathParts.slice(0, i + 1).join("/");
+                  setCurrentPath(newPath);
+                  loadFolder(newPath);
+                }
+              }}
             >
-              {t("common.back")}
-            </Button>
-          )}
-          {breadcrumbParts.map((part, i) => (
-            <Stack key={i} direction="row" alignItems="center" spacing={0.5}>
-              {i > 0 && <NavigateNextOutlinedIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
-              <Typography
-                variant="caption"
-                fontWeight={i === breadcrumbParts.length - 1 ? 600 : 400}
-                color={i === breadcrumbParts.length - 1 ? "text.primary" : "text.secondary"}
-              >
-                {part.charAt(0).toUpperCase() + part.slice(1)}
-              </Typography>
-            </Stack>
-          ))}
-          <Box flex={1} />
-          {!loading && (
-            <Typography variant="caption" color="text.disabled">
-              {folderCount > 0 && t("forms.workspace.foldersCount", { count: folderCount })}
-              {folderCount > 0 && fileCount > 0 && ", "}
-              {fileCount > 0 && t("forms.workspace.filesCount", { count: fileCount })}
+              {part}
             </Typography>
-          )}
-        </Stack>
+            {i < pathParts.length - 1 && <NavigateNextOutlinedIcon sx={{ fontSize: 16, color: "text.disabled", mx: 0.25 }} />}
+          </Box>
+        ))}
+        <Box flex={1} />
+        {!loading && (folderCount > 0 || fileCount > 0) && (
+          <Typography variant="caption" color="text.disabled" sx={{ flexShrink: 0 }}>
+            {folderCount > 0 && `${folderCount} dossier${folderCount > 1 ? "s" : ""}`}
+            {folderCount > 0 && fileCount > 0 && ", "}
+            {fileCount > 0 && `${fileCount} fichier${fileCount > 1 ? "s" : ""}`}
+          </Typography>
+        )}
+      </Box>
 
+      <DialogContent sx={{ p: 0, flex: 1, overflow: "auto", ...scrollBarSx }}>
         {loading ? (
-          <Box display="flex" justifyContent="center" py={6}>
+          <Box display="flex" justifyContent="center" alignItems="center" py={6}>
             <CircularProgress size={28} />
           </Box>
-        ) : items.length === 0 ? (
-          <Box textAlign="center" py={6}>
+        ) : sorted.length === 0 ? (
+          <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={6} gap={1}>
+            <InboxOutlinedIcon sx={{ fontSize: 40, opacity: 0.3 }} />
             <Typography variant="body2" color="text.secondary">
               {t("forms.workspace.folderEmpty")}
             </Typography>
           </Box>
         ) : (
-          <List disablePadding>
-            {items.map((item) => {
-              const isDir = item.isDirectory;
+          <List dense disablePadding>
+            {sorted.map((item) => {
+              const isDir = !!item.isDirectory;
               const isSelected = !isDir && selectedFile?.name === item.name;
-              const fileInfo = !isDir ? getFileIcon(item.name) : null;
-              const size = !isDir ? formatSize(item.size as number | undefined) : null;
-              const ext = !isDir ? (getFileExtension(item.name)?.toUpperCase() ?? "") : "";
+              const ext = !isDir ? (getFileExtension(item.name) ?? "") : "";
 
               return (
                 <ListItemButton
                   key={item.name}
                   selected={isSelected}
-                  onClick={() => isDir ? openFolder(item.name) : setSelectedFile(item)}
+                  onClick={() => isDir ? enterFolder(item.name) : setSelectedFile(isSelected ? null : item)}
                   onDoubleClick={() => {
-                    if (isDir) { openFolder(item.name); return; }
+                    if (isDir) return enterFolder(item.name);
                     setSelectedFile(item);
                     setTimeout(() => handleConfirm(), 0);
                   }}
-                  sx={{
-                    px: 2,
-                    py: 0.75,
-                    "&.Mui-selected": { bgcolor: "primary.50" },
-                  }}
+                  sx={{ px: 2, py: 0.75 }}
                 >
-                  <ListItemAvatar sx={{ minWidth: 44 }}>
+                  <ListItemIcon sx={{ minWidth: 36 }}>
                     {isDir ? (
-                      <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: "#FFF3E0" }}>
-                        <FolderRoundedIcon sx={{ color: "#FFA726" }} />
-                      </Avatar>
+                      <FolderRoundedIcon sx={{ color: (item.color as string) || "warning.main", fontSize: 24 }} />
                     ) : (
-                      <Avatar variant="rounded" sx={{ width: 36, height: 36, bgcolor: fileInfo!.bg }}>
-                        {(() => {
-                          const { icon, color } = fileInfo!;
-                          return <Box sx={{ color, display: "flex" }}>{icon}</Box>;
-                        })()}
-                      </Avatar>
+                      <FileTypeIcon extension={ext} size={22} />
                     )}
-                  </ListItemAvatar>
+                  </ListItemIcon>
                   <ListItemText
                     primary={item.name}
-                    secondary={isDir ? null : size || ext}
+                    secondary={isDir ? null : formatSize(item.size as number | undefined)}
                     primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: isSelected ? 600 : 400 }}
-                    secondaryTypographyProps={{ variant: "caption" }}
+                    secondaryTypographyProps={{ fontSize: 11 }}
                   />
-                  {isDir && <NavigateNextOutlinedIcon sx={{ color: "text.disabled", fontSize: 20 }} />}
-                  {!isDir && ext && (
-                    <Chip
-                      label={ext}
-                      size="small"
-                      sx={{ fontSize: "0.65rem", height: 20, bgcolor: fileInfo!.bg, color: fileInfo!.color, fontWeight: 600 }}
-                    />
+                  {isDir && (
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); enterFolder(item.name); }} sx={{ ml: 0.5 }}>
+                      <NavigateNextOutlinedIcon fontSize="small" />
+                    </IconButton>
                   )}
+                  {isSelected && <CheckOutlinedIcon color="primary" sx={{ fontSize: 18, ml: 0.5 }} />}
                 </ListItemButton>
               );
             })}
@@ -258,14 +252,19 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
         )}
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={handleClose} color="inherit">
+      <DialogActions sx={{ px: 2, py: 1, borderTop: 1, borderColor: "divider" }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
+          {selectedFile ? selectedFile.name : (currentPath || t("forms.workspace.personalSpace"))}
+        </Typography>
+        <Button onClick={handleClose} color="inherit" size="small">
           {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
-          disabled={!selectedFile || selectedFile.isDirectory}
+          size="small"
+          disabled={!selectedFile || !!selectedFile.isDirectory}
           onClick={handleConfirm}
+          sx={{ textTransform: "none" }}
         >
           {t("common.select")}
         </Button>
