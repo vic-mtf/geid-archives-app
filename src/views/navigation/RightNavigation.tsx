@@ -10,7 +10,7 @@ import { useCallback } from "react";
 import { updateData } from "@/redux/data";
 
 export default function RightNavigation() {
-  const open = useSelector((store: RootState) => store.data.navigation.openRight);
+  const open = useSelector((store: RootState) => store.data?.navigation?.openRight ?? false);
   const dispatch = useDispatch<AppDispatch>();
   const handleClose = useCallback(() => {
     dispatch(updateData({ data: { navigation: { openRight: false } } }));

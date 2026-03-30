@@ -22,7 +22,7 @@ import { updateData } from "@/redux/data";
 const TREE_TABS = new Set<string>(["archiveManager"]);
 
 export default function LeftNavigation() {
-  const open = useSelector((store: RootState) => store.data.navigation.openLeft);
+  const open = useSelector((store: RootState) => store.data?.navigation?.openLeft ?? false);
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigateTo = useNavigateSetState();

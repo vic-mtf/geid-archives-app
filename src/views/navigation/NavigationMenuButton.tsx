@@ -21,7 +21,7 @@ export default function NavigationMenuButton({
   direction = "left",
 }: NavigationMenuButtonProps) {
   const dir = useMemo(() => `open${capStr(direction)}`, [direction]);
-  const open = useSelector((store: RootState) => (store.data.navigation as unknown as Record<string, unknown>)[dir] as boolean);
+  const open = useSelector((store: RootState) => ((store.data?.navigation ?? {}) as unknown as Record<string, unknown>)[dir] as boolean ?? false);
   const dispatch = useDispatch<AppDispatch>();
   const handleOpenNav = useCallback(() => {
     const data = { navigation: { [dir]: !open } as unknown as import("../../types").NavigationState };
