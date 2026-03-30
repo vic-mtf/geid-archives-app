@@ -11,7 +11,7 @@ import {
   Button,
   Toolbar,
 } from "@mui/material";
-import AddRoundedIcon            from "@mui/icons-material/AddRounded";
+import AddOutlinedIcon            from "@mui/icons-material/AddOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import {
   GridToolbarColumnsButton,
@@ -56,7 +56,7 @@ const ArchiveManagementHeader = React.memo(function ArchiveManagementHeader({
         <Button
           variant="contained"
           size="small"
-          startIcon={<AddRoundedIcon />}
+          startIcon={<AddOutlinedIcon />}
           onClick={onAdd}
           disableElevation
           sx={{ display: { xs: "flex", md: "none" } }}

@@ -137,7 +137,7 @@ export default function DuaConfigDialog() {
   const canSave = !!value && Number(value) > 0 && !loading;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <AccessTimeOutlinedIcon color="info" />
         {t("dua.title")}

@@ -7,8 +7,8 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Collapse } from "@mui/material";
-import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
-import SignalWifiStatusbar4BarRoundedIcon from "@mui/icons-material/SignalWifiStatusbar4BarRounded";
+import WifiOffOutlinedIcon from "@mui/icons-material/WifiOffOutlined";
+import SignalWifiStatusbar4BarOutlinedIcon from "@mui/icons-material/SignalWifiStatusbar4BarOutlined";
 
 const NetworkStatus = React.memo(function NetworkStatus() {
   const { t } = useTranslation();
@@ -54,8 +54,8 @@ const NetworkStatus = React.memo(function NetworkStatus() {
         severity={online ? "success" : "warning"}
         variant="filled"
         icon={online
-          ? <SignalWifiStatusbar4BarRoundedIcon fontSize="inherit" />
-          : <WifiOffRoundedIcon fontSize="inherit" />
+          ? <SignalWifiStatusbar4BarOutlinedIcon fontSize="inherit" />
+          : <WifiOffOutlinedIcon fontSize="inherit" />
         }
         sx={{ borderRadius: 2, boxShadow: 4 }}
       >

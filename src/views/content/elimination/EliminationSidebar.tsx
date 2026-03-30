@@ -19,8 +19,8 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { useTranslation } from "react-i18next";
 import scrollBarSx from "@/utils/scrollBarSx";
 import { PV_STATUS_COLOR, PV_STATUS_ICON, PV_STATUSES, type PvStatus } from "./pvStatusConfig";
@@ -51,7 +51,7 @@ const EliminationSidebar = React.memo(function EliminationSidebar({
       {/* Bouton Nouveau PV */}
       {canWrite && (
         <Box px={1.5} pt={1.5} pb={0.75}>
-          <Button variant="contained" size="small" fullWidth startIcon={<AddRoundedIcon />}
+          <Button variant="contained" size="small" fullWidth startIcon={<AddOutlinedIcon />}
             onClick={onOpenCreate} disableElevation>
             {t("elimination.newPv")}
           </Button>
@@ -66,7 +66,7 @@ const EliminationSidebar = React.memo(function EliminationSidebar({
             onClick={() => onStatusFilter("ALL")}
             sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}>
             <ListItemIcon sx={{ minWidth: 28 }}>
-              <InboxRoundedIcon fontSize="small" />
+              <InboxOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary={t("elimination.filter.all")}
               primaryTypographyProps={{ variant: "body2", noWrap: true }} />

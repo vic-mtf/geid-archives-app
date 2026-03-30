@@ -23,14 +23,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import DeleteOutlineRoundedIcon    from "@mui/icons-material/DeleteOutlineRounded";
+import DeleteOutlineOutlinedIcon    from "@mui/icons-material/DeleteOutlineOutlined";
 import WarehouseOutlinedIcon       from "@mui/icons-material/WarehouseOutlined";
 import DnsOutlinedIcon             from "@mui/icons-material/DnsOutlined";
 import ViewStreamOutlinedIcon      from "@mui/icons-material/ViewStreamOutlined";
-import FolderOutlinedIcon          from "@mui/icons-material/FolderOutlined";
+import FolderRoundedIcon          from "@mui/icons-material/FolderOutlined";
 import ArticleOutlinedIcon         from "@mui/icons-material/ArticleOutlined";
 import DescriptionOutlinedIcon     from "@mui/icons-material/DescriptionOutlined";
-import QrCode2RoundedIcon          from "@mui/icons-material/QrCode2Rounded";
+import QrCode2OutlinedIcon          from "@mui/icons-material/QrCode2Outlined";
 import CalendarTodayOutlinedIcon   from "@mui/icons-material/CalendarTodayOutlined";
 import CategoryOutlinedIcon        from "@mui/icons-material/CategoryOutlined";
 import InfoOutlinedIcon            from "@mui/icons-material/InfoOutlined";
@@ -127,7 +127,7 @@ function BinderDetail({ item }: { item: Binder }) {
   const pct = item.currentCount != null ? Math.min(100, (item.currentCount / item.maxCapacity) * 100) : 0;
   return (
     <Stack spacing={1.5}>
-      <DetailRow icon={<FolderOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.name")} value={item.name} />
+      <DetailRow icon={<FolderRoundedIcon fontSize="small" />} label={t("physical.detailLabels.name")} value={item.name} />
       <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.nature")} value={item.nature} />
       <Box>
         <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
@@ -163,7 +163,7 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
       <DetailRow icon={<CategoryOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.nature")} value={item.nature} />
       {item.editionDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.editionDate")} value={fmtDate(item.editionDate)} />}
       {item.archivingDate && <DetailRow icon={<CalendarTodayOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.archivingDate")} value={fmtDate(item.archivingDate)} />}
-      {item.qrCode && <DetailRow icon={<QrCode2RoundedIcon fontSize="small" />} label={t("physical.detailLabels.qrCode")} value={item.qrCode} />}
+      {item.qrCode && <DetailRow icon={<QrCode2OutlinedIcon fontSize="small" />} label={t("physical.detailLabels.qrCode")} value={item.qrCode} />}
       {item.agent && typeof item.agent === "object" && (
         <DetailRow icon={<InfoOutlinedIcon fontSize="small" />} label={t("physical.detailLabels.agent")} value={`${(item.agent as { firstName?: string }).firstName ?? ""} ${(item.agent as { lastName?: string }).lastName ?? ""}`.trim()} />
       )}
@@ -272,7 +272,7 @@ export default function DetailPanel({ level, item, onDelete, headers }: DetailPa
         <Chip label={LEVEL_LABELS[level]} size="small" variant="outlined" />
         <Tooltip title={t("physical.deleteTooltip")} placement="top">
           <IconButton size="small" color="error" onClick={() => onDelete(item._id, itemLabel)}>
-            <DeleteOutlineRoundedIcon fontSize="small" />
+            <DeleteOutlineOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       </Stack>

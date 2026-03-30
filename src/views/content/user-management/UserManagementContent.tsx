@@ -29,8 +29,8 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import SearchRoundedIcon       from "@mui/icons-material/SearchRounded";
-import CloseRoundedIcon        from "@mui/icons-material/CloseRounded";
+import SearchOutlinedIcon       from "@mui/icons-material/SearchOutlined";
+import CloseOutlinedIcon        from "@mui/icons-material/CloseOutlined";
 import SecurityOutlinedIcon    from "@mui/icons-material/SecurityOutlined";
 import PersonOutlinedIcon      from "@mui/icons-material/PersonOutlined";
 // Liste avec scroll natif — performant jusqu'à ~1000 utilisateurs
@@ -263,13 +263,13 @@ export default function UserManagementContent() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchRoundedIcon fontSize="small" color="action" />
+                  <SearchOutlinedIcon fontSize="small" color="action" />
                 </InputAdornment>
               ),
               endAdornment: search ? (
                 <InputAdornment position="end">
                   <IconButton size="small" onClick={() => setSearch("")}>
-                    <CloseRoundedIcon fontSize="small" />
+                    <CloseOutlinedIcon fontSize="small" />
                   </IconButton>
                 </InputAdornment>
               ) : null,
@@ -336,7 +336,7 @@ export default function UserManagementContent() {
       </Box>
 
       {/* ── Dialog modification permissions ─────────────────── */}
-      <Dialog open={permDialog} onClose={() => setPermDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
+      <Dialog open={permDialog} onClose={() => setPermDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
         <DialogTitle component="div">
           <Typography fontWeight="bold">
             {t("users.permissionsTitle", { name: `${selectedUser?.fname} ${selectedUser?.lname}` })}
@@ -361,7 +361,7 @@ export default function UserManagementContent() {
                   </Select>
                 </FormControl>
                 <IconButton size="small" color="error" onClick={() => setEditPerms((prev) => prev.filter((_, j) => j !== i))}>
-                  <CloseRoundedIcon fontSize="small" />
+                  <CloseOutlinedIcon fontSize="small" />
                 </IconButton>
               </Box>
             ))}

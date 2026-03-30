@@ -1,9 +1,9 @@
 import AppsMenuButton from "./AppsMenuButton";
 import ProfileMenuButton from "./ProfileMenuButton";
-// import ExitToAppRoundedIcon from '@mui/icons-material/ExitToAppRounded';
+// import ExitToAppOutlinedIcon from '@mui/icons-material/ExitToAppOutlined';
 // import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
-import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
+import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
 // import ContactSupportOutlinedIcon from '@mui/icons-material/ContactSupportOutlined';
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
@@ -30,7 +30,7 @@ const options: HeaderOption[] = [
   {
     label: "Applications",
     pin: true,
-    icon: AppsRoundedIcon,
+    icon: AppsOutlinedIcon,
     element: AppsMenuButton,
     key: "_apps",
   },
@@ -57,7 +57,7 @@ const options: HeaderOption[] = [
   // {
   //     label: 'Quitter l\'espace personnel',
   //     pin: false,
-  //     icon: ExitToAppRoundedIcon ,
+  //     icon: ExitToAppOutlinedIcon ,
   //     element: null,
   //     key: '_exit_app',
   //     action () {

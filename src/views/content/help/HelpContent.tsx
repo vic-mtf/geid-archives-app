@@ -31,12 +31,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import SearchRoundedIcon        from "@mui/icons-material/SearchRounded";
+import SearchOutlinedIcon        from "@mui/icons-material/SearchOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
-import CloseRoundedIcon         from "@mui/icons-material/CloseRounded";
-import ExpandMoreRoundedIcon    from "@mui/icons-material/ExpandMoreRounded";
+import CloseOutlinedIcon         from "@mui/icons-material/CloseOutlined";
+import ExpandMoreOutlinedIcon    from "@mui/icons-material/ExpandMoreOutlined";
 import CheckCircleOutlineIcon   from "@mui/icons-material/CheckCircleOutline";
-import ArrowRightRoundedIcon    from "@mui/icons-material/ArrowRightRounded";
+import ArrowRightOutlinedIcon    from "@mui/icons-material/ArrowRightOutlined";
 import InfoOutlinedIcon         from "@mui/icons-material/InfoOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlined";
@@ -473,11 +473,11 @@ export default function HelpContent() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           InputProps={{
-            startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment>,
+            startAdornment: <InputAdornment position="start"><SearchOutlinedIcon fontSize="small" color="action" /></InputAdornment>,
             endAdornment: query ? (
               <InputAdornment position="end">
                 <IconButton size="small" onClick={() => { setQuery(""); setSuggestions([]); }}>
-                  <CloseRoundedIcon fontSize="small" />
+                  <CloseOutlinedIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
             ) : null,
@@ -502,7 +502,7 @@ export default function HelpContent() {
                     {s.body.slice(0, 80)}…
                   </Typography>
                 </Box>
-                <ArrowRightRoundedIcon fontSize="small" sx={{ color: "text.disabled" }} />
+                <ArrowRightOutlinedIcon fontSize="small" sx={{ color: "text.disabled" }} />
               </Stack>
             ))}
           </Paper>
@@ -856,7 +856,7 @@ export default function HelpContent() {
               <Stack key={s.label} direction="row" alignItems="center" spacing={0.5}>
                 <StatusBadge label={s.label} color={s.color} />
                 {i < arr.length - 1 && (
-                  <ArrowRightRoundedIcon sx={{ color: "text.disabled", display: { xs: "none", sm: "block" } }} />
+                  <ArrowRightOutlinedIcon sx={{ color: "text.disabled", display: { xs: "none", sm: "block" } }} />
                 )}
               </Stack>
             ))}
@@ -1487,7 +1487,7 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
           <Typography color="primary.main" variant="body2" fontWeight={700} sx={{ mt: 0.1, flexShrink: 0 }}>Q.</Typography>
           <Typography variant="body2" fontWeight={600}>{question}</Typography>
         </Stack>
-        <ExpandMoreRoundedIcon
+        <ExpandMoreOutlinedIcon
           fontSize="small"
           sx={{ flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "none", color: "text.secondary" }}
         />

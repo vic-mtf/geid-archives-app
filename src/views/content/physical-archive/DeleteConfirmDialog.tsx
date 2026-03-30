@@ -35,7 +35,7 @@ const DeleteConfirmDialog = React.memo(function DeleteConfirmDialog({
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   return (
-    <Dialog open={open} onClose={() => !deleting && onClose()} maxWidth="xs" fullWidth fullScreen={fullScreen}>
+    <Dialog open={open} onClose={() => !deleting && onClose()} maxWidth="xs" fullWidth fullScreen={fullScreen} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle component="div" fontWeight="bold">
         {t("dialogs.confirmDeletion")}
       </DialogTitle>

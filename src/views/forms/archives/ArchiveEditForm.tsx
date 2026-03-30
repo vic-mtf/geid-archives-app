@@ -115,7 +115,7 @@ export default function ArchiveEditForm() {
   };
 
   return (
-    <Dialog open={Boolean(doc)} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}>
+    <Dialog open={Boolean(doc)} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle component="div" fontWeight="bold">
         {t("forms.archiveEdit.title")}
         {doc?.designation && (

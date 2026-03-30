@@ -1,6 +1,6 @@
 import { FormControl, OutlinedInput, Stack, IconButton } from "@mui/material";
 import { useMemo, useState } from "react";
-import BackspaceRoundedIcon from "@mui/icons-material/BackspaceRounded";
+import BackspaceOutlinedIcon from "@mui/icons-material/BackspaceOutlined";
 
 interface CodeRef {
   value: string;
@@ -110,7 +110,7 @@ export default function InputsCode({
         </FormControl>
       ))}
       <IconButton aria-label="Backspace" onClick={handleDelete}>
-        <BackspaceRoundedIcon />
+        <BackspaceOutlinedIcon />
       </IconButton>
     </Stack>
   );

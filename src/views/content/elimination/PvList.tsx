@@ -5,7 +5,7 @@
 import { DataGrid, GridColDef, GridRowParams, GridToolbarQuickFilter } from "@mui/x-data-grid";
 import { frFR } from "@mui/x-data-grid/locales";
 import { Box, Stack, Typography } from "@mui/material";
-import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import { useTranslation } from "react-i18next";
 import scrollBarSx from "@/utils/scrollBarSx";
 
@@ -46,7 +46,7 @@ function NoRows() {
   const { t } = useTranslation();
   return (
     <Stack alignItems="center" justifyContent="center" height="100%" spacing={1} p={4}>
-      <GavelRoundedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+      <GavelOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
       <Typography variant="body2" color="text.secondary" textAlign="center">
         {t("elimination.noPvs")}
       </Typography>

@@ -13,7 +13,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Chip, Drawer, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { GridRowParams } from "@mui/x-data-grid";
-import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import { useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
@@ -185,7 +185,7 @@ export default function EliminationContent() {
             ) : (
               /* Résumé quand aucun PV sélectionné */
               <Box p={2.5} flex={1} display="flex" flexDirection="column" alignItems="center" justifyContent="center">
-                <GavelRoundedIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1.5 }} />
+                <GavelOutlinedIcon sx={{ fontSize: 48, color: "text.disabled", mb: 1.5 }} />
                 <Typography variant="body2" color="text.secondary" textAlign="center" mb={2}>
                   {t("elimination.noPvs")}
                 </Typography>

@@ -71,7 +71,7 @@ export default function ArchiveDeleteConfirm() {
   };
 
   return (
-    <Dialog open={ids.length > 0} onClose={handleClose} maxWidth="xs" fullWidth>
+    <Dialog open={ids.length > 0} onClose={handleClose} maxWidth="xs" fullWidth BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle component="div" fontWeight="bold">
         {t("dialogs.confirmDeletion")}
       </DialogTitle>

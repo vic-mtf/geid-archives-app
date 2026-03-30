@@ -27,23 +27,23 @@ import {
 } from "@mui/material";
 import RestoreOutlinedIcon         from "@mui/icons-material/RestoreOutlined";
 import SaveOutlinedIcon            from "@mui/icons-material/SaveOutlined";
-import DragIndicatorRoundedIcon    from "@mui/icons-material/DragIndicatorRounded";
-import ManageHistoryRoundedIcon    from "@mui/icons-material/ManageHistoryRounded";
+import DragIndicatorOutlinedIcon    from "@mui/icons-material/DragIndicatorOutlined";
+import ManageHistoryOutlinedIcon    from "@mui/icons-material/ManageHistoryOutlined";
 import HourglassTopOutlinedIcon    from "@mui/icons-material/HourglassTopOutlined";
 import CheckCircleOutlineIcon      from "@mui/icons-material/CheckCircleOutline";
-import ArchiveRoundedIcon          from "@mui/icons-material/ArchiveRounded";
-import MenuBookRoundedIcon         from "@mui/icons-material/MenuBookRounded";
-import DeleteOutlineRoundedIcon    from "@mui/icons-material/DeleteOutlineRounded";
-import GavelRoundedIcon            from "@mui/icons-material/GavelRounded";
+import ArchiveOutlinedIcon          from "@mui/icons-material/ArchiveOutlined";
+import MenuBookOutlinedIcon         from "@mui/icons-material/MenuBookOutlined";
+import DeleteOutlineOutlinedIcon    from "@mui/icons-material/DeleteOutlineOutlined";
+import GavelOutlinedIcon            from "@mui/icons-material/GavelOutlined";
 import WarehouseOutlinedIcon       from "@mui/icons-material/WarehouseOutlined";
 import FolderOpenOutlinedIcon      from "@mui/icons-material/FolderOpenOutlined";
 import TopicOutlinedIcon           from "@mui/icons-material/TopicOutlined";
-import AlarmRoundedIcon            from "@mui/icons-material/AlarmRounded";
-import PeopleOutlineRoundedIcon    from "@mui/icons-material/PeopleOutlineRounded";
-import DonutLargeRoundedIcon       from "@mui/icons-material/DonutLargeRounded";
-import PieChartRoundedIcon         from "@mui/icons-material/PieChartRounded";
-import BarChartRoundedIcon         from "@mui/icons-material/BarChartRounded";
-import ViewListRoundedIcon         from "@mui/icons-material/ViewListRounded";
+import AlarmOutlinedIcon            from "@mui/icons-material/AlarmOutlined";
+import PeopleOutlineOutlinedIcon    from "@mui/icons-material/PeopleOutlineOutlined";
+import DonutLargeOutlinedIcon       from "@mui/icons-material/DonutLargeOutlined";
+import PieChartOutlinedIcon         from "@mui/icons-material/PieChartOutlined";
+import BarChartOutlinedIcon         from "@mui/icons-material/BarChartOutlined";
+import ViewListOutlinedIcon         from "@mui/icons-material/ViewListOutlined";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
 import { useSnackbar } from "notistack";
@@ -77,19 +77,19 @@ interface CardDef { id: string; label: string; icon: React.ReactNode; color: str
 // ── Pool de cartes statistiques (12 options, max 6 actives) ──
 
 const STAT_CARDS: CardDef[] = [
-  { id: "totalArchives",        label: "Total archives",             icon: <ManageHistoryRoundedIcon fontSize="small" />,  color: "primary.main" },
+  { id: "totalArchives",        label: "Total archives",             icon: <ManageHistoryOutlinedIcon fontSize="small" />,  color: "primary.main" },
   { id: "pending",              label: "En attente de validation",   icon: <HourglassTopOutlinedIcon fontSize="small" />,  color: "warning.main" },
   { id: "active",               label: "Archives actives",           icon: <CheckCircleOutlineIcon fontSize="small" />,    color: "success.main" },
-  { id: "semiActive",           label: "Archives intermédiaires",    icon: <ArchiveRoundedIcon fontSize="small" />,        color: "info.main" },
-  { id: "permanent",            label: "Archives historiques",       icon: <MenuBookRoundedIcon fontSize="small" />,       color: "#9c27b0" },
-  { id: "destroyed",            label: "Archives détruites",         icon: <DeleteOutlineRoundedIcon fontSize="small" />,  color: "error.main" },
-  { id: "proposedElimination",  label: "Éliminations proposées",     icon: <GavelRoundedIcon fontSize="small" />,         color: "#c62828" },
+  { id: "semiActive",           label: "Archives intermédiaires",    icon: <ArchiveOutlinedIcon fontSize="small" />,        color: "info.main" },
+  { id: "permanent",            label: "Archives historiques",       icon: <MenuBookOutlinedIcon fontSize="small" />,       color: "#9c27b0" },
+  { id: "destroyed",            label: "Archives détruites",         icon: <DeleteOutlineOutlinedIcon fontSize="small" />,  color: "error.main" },
+  { id: "proposedElimination",  label: "Éliminations proposées",     icon: <GavelOutlinedIcon fontSize="small" />,         color: "#c62828" },
   { id: "containers",           label: "Conteneurs physiques",       icon: <WarehouseOutlinedIcon fontSize="small" />,     color: "#5C6BC0" },
   { id: "binders",              label: "Classeurs",                  icon: <FolderOpenOutlinedIcon fontSize="small" />,    color: "#795548" },
   { id: "records",              label: "Dossiers physiques",         icon: <TopicOutlinedIcon fontSize="small" />,         color: "#00897b" },
-  { id: "duaExpired",           label: "Conservations dépassées",    icon: <AlarmRoundedIcon fontSize="small" />,          color: "error.main" },
-  { id: "users",                label: "Utilisateurs actifs",        icon: <PeopleOutlineRoundedIcon fontSize="small" />,  color: "#546e7a" },
-  { id: "eliminationPvs",      label: "Procès-verbaux d'élimination", icon: <GavelRoundedIcon fontSize="small" />,        color: "#c62828" },
+  { id: "duaExpired",           label: "Conservations dépassées",    icon: <AlarmOutlinedIcon fontSize="small" />,          color: "error.main" },
+  { id: "users",                label: "Utilisateurs actifs",        icon: <PeopleOutlineOutlinedIcon fontSize="small" />,  color: "#546e7a" },
+  { id: "eliminationPvs",      label: "Procès-verbaux d'élimination", icon: <GavelOutlinedIcon fontSize="small" />,        color: "#c62828" },
 ];
 
 const STAT_MAP = new Map(STAT_CARDS.map((c) => [c.id, c]));
@@ -109,10 +109,10 @@ const SECTIONS = [
 ];
 
 const CHART_TYPES = [
-  { value: "donut", label: "Donut",     icon: <DonutLargeRoundedIcon /> },
-  { value: "pie",   label: "Camembert", icon: <PieChartRoundedIcon /> },
-  { value: "bar",   label: "Barres",    icon: <BarChartRoundedIcon /> },
-  { value: "list",  label: "Liste",     icon: <ViewListRoundedIcon /> },
+  { value: "donut", label: "Donut",     icon: <DonutLargeOutlinedIcon /> },
+  { value: "pie",   label: "Camembert", icon: <PieChartOutlinedIcon /> },
+  { value: "bar",   label: "Barres",    icon: <BarChartOutlinedIcon /> },
+  { value: "list",  label: "Liste",     icon: <ViewListOutlinedIcon /> },
 ];
 
 const DEFAULT_STATS = ["totalArchives", "pending", "active", "semiActive", "permanent", "containers"];
@@ -396,7 +396,7 @@ function SortableCardRow({ card, onToggle }: { card: CardDef; onToggle: (id: str
       }}
     >
       <Box {...attributes} {...listeners} sx={{ cursor: isDragging ? "grabbing" : "grab", display: "flex", color: "text.disabled" }}>
-        <DragIndicatorRoundedIcon fontSize="small" />
+        <DragIndicatorOutlinedIcon fontSize="small" />
       </Box>
       <ListItemIcon sx={{ minWidth: 28, color: card.color }}>{card.icon}</ListItemIcon>
       <ListItemText primary={card.label} primaryTypographyProps={{ variant: "body2", fontWeight: 500 }} sx={{ flex: 1, my: 0 }} />

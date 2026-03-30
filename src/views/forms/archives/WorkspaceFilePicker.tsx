@@ -26,8 +26,8 @@ import {
   useTheme,
 } from "@mui/material";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
+import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
@@ -143,7 +143,8 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen}
-      PaperProps={{ sx: { height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column" } }}>
+      BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }}
+      PaperProps={{ sx: { height: fullScreen ? "100%" : "70vh", display: "flex", flexDirection: "column", border: 1, borderColor: "divider" } }}>
       <DialogTitle component="div" fontWeight="bold" sx={{ pb: 0, flexShrink: 0 }}>
         {t("forms.workspace.title")}
       </DialogTitle>
@@ -160,7 +161,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
             <Button
               size="small"
               onClick={goBack}
-              startIcon={<ArrowBackRoundedIcon />}
+              startIcon={<ArrowBackOutlinedIcon />}
               sx={{ minWidth: 0, mr: 1 }}
             >
               {t("common.back")}
@@ -168,7 +169,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
           )}
           {breadcrumbParts.map((part, i) => (
             <Stack key={i} direction="row" alignItems="center" spacing={0.5}>
-              {i > 0 && <NavigateNextRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
+              {i > 0 && <NavigateNextOutlinedIcon sx={{ fontSize: 16, color: "text.disabled" }} />}
               <Typography
                 variant="caption"
                 fontWeight={i === breadcrumbParts.length - 1 ? 600 : 400}
@@ -243,7 +244,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
                     primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: isSelected ? 600 : 400 }}
                     secondaryTypographyProps={{ variant: "caption" }}
                   />
-                  {isDir && <NavigateNextRoundedIcon sx={{ color: "text.disabled", fontSize: 20 }} />}
+                  {isDir && <NavigateNextOutlinedIcon sx={{ color: "text.disabled", fontSize: 20 }} />}
                   {!isDir && ext && (
                     <Chip
                       label={ext}

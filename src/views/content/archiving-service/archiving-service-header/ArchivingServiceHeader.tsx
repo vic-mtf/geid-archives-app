@@ -5,7 +5,7 @@ import {
   GridToolbarFilterButton,
 } from "@mui/x-data-grid";
 import NavigationMenuButton from "@/views/navigation/NavigationMenuButton";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 const ArchivingServiceHeader = React.memo(() => {
   const handleAdd = () => {
@@ -35,7 +35,7 @@ const ArchivingServiceHeader = React.memo(() => {
       <Button
         variant="contained"
         size="small"
-        startIcon={<AddRoundedIcon />}
+        startIcon={<AddOutlinedIcon />}
         onClick={handleAdd}
         sx={{ ml: "auto" }}>
         Ajouter

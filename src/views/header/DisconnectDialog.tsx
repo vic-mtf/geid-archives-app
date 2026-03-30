@@ -49,7 +49,7 @@ export default function DisconnectDialog() {
   }, []);
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)}>
+    <Dialog open={open} onClose={() => setOpen(false)} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle id='alert-dialog-deconnexion'>
         Souhaitez-vous déconnecter le compte ?
       </DialogTitle>

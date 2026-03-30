@@ -17,10 +17,10 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import DriveFileMoveOutlinedIcon from "@mui/icons-material/DriveFileMoveOutlined";
-import LinkOffRoundedIcon from "@mui/icons-material/LinkOffRounded";
+import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 
 export interface ArchiveMenuState {
   mouseX: number;
@@ -61,7 +61,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
     >
       {/* Ouvrir le fichier */}
       <MenuItem onClick={() => { onOpen(state.archiveId); onClose(); }}>
-        <ListItemIcon><OpenInNewRoundedIcon fontSize="small" /></ListItemIcon>
+        <ListItemIcon><OpenInNewOutlinedIcon fontSize="small" /></ListItemIcon>
         <ListItemText>{t("physical.archiveContextMenu.openFile")}</ListItemText>
       </MenuItem>
 
@@ -88,7 +88,7 @@ const ArchiveContextMenu = React.memo(function ArchiveContextMenu({
           onClick={() => { onUnlink(state.archiveId, state.archiveLabel); onClose(); }}
           sx={{ color: "error.main" }}
         >
-          <ListItemIcon><LinkOffRoundedIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemIcon><LinkOffOutlinedIcon fontSize="small" color="error" /></ListItemIcon>
           <ListItemText>{t("physical.archiveContextMenu.unlink")}</ListItemText>
         </MenuItem>
       )}

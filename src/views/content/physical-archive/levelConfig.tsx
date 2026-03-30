@@ -3,7 +3,7 @@ import WarehouseOutlinedIcon  from "@mui/icons-material/WarehouseOutlined";
 import DnsOutlinedIcon        from "@mui/icons-material/DnsOutlined";
 import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon      from "@mui/icons-material/StyleOutlined";
-import FolderOutlinedIcon     from "@mui/icons-material/FolderOutlined";
+import FolderRoundedIcon     from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon      from "@mui/icons-material/TopicOutlined";
 import i18n from "@/i18n/i18n";
 import type { PhysicalLevel } from "@/constants/physical";
@@ -13,7 +13,7 @@ const levelConfigBase: Record<PhysicalLevel, { icon: React.ReactNode; labelKey: 
   shelf:     { icon: <DnsOutlinedIcon />,          labelKey: "physical.levels.shelf",     color: "#26A69A" },
   floor:     { icon: <ViewStreamOutlinedIcon />,   labelKey: "physical.levels.floor",     color: "#42A5F5" },
   binder:    { icon: <StyleOutlinedIcon />,        labelKey: "physical.levels.binder",    color: "#FFA726" },
-  record:    { icon: <FolderOutlinedIcon />,       labelKey: "physical.levels.record",    color: "#AB47BC" },
+  record:    { icon: <FolderRoundedIcon />,       labelKey: "physical.levels.record",    color: "#AB47BC" },
   document:  { icon: <TopicOutlinedIcon />,        labelKey: "physical.levels.document",  color: "#78909C" },
 };
 

@@ -1,9 +1,9 @@
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
-import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
+import InventoryOutlinedIcon from "@mui/icons-material/InventoryOutlined";
+import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import { ComponentType } from "react";
 import { SvgIconProps } from "@mui/material";
@@ -29,18 +29,18 @@ const tabs: Tab[] = [
   },
   {
     label: "Élimination",
-    icon: GavelRoundedIcon,
+    icon: GavelOutlinedIcon,
     id: "elimination",
     requiresWrite: true,
   },
   {
     label: "Archivage physique",
-    icon: InventoryRoundedIcon,
+    icon: InventoryOutlinedIcon,
     id: "physicalArchive",
   },
   {
     label: "Utilisateurs",
-    icon: PeopleOutlineRoundedIcon,
+    icon: PeopleOutlineOutlinedIcon,
     id: "userManagement",
     requiresWrite: true,
   },

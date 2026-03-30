@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 import PhysicalSearch from "./PhysicalSearch";
 
@@ -38,7 +38,7 @@ const BreadcrumbBar = React.memo(function BreadcrumbBar({ breadcrumb, headers, o
       </Typography>
       {breadcrumb.map((b, i) => (
         <React.Fragment key={b.id}>
-          <NavigateNextRoundedIcon sx={{ fontSize: { xs: 14, sm: 18 }, color: "text.disabled" }} />
+          <NavigateNextOutlinedIcon sx={{ fontSize: { xs: 14, sm: 18 }, color: "text.disabled" }} />
           <Typography
             sx={{ cursor: "pointer", fontWeight: i === breadcrumb.length - 1 ? "bold" : "normal", "&:hover": { textDecoration: "underline" }, fontSize: { xs: "0.75rem", sm: "0.875rem" }, maxWidth: { xs: 100, sm: 200 }, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
             color={i === breadcrumb.length - 1 ? "text.primary" : "text.secondary"}

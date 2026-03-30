@@ -20,9 +20,9 @@ import {
   Button,
 } from "@mui/material";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
-import SearchRoundedIcon     from "@mui/icons-material/SearchRounded";
-import CloseRoundedIcon      from "@mui/icons-material/CloseRounded";
-import ArrowBackRoundedIcon  from "@mui/icons-material/ArrowBackRounded";
+import SearchOutlinedIcon     from "@mui/icons-material/SearchOutlined";
+import CloseOutlinedIcon      from "@mui/icons-material/CloseOutlined";
+import ArrowBackOutlinedIcon  from "@mui/icons-material/ArrowBackOutlined";
 import scrollBarSx from "@/utils/scrollBarSx";
 import DashboardSettings from "./DashboardSettings";
 
@@ -78,10 +78,10 @@ export default function SettingsContent() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             InputProps={{
-              startAdornment: <InputAdornment position="start"><SearchRoundedIcon fontSize="small" color="action" /></InputAdornment>,
+              startAdornment: <InputAdornment position="start"><SearchOutlinedIcon fontSize="small" color="action" /></InputAdornment>,
               endAdornment: search ? (
                 <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearch("")}><CloseRoundedIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" onClick={() => setSearch("")}><CloseOutlinedIcon fontSize="small" /></IconButton>
                 </InputAdornment>
               ) : null,
               sx: { fontSize: "0.85rem" },
@@ -114,7 +114,7 @@ export default function SettingsContent() {
       <Box flex={1} overflow="hidden" display="flex" flexDirection="column">
         {isMobile && (
           <Box px={1.5} py={0.75} borderBottom={1} borderColor="divider">
-            <Button size="small" startIcon={<ArrowBackRoundedIcon />} onClick={() => setActiveId("")}>Retour</Button>
+            <Button size="small" startIcon={<ArrowBackOutlinedIcon />} onClick={() => setActiveId("")}>Retour</Button>
           </Box>
         )}
         {ActiveComponent ? <ActiveComponent /> : null}

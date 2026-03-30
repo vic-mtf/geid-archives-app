@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import NavigateNextOutlinedIcon from "@mui/icons-material/NavigateNextOutlined";
 import { motion } from "framer-motion";
 
 import { useTranslation } from "react-i18next";
@@ -188,7 +188,7 @@ const PhysicalItemsList = React.memo(function PhysicalItemsList({
             </Box>
             {/* Fleche navigation (pas pour les archives) */}
             {!item.isArchive && (
-              <NavigateNextRoundedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
+              <NavigateNextOutlinedIcon fontSize="small" sx={{ color: "text.disabled", flexShrink: 0 }} />
             )}
           </Box>
         );

@@ -17,9 +17,9 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import AddRoundedIcon             from "@mui/icons-material/AddRounded";
-import DeleteOutlineRoundedIcon   from "@mui/icons-material/DeleteOutlineRounded";
-import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
+import AddOutlinedIcon             from "@mui/icons-material/AddOutlined";
+import DeleteOutlineOutlinedIcon   from "@mui/icons-material/DeleteOutlineOutlined";
+import OpenInNewOutlinedIcon       from "@mui/icons-material/OpenInNewOutlined";
 import EditOutlinedIcon           from "@mui/icons-material/EditOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 
@@ -90,7 +90,7 @@ export default function PhysicalContextMenu({
     >
       {/* Voir le détail */}
       <MenuItem onClick={() => { onViewDetail(state.itemId, state.level); onClose(); }}>
-        <ListItemIcon><OpenInNewRoundedIcon fontSize="small" /></ListItemIcon>
+        <ListItemIcon><OpenInNewOutlinedIcon fontSize="small" /></ListItemIcon>
         <ListItemText>{t("physical.contextMenu.viewDetail")}</ListItemText>
       </MenuItem>
 
@@ -106,7 +106,7 @@ export default function PhysicalContextMenu({
 
       {canWrite && hasChild && (
         <MenuItem onClick={() => { onAdd(state.level, state.itemId); onClose(); }}>
-          <ListItemIcon><AddRoundedIcon fontSize="small" /></ListItemIcon>
+          <ListItemIcon><AddOutlinedIcon fontSize="small" /></ListItemIcon>
           <ListItemText>{t("physical.contextMenu.addChild", { child: t(`physical.addChild.${state.level}`) })}</ListItemText>
         </MenuItem>
       )}
@@ -114,7 +114,7 @@ export default function PhysicalContextMenu({
       {canWrite && (
         <MenuItem onClick={() => { onDelete(state.itemId, state.itemLabel, state.level); onClose(); }}
           sx={{ color: "error.main" }}>
-          <ListItemIcon><DeleteOutlineRoundedIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemIcon><DeleteOutlineOutlinedIcon fontSize="small" color="error" /></ListItemIcon>
           <ListItemText>{t("physical.contextMenu.deleteItem", { label: state.itemLabel })}</ListItemText>
         </MenuItem>
       )}

@@ -31,8 +31,8 @@ import HistoryEduOutlinedIcon     from "@mui/icons-material/HistoryEduOutlined";
 import DeleteForeverOutlinedIcon  from "@mui/icons-material/DeleteForeverOutlined";
 import RestoreOutlinedIcon        from "@mui/icons-material/RestoreOutlined";
 import DeleteOutlineOutlinedIcon  from "@mui/icons-material/DeleteOutlineOutlined";
-import CloseRoundedIcon           from "@mui/icons-material/CloseRounded";
-import OpenInNewRoundedIcon       from "@mui/icons-material/OpenInNewRounded";
+import CloseOutlinedIcon           from "@mui/icons-material/CloseOutlined";
+import OpenInNewOutlinedIcon       from "@mui/icons-material/OpenInNewOutlined";
 import GavelOutlinedIcon          from "@mui/icons-material/GavelOutlined";
 import ShieldOutlinedIcon         from "@mui/icons-material/ShieldOutlined";
 import ReplayOutlinedIcon         from "@mui/icons-material/ReplayOutlined";
@@ -169,14 +169,14 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
                   size="small"
                   onClick={() => openArchiveFile(doc._id as string, doc.designation as string ?? "Fichier")}
                 >
-                  <OpenInNewRoundedIcon fontSize="small" />
+                  <OpenInNewOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}
           </Box>
         </Box>
         <IconButton size="small" onClick={onClose} sx={{ flexShrink: 0 }}>
-          <CloseRoundedIcon fontSize="small" />
+          <CloseOutlinedIcon fontSize="small" />
         </IconButton>
       </Box>
 

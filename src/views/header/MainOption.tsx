@@ -9,7 +9,7 @@ import {
 import React, { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import AppsRoundedIcon from "@mui/icons-material/AppsRounded";
+import AppsOutlinedIcon from "@mui/icons-material/AppsOutlined";
 import AppsMenu from "./AppsMenu";
 import ProfileMenu from "./ProfileMenu";
 
@@ -37,7 +37,7 @@ const AppsMenuButton = () => {
           onClick={() => {
             setAnchorEl(anchorEl ? null : anchorRef.current);
           }}>
-          <AppsRoundedIcon fontSize='small' />
+          <AppsOutlinedIcon fontSize='small' />
         </IconButton>
       </Tooltip>
       <AppsMenu onClose={() => setAnchorEl(null)} anchorEl={anchorEl} />

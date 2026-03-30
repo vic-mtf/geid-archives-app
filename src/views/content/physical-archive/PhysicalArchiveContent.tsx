@@ -19,11 +19,11 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import ArrowBackRoundedIcon         from "@mui/icons-material/ArrowBackRounded";
-import AddRoundedIcon               from "@mui/icons-material/AddRounded";
+import ArrowBackOutlinedIcon         from "@mui/icons-material/ArrowBackOutlined";
+import AddOutlinedIcon               from "@mui/icons-material/AddOutlined";
 import KeyboardReturnOutlinedIcon   from "@mui/icons-material/KeyboardReturnOutlined";
 import InfoOutlinedIcon             from "@mui/icons-material/InfoOutlined";
-import NavigateNextRoundedIcon      from "@mui/icons-material/NavigateNextRounded";
+import NavigateNextOutlinedIcon      from "@mui/icons-material/NavigateNextOutlined";
 
 import { useTranslation } from "react-i18next";
 import useAxios      from "@/hooks/useAxios";
@@ -406,7 +406,7 @@ export default function PhysicalArchiveContent() {
                   <Typography variant="body2" fontWeight="bold" color={parentConfig.color} noWrap sx={{ maxWidth: { xs: 80, sm: 150 } }}>
                     {parent.label}
                   </Typography>
-                  <NavigateNextRoundedIcon sx={{ fontSize: 16, color: "text.disabled" }} />
+                  <NavigateNextOutlinedIcon sx={{ fontSize: 16, color: "text.disabled" }} />
                 </>
               );
             })()}
@@ -424,7 +424,7 @@ export default function PhysicalArchiveContent() {
             {canWrite && (
               <Tooltip title={`${t("common.add")} ${t(`physical.addItem.${currentLevel}`)}`}>
                 <IconButton size="small" onClick={() => { setFormLevel(currentLevel); setFormParentId(parentId); setFormParentLevel(breadcrumb.length > 0 ? breadcrumb[breadcrumb.length - 1]?.level : undefined); setFormOpen(true); }}>
-                  <AddRoundedIcon sx={{ fontSize: 18 }} />
+                  <AddOutlinedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -478,7 +478,7 @@ export default function PhysicalArchiveContent() {
           borderColor: "divider",
         }}>
           {isMobile && showDetail && (
-            <Button startIcon={<ArrowBackRoundedIcon />} onClick={() => setSelected(null)} sx={{ mb: 1, alignSelf: "flex-start" }} size="small">
+            <Button startIcon={<ArrowBackOutlinedIcon />} onClick={() => setSelected(null)} sx={{ mb: 1, alignSelf: "flex-start" }} size="small">
               {t("common.back")}
             </Button>
           )}
@@ -595,7 +595,7 @@ export default function PhysicalArchiveContent() {
       />
 
       {/* Confirmation de déplacement d'archive par drag & drop */}
-      <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth fullScreen={isMobile}>
+      <Dialog open={Boolean(moveConfirm)} onClose={cancelMove} maxWidth="xs" fullWidth fullScreen={isMobile} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
         <DialogTitle component="div" fontWeight="bold">
           {t("dialogs.confirmMove")}
         </DialogTitle>

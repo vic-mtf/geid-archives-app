@@ -15,8 +15,8 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import ErrorOutlineOutlinedIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import {
   setProgressCallback,
   cancelFileLoading,
@@ -72,7 +72,7 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
         {/* Erreur */}
         {isError && (
           <Stack direction="row" alignItems="flex-start" spacing={1}>
-            <ErrorOutlineRoundedIcon color="error" sx={{ mt: 0.25, flexShrink: 0 }} />
+            <ErrorOutlineOutlinedIcon color="error" sx={{ mt: 0.25, flexShrink: 0 }} />
             <Box flex={1}>
               <Typography variant="body2" fontWeight={600} color="error.main">
                 {t("files.cannotOpenFile")}
@@ -87,7 +87,7 @@ const FileLoadingSnackbar = React.memo(function FileLoadingSnackbar() {
         {/* Annulé */}
         {isCancelled && (
           <Stack direction="row" alignItems="center" spacing={1}>
-            <CloseRoundedIcon color="warning" sx={{ flexShrink: 0 }} />
+            <CloseOutlinedIcon color="warning" sx={{ flexShrink: 0 }} />
             <Typography variant="body2" color="text.secondary">
               {t("files.cancelled", { fileName: state.fileName })}
             </Typography>

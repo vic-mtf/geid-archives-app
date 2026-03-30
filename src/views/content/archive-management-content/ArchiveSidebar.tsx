@@ -23,12 +23,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import AddRoundedIcon            from "@mui/icons-material/AddRounded";
-import SearchRoundedIcon         from "@mui/icons-material/SearchRounded";
+import AddOutlinedIcon            from "@mui/icons-material/AddOutlined";
+import SearchOutlinedIcon         from "@mui/icons-material/SearchOutlined";
 import FileDownloadOutlinedIcon  from "@mui/icons-material/FileDownloadOutlined";
-import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
-import CalendarTodayRoundedIcon  from "@mui/icons-material/CalendarTodayRounded";
-import BoltRoundedIcon           from "@mui/icons-material/BoltRounded";
+import AlarmOutlinedIcon          from "@mui/icons-material/AlarmOutlined";
+import CalendarTodayOutlinedIcon  from "@mui/icons-material/CalendarTodayOutlined";
+import BoltOutlinedIcon           from "@mui/icons-material/BoltOutlined";
 import scrollBarSx               from "@/utils/scrollBarSx";
 import { STATUS_COLOR, normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 
@@ -105,7 +105,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
             variant="contained"
             size="small"
             fullWidth
-            startIcon={<AddRoundedIcon />}
+            startIcon={<AddOutlinedIcon />}
             onClick={onOpenAdd}
             disableElevation
           >
@@ -121,7 +121,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
               );
             }}
             sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
-            <SearchRoundedIcon fontSize="small" />
+            <SearchOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title={`Exporter la liste en CSV (${rowCount} lignes)`} placement="right">
@@ -177,7 +177,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
             sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}
           >
             <ListItemIcon sx={{ minWidth: 28, color: quickFilter === "dua_expired" ? undefined : "error.main" }}>
-              <AlarmRoundedIcon fontSize="small" />
+              <AlarmOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Durée de conservation dépassées" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
             {duaExpiredCount > 0 && (
@@ -196,7 +196,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
             sx={{ borderRadius: 1, mx: 0.5, my: 0.125, py: 0.75 }}
           >
             <ListItemIcon sx={{ minWidth: 28, color: quickFilter === "this_month" ? undefined : "text.secondary" }}>
-              <CalendarTodayRoundedIcon fontSize="small" />
+              <CalendarTodayOutlinedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText primary="Ce mois" primaryTypographyProps={{ variant: "body2", noWrap: true }} />
             {thisMonthCount > 0 && (
@@ -216,7 +216,7 @@ const ArchiveSidebar = React.memo(function ArchiveSidebar({
           <Divider sx={{ mx: 1, my: 0.75 }} />
           <MuiBox px={1} pb={0.5}>
             <MuiBox display="flex" alignItems="center" gap={0.5} px={0.5} pb={0.25}>
-              <BoltRoundedIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+              <BoltOutlinedIcon sx={{ fontSize: 14, color: "text.disabled" }} />
               <Typography variant="caption" color="text.disabled" fontWeight="bold" textTransform="uppercase" letterSpacing={0.5}>
                 Récents
               </Typography>

@@ -25,20 +25,20 @@ import {
 import { PieChart } from "@mui/x-charts/PieChart";
 import { BarChart } from "@mui/x-charts/BarChart";
 import WarehouseOutlinedIcon     from "@mui/icons-material/WarehouseOutlined";
-import MenuBookRoundedIcon       from "@mui/icons-material/MenuBookRounded";
-import ManageHistoryRoundedIcon  from "@mui/icons-material/ManageHistoryRounded";
+import MenuBookOutlinedIcon       from "@mui/icons-material/MenuBookOutlined";
+import ManageHistoryOutlinedIcon  from "@mui/icons-material/ManageHistoryOutlined";
 import getFileIcon from "@/utils/getFileIcon";
 import CheckCircleOutlineIcon    from "@mui/icons-material/CheckCircleOutline";
 import HourglassTopOutlinedIcon  from "@mui/icons-material/HourglassTopOutlined";
-import WarningAmberRoundedIcon   from "@mui/icons-material/WarningAmberRounded";
-import ArchiveRoundedIcon        from "@mui/icons-material/ArchiveRounded";
-import ArrowForwardRoundedIcon   from "@mui/icons-material/ArrowForwardRounded";
-import AlarmRoundedIcon          from "@mui/icons-material/AlarmRounded";
-import DeleteOutlineRoundedIcon  from "@mui/icons-material/DeleteOutlineRounded";
-import GavelRoundedIcon          from "@mui/icons-material/GavelRounded";
+import WarningAmberOutlinedIcon   from "@mui/icons-material/WarningAmberOutlined";
+import ArchiveOutlinedIcon        from "@mui/icons-material/ArchiveOutlined";
+import ArrowForwardOutlinedIcon   from "@mui/icons-material/ArrowForwardOutlined";
+import AlarmOutlinedIcon          from "@mui/icons-material/AlarmOutlined";
+import DeleteOutlineOutlinedIcon  from "@mui/icons-material/DeleteOutlineOutlined";
+import GavelOutlinedIcon          from "@mui/icons-material/GavelOutlined";
 import FolderOpenOutlinedIcon    from "@mui/icons-material/FolderOpenOutlined";
 import TopicOutlinedIcon         from "@mui/icons-material/TopicOutlined";
-import PeopleOutlineRoundedIcon  from "@mui/icons-material/PeopleOutlineRounded";
+import PeopleOutlineOutlinedIcon  from "@mui/icons-material/PeopleOutlineOutlined";
 
 import useToken  from "@/hooks/useToken";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
@@ -188,19 +188,19 @@ export default function DashboardContent() {
   // ── Cartes de synthèse dynamiques ─────────────────────────
   const DEFAULT_STATS = ["totalArchives", "pending", "active", "semiActive", "permanent", "containers"];
   const statCardDefs: Record<string, { label: string; value: number; icon: React.ReactNode; color: string; tab: string; statusFilter?: string; highlight?: boolean }> = {
-    totalArchives:       { label: t("dashboard.totalArchives"), value: totalCount,                        icon: <ManageHistoryRoundedIcon />,  color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
+    totalArchives:       { label: t("dashboard.totalArchives"), value: totalCount,                        icon: <ManageHistoryOutlinedIcon />,  color: "primary.main", tab: "archiveManager", statusFilter: "ALL" },
     pending:             { label: t("dashboard.pending"),       value: statusCounts.PENDING,              icon: <HourglassTopOutlinedIcon />,  color: "warning.main", tab: "archiveManager", statusFilter: "PENDING", highlight: statusCounts.PENDING > 0 },
     active:              { label: t("dashboard.active"),        value: statusCounts.ACTIVE,               icon: <CheckCircleOutlineIcon />,    color: "success.main", tab: "archiveManager", statusFilter: "ACTIVE" },
-    semiActive:          { label: t("dashboard.semiActive"),    value: statusCounts.SEMI_ACTIVE,          icon: <ArchiveRoundedIcon />,        color: "info.main",    tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
-    permanent:           { label: t("dashboard.historic"),      value: statusCounts.PERMANENT ?? 0,       icon: <MenuBookRoundedIcon />,       color: "#9c27b0",      tab: "archiveManager", statusFilter: "PERMANENT" },
-    destroyed:           { label: t("status.destroyedFemPlural"), value: statusCounts.DESTROYED ?? 0,     icon: <DeleteOutlineRoundedIcon />,  color: "error.main",   tab: "archiveManager", statusFilter: "DESTROYED" },
-    proposedElimination: { label: t("status.proposedEliminationPlural"), value: statusCounts.PROPOSED_ELIMINATION ?? 0, icon: <GavelRoundedIcon />, color: "#c62828", tab: "archiveManager", statusFilter: "PROPOSED_ELIMINATION" },
+    semiActive:          { label: t("dashboard.semiActive"),    value: statusCounts.SEMI_ACTIVE,          icon: <ArchiveOutlinedIcon />,        color: "info.main",    tab: "archiveManager", statusFilter: "SEMI_ACTIVE" },
+    permanent:           { label: t("dashboard.historic"),      value: statusCounts.PERMANENT ?? 0,       icon: <MenuBookOutlinedIcon />,       color: "#9c27b0",      tab: "archiveManager", statusFilter: "PERMANENT" },
+    destroyed:           { label: t("status.destroyedFemPlural"), value: statusCounts.DESTROYED ?? 0,     icon: <DeleteOutlineOutlinedIcon />,  color: "error.main",   tab: "archiveManager", statusFilter: "DESTROYED" },
+    proposedElimination: { label: t("status.proposedEliminationPlural"), value: statusCounts.PROPOSED_ELIMINATION ?? 0, icon: <GavelOutlinedIcon />, color: "#c62828", tab: "archiveManager", statusFilter: "PROPOSED_ELIMINATION" },
     containers:          { label: t("dashboard.containers"),    value: containerList.length,              icon: <WarehouseOutlinedIcon />,     color: "#5C6BC0",      tab: "physicalArchive" },
     binders:             { label: t("dashboard.binders"),       value: binderList.length,                 icon: <FolderOpenOutlinedIcon />,    color: "#795548",      tab: "physicalArchive" },
     records:             { label: t("dashboard.folders"),       value: recordList.length,                 icon: <TopicOutlinedIcon />,         color: "#00897b",      tab: "physicalArchive" },
-    duaExpired:          { label: t("dua.expired"),             value: duaExpired.length,                 icon: <AlarmRoundedIcon />,          color: "error.main",   tab: "archiveManager", highlight: duaExpired.length > 0 },
-    users:               { label: t("dashboard.users"),         value: globalStats?.users?.active ?? 0,   icon: <PeopleOutlineRoundedIcon />,  color: "#546e7a",      tab: "userManagement" },
-    eliminationPvs:      { label: t("elimination.pvList"),      value: 0,                                 icon: <GavelRoundedIcon />,          color: "#c62828",      tab: "elimination" },
+    duaExpired:          { label: t("dua.expired"),             value: duaExpired.length,                 icon: <AlarmOutlinedIcon />,          color: "error.main",   tab: "archiveManager", highlight: duaExpired.length > 0 },
+    users:               { label: t("dashboard.users"),         value: globalStats?.users?.active ?? 0,   icon: <PeopleOutlineOutlinedIcon />,  color: "#546e7a",      tab: "userManagement" },
+    eliminationPvs:      { label: t("elimination.pvList"),      value: 0,                                 icon: <GavelOutlinedIcon />,          color: "#c62828",      tab: "elimination" },
   };
 
   const activeStats = useMemo(() =>
@@ -228,19 +228,19 @@ export default function DashboardContent() {
         <Stack spacing={1} mb={2}>
           {statusCounts.PENDING > 0 && (
             <Alert severity="warning" icon={<HourglassTopOutlinedIcon fontSize="inherit" />}
-              action={<Chip label={t("common.consult")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+              action={<Chip label={t("common.consult")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", statusFilter: "PENDING" })} icon={<ArrowForwardOutlinedIcon fontSize="small" />} clickable />}>
               <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertPendingValidation", { count: statusCounts.PENDING }) }} />
             </Alert>
           )}
           {duaExpired.length > 0 && (
-            <Alert severity="error" icon={<AlarmRoundedIcon fontSize="inherit" />}
-              action={<Chip label={t("common.see")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", quickFilter: "dua_expired" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+            <Alert severity="error" icon={<AlarmOutlinedIcon fontSize="inherit" />}
+              action={<Chip label={t("common.see")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "archiveManager", quickFilter: "dua_expired" })} icon={<ArrowForwardOutlinedIcon fontSize="small" />} clickable />}>
               <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertDuaExpired", { count: duaExpired.length }) }} />
             </Alert>
           )}
           {criticalBinders.length > 0 && (
-            <Alert severity="warning" icon={<WarningAmberRoundedIcon fontSize="inherit" />}
-              action={<Chip label={t("nav.physicalArchive")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })} icon={<ArrowForwardRoundedIcon fontSize="small" />} clickable />}>
+            <Alert severity="warning" icon={<WarningAmberOutlinedIcon fontSize="inherit" />}
+              action={<Chip label={t("nav.physicalArchive")} size="small" onClick={() => deepNavigate(navigateTo, { tab: "physicalArchive" })} icon={<ArrowForwardOutlinedIcon fontSize="small" />} clickable />}>
               <span dangerouslySetInnerHTML={{ __html: t("dashboard.alertCriticalBinders", { count: criticalBinders.length }) }} />
             </Alert>
           )}

@@ -28,12 +28,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
-import GavelRoundedIcon from "@mui/icons-material/GavelRounded";
-import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
+import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import { useTranslation } from "react-i18next";
 import useNavigateSetState from "@/hooks/useNavigateSetState";
 import deepNavigate from "@/utils/deepNavigate";
@@ -189,7 +189,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
         </Typography>
         <PvStatusChip status={pv.status} />
         <IconButton size="small" onClick={onClose}>
-          <CloseRoundedIcon fontSize="small" />
+          <CloseOutlinedIcon fontSize="small" />
         </IconButton>
       </Box>
 
@@ -308,7 +308,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
           <Button
             variant="contained"
             size="small"
-            startIcon={<SendRoundedIcon />}
+            startIcon={<SendOutlinedIcon />}
             onClick={() => submitPv(pv._id)}
             disabled={loading}
             disableElevation
@@ -323,7 +323,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
               variant="contained"
               color="success"
               size="small"
-              startIcon={<CheckRoundedIcon />}
+              startIcon={<CheckOutlinedIcon />}
               onClick={() => openNoteDialog("approveProducer")}
               disabled={loading}
               disableElevation
@@ -349,7 +349,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
               variant="contained"
               color="success"
               size="small"
-              startIcon={<CheckRoundedIcon />}
+              startIcon={<CheckOutlinedIcon />}
               onClick={() => openNoteDialog("approveDantic")}
               disabled={loading}
               disableElevation
@@ -375,7 +375,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
               variant="contained"
               color="error"
               size="small"
-              startIcon={<GavelRoundedIcon />}
+              startIcon={<GavelOutlinedIcon />}
               onClick={() => setConfirmOpen(true)}
               disabled={loading}
               disableElevation
@@ -384,7 +384,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
             </Button>
             <Button
               size="small"
-              startIcon={<PictureAsPdfRoundedIcon />}
+              startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={handleDownloadPdf}
             >
               {t("elimination.action.downloadPdf")}
@@ -395,7 +395,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
         {pv.status === "EXECUTED" && (
           <Button
             size="small"
-            startIcon={<PictureAsPdfRoundedIcon />}
+            startIcon={<PictureAsPdfOutlinedIcon />}
             onClick={handleDownloadPdf}
           >
             {t("elimination.action.downloadPdf")}
@@ -412,7 +412,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
       </Box>
 
       {/* Execute confirmation dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
         <DialogTitle>{t("elimination.confirmExecute.title")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -428,7 +428,7 @@ export default function PvDetailPanel({ pv, canWrite, isAdmin, onClose }: PvDeta
       </Dialog>
 
       {/* Note dialog for approve/reject */}
-      <Dialog open={noteDialogOpen} onClose={() => setNoteDialogOpen(false)} maxWidth="xs" fullWidth>
+      <Dialog open={noteDialogOpen} onClose={() => setNoteDialogOpen(false)} maxWidth="xs" fullWidth BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
         <DialogTitle>
           {noteAction === "reject"
             ? t("elimination.noteDialog.rejectTitle")

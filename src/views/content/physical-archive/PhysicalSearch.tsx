@@ -25,13 +25,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import SearchRoundedIcon      from "@mui/icons-material/SearchRounded";
-import CloseRoundedIcon       from "@mui/icons-material/CloseRounded";
+import SearchOutlinedIcon      from "@mui/icons-material/SearchOutlined";
+import CloseOutlinedIcon       from "@mui/icons-material/CloseOutlined";
 import WarehouseOutlinedIcon  from "@mui/icons-material/WarehouseOutlined";
 import DnsOutlinedIcon        from "@mui/icons-material/DnsOutlined";
 import ViewStreamOutlinedIcon from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon      from "@mui/icons-material/StyleOutlined";
-import FolderOutlinedIcon     from "@mui/icons-material/FolderOutlined";
+import FolderRoundedIcon     from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon      from "@mui/icons-material/TopicOutlined";
 import ArticleOutlinedIcon    from "@mui/icons-material/ArticleOutlined";
 import useAxios from "@/hooks/useAxios";
@@ -55,7 +55,7 @@ const LEVEL_ICON: Record<Level, React.ReactNode> = {
   shelf:     <DnsOutlinedIcon sx={{ fontSize: 18, color: "#26A69A" }} />,
   floor:     <ViewStreamOutlinedIcon sx={{ fontSize: 18, color: "#42A5F5" }} />,
   binder:    <StyleOutlinedIcon sx={{ fontSize: 18, color: "#FFA726" }} />,
-  record:    <FolderOutlinedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
+  record:    <FolderRoundedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
   document:  <TopicOutlinedIcon sx={{ fontSize: 18, color: "#78909C" }} />,
   archive:   <ArticleOutlinedIcon sx={{ fontSize: 18, color: "#43A047" }} />,
 };
@@ -195,13 +195,13 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              {loading ? <CircularProgress size={14} /> : <SearchRoundedIcon fontSize="small" color="action" />}
+              {loading ? <CircularProgress size={14} /> : <SearchOutlinedIcon fontSize="small" color="action" />}
             </InputAdornment>
           ),
           endAdornment: query ? (
             <InputAdornment position="end">
               <IconButton size="small" onClick={() => { setQuery(""); setResults([]); setShowDropdown(false); }}>
-                <CloseRoundedIcon fontSize="small" />
+                <CloseOutlinedIcon fontSize="small" />
               </IconButton>
             </InputAdornment>
           ) : null,

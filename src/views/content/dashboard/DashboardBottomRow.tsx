@@ -21,11 +21,11 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import AlarmRoundedIcon from "@mui/icons-material/AlarmRounded";
+import AlarmOutlinedIcon from "@mui/icons-material/AlarmOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
-import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import PeopleOutlineOutlinedIcon from "@mui/icons-material/PeopleOutlineOutlined";
+import ArrowForwardOutlinedIcon from "@mui/icons-material/ArrowForwardOutlined";
 
 import { useTranslation } from "react-i18next";
 import type { Archive, PhysicalRecord, Container, Binder } from "@/types";
@@ -79,7 +79,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
           <Card variant="outlined" sx={{ height: "100%", borderColor: duaExpired.length > 0 ? "error.main" : "warning.main" }}>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                <AlarmRoundedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
+                <AlarmOutlinedIcon color={duaExpired.length > 0 ? "error" : "warning"} fontSize="small" />
                 <Typography variant="body2" fontWeight="bold">{t("dashboard.conservationAlerts")}</Typography>
               </Stack>
               <Divider sx={{ mb: 1 }} />
@@ -186,7 +186,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
               )}
               <Box mt={1.5} display="flex" justifyContent="flex-end">
                 <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                  {t("common.manage")} <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
+                  {t("common.manage")} <ArrowForwardOutlinedIcon sx={{ fontSize: 12 }} />
                 </Typography>
               </Box>
             </CardContent>
@@ -201,7 +201,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
             <CardActionArea sx={{ height: "100%" }} onClick={() => deepNavigate(navigateTo, { tab: "userManagement" })}>
               <CardContent>
                 <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                  <PeopleOutlineRoundedIcon fontSize="small" color="action" />
+                  <PeopleOutlineOutlinedIcon fontSize="small" color="action" />
                   <Typography variant="body2" fontWeight="bold">{t("dashboard.users")}</Typography>
                 </Stack>
                 <Divider sx={{ mb: 1 }} />
@@ -228,7 +228,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                 ) : null}
                 <Box mt={1.5} display="flex" justifyContent="flex-end">
                   <Typography variant="caption" color="primary.main" sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                    {t("common.manage")} <ArrowForwardRoundedIcon sx={{ fontSize: 12 }} />
+                    {t("common.manage")} <ArrowForwardOutlinedIcon sx={{ fontSize: 12 }} />
                   </Typography>
                 </Box>
               </CardContent>
@@ -256,7 +256,7 @@ const DashboardBottomRow = React.memo(function DashboardBottomRow({
                       <Typography variant="caption" fontWeight={500}>{label}</Typography>
                       <Typography variant="caption" color="text.secondary" display="block">{desc}</Typography>
                     </Box>
-                    <ArrowForwardRoundedIcon sx={{ fontSize: 14 }} color="action" />
+                    <ArrowForwardOutlinedIcon sx={{ fontSize: 14 }} color="action" />
                   </Box>
                 ))}
               </Stack>

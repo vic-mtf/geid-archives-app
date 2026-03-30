@@ -32,11 +32,11 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import QrCode2RoundedIcon from "@mui/icons-material/QrCode2Rounded";
+import QrCode2OutlinedIcon from "@mui/icons-material/QrCode2Outlined";
 import { useTranslation } from "react-i18next";
 import useToken from "@/hooks/useToken";
 import useAxios from "@/hooks/useAxios";
@@ -257,7 +257,7 @@ export default function GlobalSearchDialog() {
         gap={1}
         borderBottom={1}
         borderColor="divider">
-        <SearchRoundedIcon color="action" />
+        <SearchOutlinedIcon color="action" />
         <TextField
           autoFocus
           fullWidth
@@ -276,7 +276,7 @@ export default function GlobalSearchDialog() {
               <InputAdornment position="end">
                 <Tooltip title={t("search.clearSearch")}>
                   <IconButton size="small" onClick={() => setQuery("")} sx={{ bgcolor: "action.hover", borderRadius: 1, px: 0.75 }}>
-                    <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                    <CloseOutlinedIcon sx={{ fontSize: 14 }} />
                   </IconButton>
                 </Tooltip>
               </InputAdornment>
@@ -286,7 +286,7 @@ export default function GlobalSearchDialog() {
         <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
         <Tooltip title={t("search.closeDialog")}>
           <IconButton size="small" onClick={handleClose}>
-            <CloseRoundedIcon fontSize="small" />
+            <CloseOutlinedIcon fontSize="small" />
           </IconButton>
         </Tooltip>
       </Box>
@@ -301,7 +301,7 @@ export default function GlobalSearchDialog() {
             justifyContent="center"
             gap={1}
             py={5}>
-            <SearchRoundedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+            <SearchOutlinedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
             <Typography color="text.secondary" variant="body2">
               {t("search.minChars")}
             </Typography>
@@ -405,7 +405,7 @@ export default function GlobalSearchDialog() {
                     <ListItemButton key={rec._id} sx={{ px: 2, py: 0.75 }} onClick={() => handleRecordClick(rec._id)}>
                       <ListItemIcon sx={{ minWidth: 32 }}>
                         {rec.qrCode
-                          ? <QrCode2RoundedIcon fontSize="small" color="action" />
+                          ? <QrCode2OutlinedIcon fontSize="small" color="action" />
                           : <FolderOpenOutlinedIcon fontSize="small" color="action" />}
                       </ListItemIcon>
                       <ListItemText

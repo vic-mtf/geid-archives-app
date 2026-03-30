@@ -19,7 +19,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import CloudSyncOutlinedIcon from "@mui/icons-material/CloudSyncOutlined";
 import { useTranslation } from "react-i18next";
 
@@ -55,7 +55,7 @@ const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
   }, []);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={fullScreen}>
+    <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth fullScreen={fullScreen} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
       <DialogTitle component="div" fontWeight="bold">
         {t("forms.archiveSource.title")}
       </DialogTitle>
@@ -69,7 +69,7 @@ const ArchiveSourcePicker = React.memo(function ArchiveSourcePicker() {
             sx={{ borderRadius: 1.5, mb: 1, border: "1px solid", borderColor: "divider" }}
           >
             <ListItemIcon>
-              <UploadFileRoundedIcon color="primary" />
+              <UploadFileOutlinedIcon color="primary" />
             </ListItemIcon>
             <ListItemText
               primary={t("forms.archiveSource.fromDevice")}

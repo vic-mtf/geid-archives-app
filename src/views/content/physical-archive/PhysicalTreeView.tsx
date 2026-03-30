@@ -17,10 +17,10 @@ import WarehouseOutlinedIcon      from "@mui/icons-material/WarehouseOutlined";
 import DnsOutlinedIcon            from "@mui/icons-material/DnsOutlined";
 import ViewStreamOutlinedIcon     from "@mui/icons-material/ViewStreamOutlined";
 import StyleOutlinedIcon          from "@mui/icons-material/StyleOutlined";
-import FolderOutlinedIcon         from "@mui/icons-material/FolderOutlined";
+import FolderRoundedIcon         from "@mui/icons-material/FolderOutlined";
 import TopicOutlinedIcon          from "@mui/icons-material/TopicOutlined";
-import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
+import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
+import KeyboardArrowRightOutlinedIcon from "@mui/icons-material/KeyboardArrowRightOutlined";
 import useAxios from "@/hooks/useAxios";
 import scrollBarSx from "@/utils/scrollBarSx";
 import InlineEditableLabel from "./InlineEditableLabel";
@@ -81,7 +81,7 @@ const LEVEL_ICON: Record<Level, React.ReactNode> = {
   shelf:     <DnsOutlinedIcon sx={{ fontSize: 18, color: "#26A69A" }} />,
   floor:     <ViewStreamOutlinedIcon sx={{ fontSize: 18, color: "#42A5F5" }} />,
   binder:    <StyleOutlinedIcon sx={{ fontSize: 18, color: "#FFA726" }} />,
-  record:    <FolderOutlinedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
+  record:    <FolderRoundedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
   document:  <TopicOutlinedIcon sx={{ fontSize: 18, color: "#78909C" }} />,
 };
 
@@ -459,8 +459,8 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
         </Box>
       ) : (
         <TreeView
-          defaultCollapseIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 20, color: "text.primary" }} />}
-          defaultExpandIcon={<KeyboardArrowRightRoundedIcon sx={{ fontSize: 20, color: "text.disabled" }} />}
+          defaultCollapseIcon={<KeyboardArrowDownOutlinedIcon sx={{ fontSize: 20, color: "text.primary" }} />}
+          defaultExpandIcon={<KeyboardArrowRightOutlinedIcon sx={{ fontSize: 20, color: "text.disabled" }} />}
           expanded={expanded}
           onNodeToggle={(_e: React.SyntheticEvent, nodeIds: string[]) => {
             // Chevron cliqué → toggle direct

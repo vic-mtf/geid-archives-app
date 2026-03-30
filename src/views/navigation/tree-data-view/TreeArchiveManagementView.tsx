@@ -24,9 +24,9 @@ import FolderOpenOutlinedIcon      from "@mui/icons-material/FolderOpenOutlined"
 import VisibilityOutlinedIcon      from "@mui/icons-material/VisibilityOutlined";
 import VerifiedOutlinedIcon        from "@mui/icons-material/VerifiedOutlined";
 import EditNoteOutlinedIcon        from "@mui/icons-material/EditNoteOutlined";
-import LinkRoundedIcon             from "@mui/icons-material/LinkRounded";
+import LinkOutlinedIcon             from "@mui/icons-material/LinkOutlined";
 import AccessTimeOutlinedIcon      from "@mui/icons-material/AccessTimeOutlined";
-import DeleteOutlineRoundedIcon    from "@mui/icons-material/DeleteOutlineRounded";
+import DeleteOutlineOutlinedIcon    from "@mui/icons-material/DeleteOutlineOutlined";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { updateData } from "@/redux/data";
@@ -221,7 +221,7 @@ function ArchiveContextMenu({ contextMenu, onClose, canWrite, isAdmin, dispatchA
       {/* Dossier physique — si canWrite et ACTIVE ou SEMI_ACTIVE */}
       {canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") && (
         <MenuItem onClick={() => { dispatchAction("__link_physical_record", { doc }); onClose(); }}>
-          <ListItemIcon><LinkRoundedIcon fontSize="small" /></ListItemIcon>
+          <ListItemIcon><LinkOutlinedIcon fontSize="small" /></ListItemIcon>
           <ListItemText>Dossier physique</ListItemText>
         </MenuItem>
       )}
@@ -239,7 +239,7 @@ function ArchiveContextMenu({ contextMenu, onClose, canWrite, isAdmin, dispatchA
       {isAdmin && norm !== "DESTROYED" && (
         <MenuItem onClick={() => { dispatchAction("__delete_archive_docs", { ids: [contextMenu.docId] }); onClose(); }}
           sx={{ color: "error.main" }}>
-          <ListItemIcon><DeleteOutlineRoundedIcon fontSize="small" color="error" /></ListItemIcon>
+          <ListItemIcon><DeleteOutlineOutlinedIcon fontSize="small" color="error" /></ListItemIcon>
           <ListItemText>Supprimer définitivement</ListItemText>
         </MenuItem>
       )}

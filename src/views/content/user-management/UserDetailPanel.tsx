@@ -38,16 +38,16 @@ import CreateOutlinedIcon      from "@mui/icons-material/CreateOutlined";
 import PersonOutlinedIcon      from "@mui/icons-material/PersonOutlined";
 import EmailOutlinedIcon       from "@mui/icons-material/EmailOutlined";
 import BadgeOutlinedIcon       from "@mui/icons-material/BadgeOutlined";
-import WorkOutlineRoundedIcon  from "@mui/icons-material/WorkOutlineRounded";
+import WorkOutlineOutlinedIcon  from "@mui/icons-material/WorkOutlineOutlined";
 import VerifiedOutlinedIcon    from "@mui/icons-material/VerifiedOutlined";
-import ArrowBackRoundedIcon    from "@mui/icons-material/ArrowBackRounded";
+import ArrowBackOutlinedIcon    from "@mui/icons-material/ArrowBackOutlined";
 import AdminPanelSettingsIcon  from "@mui/icons-material/AdminPanelSettings";
 import avatarColor from "@/utils/avatarColor";
 import BlockOutlinedIcon       from "@mui/icons-material/BlockOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
-import SwapHorizRoundedIcon    from "@mui/icons-material/SwapHorizRounded";
-import HistoryRoundedIcon      from "@mui/icons-material/HistoryRounded";
-import BarChartRoundedIcon     from "@mui/icons-material/BarChartRounded";
+import SwapHorizOutlinedIcon    from "@mui/icons-material/SwapHorizOutlined";
+import HistoryOutlinedIcon      from "@mui/icons-material/HistoryOutlined";
+import BarChartOutlinedIcon     from "@mui/icons-material/BarChartOutlined";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useTranslation } from "react-i18next";
 import useAxios from "@/hooks/useAxios";
@@ -198,7 +198,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       {/* Header utilisateur */}
       <Box px={{ xs: 2, sm: 3 }} py={2.5} display="flex" alignItems="center" gap={2} borderBottom={1} borderColor="divider">
         {isMobile && (
-          <IconButton onClick={onBack} size="small"><ArrowBackRoundedIcon /></IconButton>
+          <IconButton onClick={onBack} size="small"><ArrowBackOutlinedIcon /></IconButton>
         )}
         <Avatar
           src={avatarUrl(user)}
@@ -235,7 +235,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
           <Tooltip title="Changer l'unité administrative">
             <IconButton size="small" onClick={() => { setNewRole(user.grade?.role ?? ""); setRoleDialog(true); }}
               sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
-              <SwapHorizRoundedIcon fontSize="small" />
+              <SwapHorizOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
@@ -244,7 +244,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       {/* Statistiques avec chart */}
       <Box px={{ xs: 2, sm: 3 }} py={2}>
         <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-          <BarChartRoundedIcon fontSize="small" color="action" />
+          <BarChartOutlinedIcon fontSize="small" color="action" />
           <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
             Statistiques
           </Typography>
@@ -280,7 +280,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
         </Typography>
         <Stack spacing={1.5}>
           <DetailField icon={<BadgeOutlinedIcon fontSize="small" />} label="Rôle" value={user.grade?.role ?? "—"} />
-          <DetailField icon={<WorkOutlineRoundedIcon fontSize="small" />} label="Grade" value={user.grade?.grade ?? "—"} />
+          <DetailField icon={<WorkOutlineOutlinedIcon fontSize="small" />} label="Grade" value={user.grade?.grade ?? "—"} />
           <DetailField icon={<EmailOutlinedIcon fontSize="small" />} label="Email" value={user.email} />
           {user.phoneCell && <DetailField icon={<PersonOutlinedIcon fontSize="small" />} label="Téléphone" value={user.phoneCell} />}
           <DetailField icon={<VerifiedOutlinedIcon fontSize="small" />} label="Profil auth" value={user.auth?.name ?? "—"} />
@@ -317,7 +317,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       {/* Journal d'activité */}
       <Box px={{ xs: 2, sm: 3 }} py={2}>
         <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-          <HistoryRoundedIcon fontSize="small" color="action" />
+          <HistoryOutlinedIcon fontSize="small" color="action" />
           <Typography variant="caption" fontWeight="bold" color="text.secondary" textTransform="uppercase" letterSpacing={0.5}>
             Activité récente
           </Typography>
@@ -344,7 +344,7 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
       </Box>
 
       {/* Dialog assignation rôle */}
-      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="xs" fullWidth fullScreen={isSmall}>
+      <Dialog open={roleDialog} onClose={() => setRoleDialog(false)} maxWidth="xs" fullWidth fullScreen={isSmall} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
         <DialogTitle component="div" fontWeight="bold">{t("users.changeUnit")}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>

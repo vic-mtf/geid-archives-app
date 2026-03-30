@@ -7,7 +7,7 @@ import {
   IconButton,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 
 interface MoreOption {
   icon?: React.ReactNode;
@@ -34,7 +34,7 @@ export default function MoreOptionsButton({ options }: MoreOptionsButtonProps) {
           onClick={() => {
             setAnchorEl(anchorEl ? null : anchorRef.current);
           }}>
-          <MoreVertRoundedIcon fontSize='small' />
+          <MoreVertOutlinedIcon fontSize='small' />
         </IconButton>
       </Tooltip>
       <Menu

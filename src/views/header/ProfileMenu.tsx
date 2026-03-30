@@ -11,7 +11,7 @@ import {
   Box,
   Button,
 } from "@mui/material";
-import AddAPhotoRoundedIcon from "@mui/icons-material/AddAPhotoRounded";
+import AddAPhotoOutlinedIcon from "@mui/icons-material/AddAPhotoOutlined";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -79,7 +79,7 @@ export default function ProfileMenu({ anchorEl, onClose }: ProfileMenuProps) {
                     border: (theme) =>
                       `1px solid ${theme.palette.background.paper + "30"}`,
                   }}>
-                  <AddAPhotoRoundedIcon fontSize='small' />
+                  <AddAPhotoOutlinedIcon fontSize='small' />
                 </IconButton>
               }>
               <Avatar

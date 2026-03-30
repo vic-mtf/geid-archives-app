@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import type { PhysicalLevel } from "@/constants/physical";
 import { UPDATE_ENDPOINTS, RENAME_FIELD } from "@/constants/physical";
@@ -114,7 +114,7 @@ const SidebarTree = React.memo(function SidebarTree({
         {canWrite && (
           <Tooltip title={t("physical.newContainer")}>
             <IconButton size="small" onClick={() => onSetFormOpen("container")}>
-              <AddRoundedIcon sx={{ fontSize: 18 }} />
+              <AddOutlinedIcon sx={{ fontSize: 18 }} />
             </IconButton>
           </Tooltip>
         )}

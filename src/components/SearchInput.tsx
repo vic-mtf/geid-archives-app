@@ -1,5 +1,5 @@
 import { InputAdornment, TextField, TextFieldProps } from "@mui/material";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 
 type SearchInputProps = Omit<TextFieldProps, "variant" | "size">;
 
@@ -14,7 +14,7 @@ export default function SearchInput(props: SearchInputProps) {
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <SearchRoundedIcon fontSize="small" color="action" />
+            <SearchOutlinedIcon fontSize="small" color="action" />
           </InputAdornment>
         ),
       }}
