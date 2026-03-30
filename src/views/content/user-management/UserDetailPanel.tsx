@@ -329,9 +329,9 @@ export default function UserDetailPanel({ user, headers, isAdmin, isMobile, role
         ) : (
           <Stack spacing={0.5}>
             {(activityData?.activities ?? []).slice(0, 8).map((a, i) => (
-              <Box key={i} display="flex" alignItems="center" gap={1} px={1} py={0.5} borderRadius={1} bgcolor="action.hover">
+              <Box key={i} display="flex" alignItems="center" gap={1} px={1} py={0.5} borderRadius={1} bgcolor="action.hover" overflow="hidden">
                 <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: a.type === "lifecycle" ? "info.main" : "success.main", flexShrink: 0 }} />
-                <Typography variant="caption" flex={1} noWrap>
+                <Typography variant="caption" noWrap sx={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
                   {a.type === "lifecycle" ? (STATUS_LABEL[a.action] ?? a.action) : a.action} — {a.target}
                 </Typography>
                 <Typography variant="caption" color="text.disabled" flexShrink={0}>
