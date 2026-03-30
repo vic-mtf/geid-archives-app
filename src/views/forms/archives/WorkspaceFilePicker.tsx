@@ -235,7 +235,10 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
                   </ListItemIcon>
                   <ListItemText
                     primary={item.name}
-                    secondary={isDir ? null : formatSize(item.size as number | undefined)}
+                    secondary={isDir
+                      ? ((item.count as number) != null ? `${item.count} element${(item.count as number) > 1 ? "s" : ""}` : undefined)
+                      : formatSize(item.size as number | undefined)
+                    }
                     primaryTypographyProps={{ variant: "body2", noWrap: true, fontWeight: isSelected ? 600 : 400 }}
                     secondaryTypographyProps={{ fontSize: 11 }}
                   />
