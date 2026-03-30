@@ -7,7 +7,7 @@
  */
 
 export default function avatarColor(id: string | undefined): { bgcolor: string; color: string } {
-  if (!id) return { bgcolor: "grey.400", color: "#fff" };
+  if (!id) return { bgcolor: "grey.400", color: 'common.white' };
   const num = parseInt(id.toString().slice(-6), 16);
   const hue = num % 360;
   return {

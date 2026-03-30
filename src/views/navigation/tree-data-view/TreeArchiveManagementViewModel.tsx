@@ -8,6 +8,7 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
+import scrollBarSx from "@/utils/scrollBarSx";
 import { SvgIconProps } from "@mui/material";
 
 interface TreeFolderDataItem {
@@ -49,6 +50,7 @@ export default function TreeArchiveManagementViewModel() {
       sx={{
         flexGrow: 1,
         overflowY: "auto",
+        ...scrollBarSx,
       }}>
       {data.map((data) =>
         !data.folder ? (

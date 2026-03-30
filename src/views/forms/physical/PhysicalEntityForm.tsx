@@ -41,6 +41,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import type { FieldValues } from "react-hook-form";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
+import scrollBarSx from "@/utils/scrollBarSx";
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -433,7 +434,7 @@ export default function PhysicalEntityForm({
         )}
       </DialogTitle>
 
-      <DialogContent dividers sx={{ maxHeight: "65vh", overflowY: "auto" }}>
+      <DialogContent dividers sx={{ maxHeight: "65vh", overflowY: "auto", ...scrollBarSx }}>
         <form id="physical-form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <Stack spacing={2}>
             {config.fields.map((field) =>

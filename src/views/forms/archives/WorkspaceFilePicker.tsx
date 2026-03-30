@@ -6,6 +6,7 @@
  */
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import scrollBarSx from "@/utils/scrollBarSx";
 import {
   Avatar,
   Box,
@@ -92,16 +93,15 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
     });
   }, [data, isRoot]);
 
+  const [mode, setMode] = useState<"archive" | "create">("archive");
+
   useEffect(() => {
     const root = document.getElementById("root");
-    const handler = () => {
-      setOpen(true);
-      setFolder(null);
-      setFolderHistory([]);
-      setSelectedFile(null);
-    };
-    root?.addEventListener(EVENT_NAME, handler);
-    return () => root?.removeEventListener(EVENT_NAME, handler);
+    const openArchive = () => { setOpen(true); setMode("archive"); setFolder(null); setFolderHistory([]); setSelectedFile(null); };
+    const openCreate = () => { setOpen(true); setMode("create"); setFolder(null); setFolderHistory([]); setSelectedFile(null); };
+    root?.addEventListener(EVENT_NAME, openArchive);
+    root?.addEventListener("__open_workspace_file_picker_for_create", openCreate);
+    return () => { root?.removeEventListener(EVENT_NAME, openArchive); root?.removeEventListener("__open_workspace_file_picker_for_create", openCreate); };
   }, []);
 
   const handleClose = useCallback(() => {
@@ -128,13 +128,12 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
   const handleConfirm = useCallback(() => {
     if (!selectedFile) return;
     setOpen(false);
+    const eventName = mode === "create" ? "__workspace_file_selected" : "_open_archives_form";
     document.getElementById("root")?.dispatchEvent(
-      new CustomEvent("_open_archives_form", {
-        detail: { name: "_open_archives_form", file: selectedFile },
-      })
+      new CustomEvent(eventName, { detail: { name: eventName, file: selectedFile } })
     );
     setSelectedFile(null);
-  }, [selectedFile]);
+  }, [selectedFile, mode]);
 
   // Breadcrumb
   const breadcrumbParts = isRoot ? [t("forms.workspace.personalSpace")] : [t("forms.workspace.personalSpace"), ...folder!.split("/")];
@@ -149,7 +148,7 @@ const WorkspaceFilePicker = React.memo(function WorkspaceFilePicker() {
         {t("forms.workspace.title")}
       </DialogTitle>
 
-      <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 0 }}>
+      <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 0, ...scrollBarSx }}>
         {/* Barre de navigation */}
         <Stack
           direction="row"

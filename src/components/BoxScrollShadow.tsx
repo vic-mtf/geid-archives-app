@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Box, List, SxProps, Theme } from "@mui/material";
+import scrollBarSx from "@/utils/scrollBarSx";
 
 const useScrollTop = (): [number, { onScroll: React.UIEventHandler<HTMLUListElement> }] => {
   const [scrollTop, setScrollTop] = React.useState(0);
@@ -29,8 +30,9 @@ const BoxScrollShadow = ({ children, sx, ...otherProps }: BoxScrollShadowProps) 
             : "none",
         transition: "box-shadow 0.2s",
         overflow: "auto",
-        ...sx,
-      }}>
+        ...(scrollBarSx as Record<string, unknown>),
+        ...sx as Record<string, unknown>,
+      } as SxProps<Theme>}>
       {children}
     </Box>
   );

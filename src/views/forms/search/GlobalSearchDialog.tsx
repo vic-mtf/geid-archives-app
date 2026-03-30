@@ -12,6 +12,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
+import scrollBarSx from "@/utils/scrollBarSx";
 import {
   Box,
   Chip,
@@ -291,7 +292,7 @@ export default function GlobalSearchDialog() {
         </Tooltip>
       </Box>
 
-      <DialogContent sx={{ p: 0, flex: 1, overflow: "auto" }}>
+      <DialogContent sx={{ p: 0, flex: 1, overflow: "auto", ...scrollBarSx }}>
         {/* État initial */}
         {!shouldSearch && !loading && (
           <Box

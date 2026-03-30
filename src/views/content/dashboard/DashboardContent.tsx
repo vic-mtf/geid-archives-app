@@ -221,7 +221,7 @@ export default function DashboardContent() {
 
   // ── Rendu ─────────────────────────────────────────────────────
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, overflowY: "auto", height: "100%", width: "100%" }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, overflowY: "auto", height: "100%", width: "100%", ...scrollBarSx }}>
 
       {/* ── Alertes prioritaires ──────────────────────────── */}
       {visible.has("alerts") && (statusCounts.PENDING > 0 || duaExpired.length > 0 || criticalBinders.length > 0) && (

@@ -32,6 +32,7 @@ import type { RootState, AppDispatch } from "@/redux/store";
 import { updateData } from "@/redux/data";
 import { STATUS_COLOR, normalizeStatus } from "@/constants/lifecycle";
 import useArchivePermissions from "@/hooks/useArchivePermissions";
+import scrollBarSx from "@/utils/scrollBarSx";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ export default function TreeArchiveManagementView({ filter = "" }: TreeArchiveMa
         defaultExpandIcon={<FolderOpenOutlinedIcon fontSize="small" />}
         onNodeSelect={onNodeSelect}
         onNodeFocus={(event) => event.preventDefault()}
-        sx={{ flexGrow: 1, overflowY: "auto", px: 1, pb: 2 }}>
+        sx={{ flexGrow: 1, overflowY: "auto", px: 1, pb: 2, ...scrollBarSx }}>
         {filteredData.map((doc) => {
           const id = (doc._id ?? doc.id) as string;
           const norm = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);

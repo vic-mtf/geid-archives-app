@@ -43,6 +43,7 @@ import BookmarkBorderOutlinedIcon from "@mui/icons-material/BookmarkBorderOutlin
 import { useLocation }          from "react-router-dom";
 import Fuse                     from "fuse.js";
 import useToken                 from "@/hooks/useToken";
+import scrollBarSx              from "@/utils/scrollBarSx";
 
 // ── Structure des sections du manuel ─────────────────────────
 
@@ -607,7 +608,7 @@ export default function HelpContent() {
           navigation se transforme en barre de navigation horizontale en bas de l'écran.
         </Paragraph>
 
-        <Box sx={{ overflowX: "auto", mb: 2 }}>
+        <Box sx={{ overflowX: "auto", mb: 2, ...scrollBarSx }}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -1357,7 +1358,7 @@ export default function HelpContent() {
           la suppression ne peuvent être réalisées que par des personnes habilitées.
         </Paragraph>
 
-        <Box sx={{ overflowX: "auto", mb: 2 }}>
+        <Box sx={{ overflowX: "auto", mb: 2, ...scrollBarSx }}>
         <Table size="small">
           <TableHead>
             <TableRow>

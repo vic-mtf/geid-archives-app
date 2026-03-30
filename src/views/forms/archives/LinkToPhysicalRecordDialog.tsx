@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
+import scrollBarSx from "@/utils/scrollBarSx";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, Typography, Box, Stack,
@@ -300,7 +301,7 @@ export default function LinkToPhysicalRecordDialog() {
         </Box>
 
         {/* Liste des items */}
-        <Box sx={{ flex: 1, overflowY: "auto", px: 2, py: 1.5 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", px: 2, py: 1.5, ...scrollBarSx }}>
           {loadingItems ? (
             <Stack spacing={1}>
               {[1, 2, 3].map(i => <Skeleton key={i} variant="rounded" height={64} />)}

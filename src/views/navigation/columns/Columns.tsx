@@ -2,6 +2,7 @@ import {
   List,
   Stack,
 } from "@mui/material";
+import scrollBarSx from "@/utils/scrollBarSx";
 // import { useDispatch, useSelector } from "react-redux";
 // import { changeVisibilityColumn } from "@/redux/data";
 
@@ -19,6 +20,7 @@ export default function Columns() {
       <List
         sx={{
           overflow: "auto",
+          ...scrollBarSx,
           display: "flex",
           // flex: 1,
           width: "100%",

@@ -7,6 +7,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import scrollBarSx from "@/utils/scrollBarSx";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState, AppDispatch } from "@/redux/store";
 import { setCacheEntry } from "@/redux/data";
@@ -221,6 +222,7 @@ export default function PhysicalSearch({ headers, onNavigate }: PhysicalSearchPr
             mt: 0.5,
             maxHeight: 400,
             overflow: "auto",
+            ...scrollBarSx,
             borderRadius: 1.5,
           }}>
           {(Object.entries(grouped) as [Level, SearchResult[]][]).map(([level, items]) => (
