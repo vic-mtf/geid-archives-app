@@ -75,7 +75,7 @@ export default function ArchiveCreateDialog() {
   // Key pour forcer le re-mount de Typology quand les defaults changent
   const [typologyKey, setTypologyKey] = useState(0);
 
-  const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onTouched",
   });
@@ -96,24 +96,27 @@ export default function ArchiveCreateDialog() {
     return () => root?.removeEventListener(EVENT_NAME, handler);
   }, [resetAll]);
 
-  // Retour du WorkspaceFilePicker — pre-remplir
+  // Retour du WorkspaceFilePicker — pre-remplir avec reset complet
   useEffect(() => {
     const root = document.getElementById("root");
     const handler = (e: any) => {
       const f = e.detail?.file;
       if (!f) return;
       setWsFile(f); setFile(null); setFileError("");
-      // Pre-remplir : designation depuis metadata ou nom du fichier (sans extension)
       const nameWithoutExt = (f.name || "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
-      setValue("designation", f.designation || nameWithoutExt, { shouldDirty: true, shouldTouch: true });
-      setValue("description", f.description || "", { shouldDirty: true, shouldTouch: true });
+      // reset recrée le form state complet avec les nouvelles valeurs
+      reset({
+        designation: f.designation || nameWithoutExt,
+        description: f.description || "",
+        refNumber: "",
+      });
       if (f.docType) { setDefaultType(f.docType); typeRef.current = f.docType; }
       if (f.docSubType) { setDefaultSubType(f.docSubType); subTypeRef.current = f.docSubType; }
       setTypologyKey((k) => k + 1);
     };
     root?.addEventListener("__workspace_file_selected", handler);
     return () => root?.removeEventListener("__workspace_file_selected", handler);
-  }, [setValue]);
+  }, [reset]);
 
   const handleClose = () => { if (!loading) { setOpen(false); resetAll(); } };
 
