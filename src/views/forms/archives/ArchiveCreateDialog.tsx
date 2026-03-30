@@ -105,20 +105,19 @@ export default function ArchiveCreateDialog() {
     const root = document.getElementById("root");
     const handler = (e: any) => {
       const f = e.detail?.file;
-      if (f && open) {
-        setWsFile(f); setFile(null); setFileError("");
-        // Pre-remplir : designation depuis metadata ou nom du fichier (sans extension)
-        const nameWithoutExt = (f.name || "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
-        setValue("designation", f.designation || nameWithoutExt, { shouldDirty: true, shouldTouch: true });
-        if (f.description) setValue("description", f.description, { shouldDirty: true, shouldTouch: true });
-        if (f.docType) { setDefaultType(f.docType); typeRef.current = f.docType; }
-        if (f.docSubType) { setDefaultSubType(f.docSubType); subTypeRef.current = f.docSubType; }
-        setTypologyKey((k) => k + 1);
-      }
+      if (!f) return;
+      setWsFile(f); setFile(null); setFileError("");
+      // Pre-remplir : designation depuis metadata ou nom du fichier (sans extension)
+      const nameWithoutExt = (f.name || "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
+      setValue("designation", f.designation || nameWithoutExt, { shouldDirty: true, shouldTouch: true });
+      setValue("description", f.description || "", { shouldDirty: true, shouldTouch: true });
+      if (f.docType) { setDefaultType(f.docType); typeRef.current = f.docType; }
+      if (f.docSubType) { setDefaultSubType(f.docSubType); subTypeRef.current = f.docSubType; }
+      setTypologyKey((k) => k + 1);
     };
     root?.addEventListener("__workspace_file_selected", handler);
     return () => root?.removeEventListener("__workspace_file_selected", handler);
-  }, [open, setValue]);
+  }, [setValue]);
 
   const handleClose = () => { if (!loading) { setOpen(false); resetAll(); } };
 
