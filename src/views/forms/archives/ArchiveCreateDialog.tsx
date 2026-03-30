@@ -1,11 +1,14 @@
 /**
  * ArchiveCreateDialog — Creer une archive depuis l'appareil ou l'espace personnel.
  *
- * - Erreurs de validation sous chaque champ (pas d'Alert globale)
+ * - Validation useForm + yup (erreurs sous chaque champ)
  * - Pre-remplissage depuis les metadonnees du fichier workspace
  */
 
 import { useEffect, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import {
   Box,
   Button,
@@ -41,6 +44,14 @@ function formatSize(bytes?: number): string {
 
 const EVENT_NAME = "__open_archive_create";
 
+const schema = yup.object({
+  designation: yup.string().trim().required("Veuillez renseigner la designation."),
+  description: yup.string().trim().required("Veuillez renseigner la description."),
+  refNumber: yup.string(),
+});
+
+type FormData = yup.InferType<typeof schema>;
+
 export default function ArchiveCreateDialog() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -50,68 +61,63 @@ export default function ArchiveCreateDialog() {
   const [wsFile, setWsFile] = useState<any>(null);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Champs controlés
-  const [designation, setDesignation] = useState("");
-  const [refNumber, setRefNumber] = useState("");
-  const [description, setDescription] = useState("");
-  const [typeVal, setTypeVal] = useState<string | null>(null);
-  const [subTypeVal, setSubTypeVal] = useState<string | null>(null);
-
-  // Erreurs par champ
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [fileError, setFileError] = useState("");
+  const [typeError, setTypeError] = useState("");
 
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const dispatch = useDispatch<AppDispatch>();
   const { enqueueSnackbar } = useSnackbar();
 
-  // Refs pour Typology (composant non controlé)
-  const typeRef = { current: typeVal } as { current: string | null | undefined };
-  const subTypeRef = { current: subTypeVal } as { current: string | null | undefined };
+  const typeRef = { current: null as string | null | undefined };
+  const subTypeRef = { current: null as string | null | undefined };
 
-  const reset = useCallback(() => {
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
+    resolver: yupResolver(schema),
+    mode: "onTouched",
+  });
+
+  const resetAll = useCallback(() => {
     setFile(null); setWsFile(null); setDragging(false);
-    setDesignation(""); setRefNumber(""); setDescription("");
-    setTypeVal(null); setSubTypeVal(null); setErrors({});
-  }, []);
+    setFileError(""); setTypeError("");
+    typeRef.current = null; subTypeRef.current = null;
+    reset({ designation: "", description: "", refNumber: "" });
+  }, [reset]);
 
   useEffect(() => {
     const root = document.getElementById("root");
-    const handler = () => { setOpen(true); reset(); };
+    const handler = () => { setOpen(true); resetAll(); };
     root?.addEventListener(EVENT_NAME, handler);
     return () => root?.removeEventListener(EVENT_NAME, handler);
-  }, [reset]);
+  }, [resetAll]);
 
-  // Ecouter le retour du WorkspaceFilePicker
+  // Retour du WorkspaceFilePicker — pre-remplir
   useEffect(() => {
     const root = document.getElementById("root");
     const handler = (e: any) => {
       const f = e.detail?.file;
       if (f && open) {
-        setWsFile(f);
-        setFile(null);
-        // Pre-remplir depuis les metadonnees workspace
-        if (f.designation && !designation) setDesignation(f.designation);
-        if (f.description && !description) setDescription(f.description);
-        if (f.docType && !typeVal) setTypeVal(f.docType);
-        if (f.docSubType && !subTypeVal) setSubTypeVal(f.docSubType);
+        setWsFile(f); setFile(null); setFileError("");
+        if (f.designation) setValue("designation", f.designation);
+        if (f.description) setValue("description", f.description);
+        if (f.docType) typeRef.current = f.docType;
+        if (f.docSubType) subTypeRef.current = f.docSubType;
       }
     };
     root?.addEventListener("__workspace_file_selected", handler);
     return () => root?.removeEventListener("__workspace_file_selected", handler);
-  }, [open, designation, description, typeVal, subTypeVal]);
+  }, [open, setValue]);
 
-  const handleClose = () => { if (!loading) { setOpen(false); reset(); } };
+  const handleClose = () => { if (!loading) { setOpen(false); resetAll(); } };
 
   const handleFileDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setDragging(false);
     const dropped = e.dataTransfer.files[0];
-    if (dropped) { setFile(dropped); setWsFile(null); setErrors((p) => ({ ...p, file: "" })); }
+    if (dropped) { setFile(dropped); setWsFile(null); setFileError(""); }
   }, []);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.files?.[0];
-    if (picked) { setFile(picked); setWsFile(null); setErrors((p) => ({ ...p, file: "" })); }
+    if (picked) { setFile(picked); setWsFile(null); setFileError(""); }
   }, []);
 
   const openWorkspacePicker = useCallback(() => {
@@ -120,27 +126,21 @@ export default function ArchiveCreateDialog() {
 
   const selectedName = file?.name || wsFile?.name || null;
 
-  const handleSubmit = async () => {
-    // Validation par champ
-    const errs: Record<string, string> = {};
-    if (!file && !wsFile) errs.file = t("forms.archiveCreate.errorNoFile");
-    if (!designation.trim()) errs.designation = t("forms.archiveCreate.errorNoDesignation");
-    if (!description.trim()) errs.description = t("forms.archiveCreate.errorNoDescription");
-    if (!typeVal) errs.type = t("forms.archiveCreate.errorNoType");
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+  const onSubmit = async (data: FormData) => {
+    if (!file && !wsFile) { setFileError(t("forms.archiveCreate.errorNoFile")); return; }
+    if (!typeRef.current) { setTypeError(t("forms.archiveCreate.errorNoType")); return; }
 
-    setLoading(true);
-    setErrors({});
+    setLoading(true); setFileError(""); setTypeError("");
 
     try {
       if (file) {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("designation", designation.trim());
-        formData.append("description", description.trim());
-        formData.append("type", typeVal!);
-        if (subTypeVal) formData.append("subtype", subTypeVal);
-        if (refNumber.trim()) formData.append("refNumber", refNumber.trim());
+        formData.append("designation", data.designation);
+        formData.append("description", data.description);
+        formData.append("type", typeRef.current);
+        if (subTypeRef.current) formData.append("subtype", subTypeRef.current);
+        if (data.refNumber?.trim()) formData.append("refNumber", data.refNumber.trim());
 
         const res = await fetch(`${import.meta.env.VITE_SERVER_BASE_URL ?? ""}/api/stuff/archives/upload`, {
           method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData,
@@ -155,16 +155,16 @@ export default function ArchiveCreateDialog() {
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
           body: JSON.stringify({
             fileId: wsFile._id, fileName: wsFile.name,
-            designation: designation.trim(), description: description.trim(),
-            type: typeVal, subtype: subTypeVal || undefined,
-            refNumber: refNumber.trim() || undefined,
+            designation: data.designation, description: data.description,
+            type: typeRef.current, subtype: subTypeRef.current || undefined,
+            refNumber: data.refNumber?.trim() || undefined,
           }),
         });
         if (!res.ok) throw new Error(t("notifications.archiveCreateFailed"));
       }
 
       dispatch(incrementVersion());
-      enqueueSnackbar(t("notifications.archiveCreated", { name: designation }), { variant: "success" });
+      enqueueSnackbar(t("notifications.archiveCreated", { name: data.designation }), { variant: "success" });
       handleClose();
     } catch (err: unknown) {
       const msg = (err as Error).message;
@@ -186,91 +186,92 @@ export default function ArchiveCreateDialog() {
         </Typography>
       </DialogTitle>
 
-      <DialogContent>
-        <Stack spacing={2}>
-          {/* Fichier selectionne */}
-          {selectedName ? (
-            <Box sx={{
-              border: 2, borderColor: "success.main", borderRadius: 2, p: 2,
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-            }}>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <FileTypeIcon extension={getFileExtension(selectedName) || "txt"} size={28} />
-                <Stack spacing={0}>
-                  <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 250 }}>{selectedName}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {wsFile ? "Espace personnel" : ""}{file ? formatSize(file.size) : wsFile?.size ? formatSize(wsFile.size) : ""}
-                  </Typography>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <DialogContent>
+          <Stack spacing={2}>
+            {selectedName ? (
+              <Box sx={{ border: 2, borderColor: "success.main", borderRadius: 2, p: 2, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <FileTypeIcon extension={getFileExtension(selectedName) || "txt"} size={28} />
+                  <Stack spacing={0}>
+                    <Typography variant="body2" fontWeight={500} noWrap sx={{ maxWidth: 250 }}>{selectedName}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {wsFile ? "Espace personnel · " : ""}{formatSize(file?.size || wsFile?.size)}
+                    </Typography>
+                  </Stack>
                 </Stack>
-              </Stack>
-              <Button size="small" color="inherit" onClick={() => { setFile(null); setWsFile(null); }}>
-                {t("common.change")}
-              </Button>
-            </Box>
-          ) : (
-            <Stack spacing={1}>
-              <Box
-                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={handleFileDrop}
-                onClick={() => document.getElementById("archive-file-input")?.click()}
-                sx={{
-                  border: 2, borderStyle: "dashed",
-                  borderColor: errors.file ? "error.main" : dragging ? "primary.main" : "divider",
-                  borderRadius: 2, p: 2.5, textAlign: "center", cursor: "pointer",
-                  bgcolor: dragging ? "action.hover" : "background.default",
-                  transition: "all .2s",
-                  "&:hover": { borderColor: "primary.main", bgcolor: "action.hover" },
-                }}
-              >
-                <input id="archive-file-input" type="file" hidden onChange={handleFileInput} />
-                <UploadFileOutlinedIcon sx={{ color: "text.disabled", fontSize: 32 }} />
-                <Typography variant="body2" color="text.secondary" mt={0.5}>
-                  {t("forms.archiveCreate.dropZone")}
-                </Typography>
+                <Button size="small" color="inherit" onClick={() => { setFile(null); setWsFile(null); }}>{t("common.change")}</Button>
               </Box>
-              {errors.file && <Typography variant="caption" color="error.main" sx={{ mt: -0.5, ml: 1.5 }}>{errors.file}</Typography>}
+            ) : (
+              <Stack spacing={1}>
+                <Box
+                  onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={handleFileDrop}
+                  onClick={() => document.getElementById("archive-file-input")?.click()}
+                  sx={{
+                    border: 2, borderStyle: "dashed",
+                    borderColor: fileError ? "error.main" : dragging ? "primary.main" : "divider",
+                    borderRadius: 2, p: 2.5, textAlign: "center", cursor: "pointer",
+                    bgcolor: dragging ? "action.hover" : "background.default", transition: "all .2s",
+                    "&:hover": { borderColor: "primary.main", bgcolor: "action.hover" },
+                  }}
+                >
+                  <input id="archive-file-input" type="file" hidden onChange={handleFileInput} />
+                  <UploadFileOutlinedIcon sx={{ color: "text.disabled", fontSize: 32 }} />
+                  <Typography variant="body2" color="text.secondary" mt={0.5}>{t("forms.archiveCreate.dropZone")}</Typography>
+                </Box>
+                {fileError && <Typography variant="caption" color="error.main" sx={{ ml: 1.5 }}>{fileError}</Typography>}
 
-              <Divider><Typography variant="caption" color="text.disabled">{t("common.or")}</Typography></Divider>
+                <Divider><Typography variant="caption" color="text.disabled">{t("common.or")}</Typography></Divider>
 
-              <Button variant="outlined" color="inherit" startIcon={<FolderRoundedIcon sx={{ color: "warning.main" }} />}
-                onClick={openWorkspacePicker} sx={{ textTransform: "none", py: 1.5, borderStyle: "dashed" }}
-              >
-                {t("forms.archiveSource.fromWorkspace")}
-              </Button>
-            </Stack>
-          )}
+                <Button variant="outlined" color="inherit" startIcon={<FolderRoundedIcon sx={{ color: "warning.main" }} />}
+                  onClick={openWorkspacePicker} sx={{ textTransform: "none", py: 1.5, borderStyle: "dashed" }}
+                >
+                  {t("forms.archiveSource.fromWorkspace")}
+                </Button>
+              </Stack>
+            )}
 
-          <TextField label={t("forms.archiveCreate.designationLabel")} fullWidth size="small"
-            value={designation} onChange={(e) => { setDesignation(e.target.value); setErrors((p) => ({ ...p, designation: "" })); }}
-            error={!!errors.designation} helperText={errors.designation || t("forms.archiveCreate.designationHelper")}
-            required
-          />
+            <TextField
+              {...register("designation")}
+              label={t("forms.archiveCreate.designationLabel")}
+              fullWidth size="small" required
+              placeholder={t("forms.archiveCreate.designationPlaceholder")}
+              error={!!errors.designation}
+              helperText={errors.designation?.message || t("forms.archiveCreate.designationHelper")}
+            />
 
-          <TextField label={t("forms.archiveCreate.refNumberLabel")} fullWidth size="small"
-            value={refNumber} onChange={(e) => setRefNumber(e.target.value)}
-          />
+            <TextField
+              {...register("refNumber")}
+              label={t("forms.archiveCreate.refNumberLabel")}
+              fullWidth size="small"
+              placeholder={t("forms.archiveCreate.refNumberPlaceholder")}
+            />
 
-          <Typology type={typeRef} subType={subTypeRef} />
-          {errors.type && <Typography variant="caption" color="error.main" sx={{ mt: -1, ml: 1.5 }}>{errors.type}</Typography>}
+            <Typology type={typeRef} subType={subTypeRef} />
+            {typeError && <Typography variant="caption" color="error.main" sx={{ mt: -1, ml: 1.5 }}>{typeError}</Typography>}
 
-          <TextField label={t("forms.archiveCreate.descriptionLabel")} fullWidth size="small"
-            multiline rows={3} value={description}
-            onChange={(e) => { setDescription(e.target.value); setErrors((p) => ({ ...p, description: "" })); }}
-            error={!!errors.description} helperText={errors.description || undefined}
-            required
-          />
-        </Stack>
-      </DialogContent>
+            <TextField
+              {...register("description")}
+              label={t("forms.archiveCreate.descriptionLabel")}
+              fullWidth size="small" multiline rows={3} required
+              placeholder={t("forms.archiveCreate.descriptionPlaceholder")}
+              error={!!errors.description}
+              helperText={errors.description?.message}
+            />
+          </Stack>
+        </DialogContent>
 
-      <DialogActions>
-        <Button onClick={handleClose} color="inherit" disabled={loading}>{t("common.cancel")}</Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={loading} disableElevation
-          startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
-        >
-          {t("forms.archiveCreate.submitLabel")}
-        </Button>
-      </DialogActions>
+        <DialogActions>
+          <Button onClick={handleClose} color="inherit" disabled={loading}>{t("common.cancel")}</Button>
+          <Button type="submit" variant="contained" disabled={loading} disableElevation
+            startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
+          >
+            {t("forms.archiveCreate.submitLabel")}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }
