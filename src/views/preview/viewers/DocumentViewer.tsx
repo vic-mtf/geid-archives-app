@@ -13,8 +13,7 @@ import scrollBarSx from "@/utils/scrollBarSx";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import {
-  Box, CircularProgress, IconButton, InputBase, LinearProgress,
-  Skeleton, Typography,
+  Box, CircularProgress, IconButton, InputBase, LinearProgress, Skeleton, Typography,
 } from "@mui/material";
 import ZoomInOutlinedIcon from "@mui/icons-material/ZoomInOutlined";
 import ZoomOutOutlinedIcon from "@mui/icons-material/ZoomOutOutlined";
@@ -319,6 +318,56 @@ const DocumentViewer = React.memo(function DocumentViewer({ fileUrl, extension }
   );
 });
 
+/**
+ * TextSpanOverlay — Un span de texte positionne et etire pour matcher l'image PDF.
+ * Mesure la largeur naturelle du texte puis applique scaleX pour correspondre exactement.
+ */
+const TextSpanOverlay = React.memo(function TextSpanOverlay({
+  span, pdfW, pdfH, displayW, displayH, searchQuery,
+}: {
+  span: TextSpan; pdfW: number; pdfH: number; displayW: number; displayH: number; searchQuery: string;
+}) {
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const [scaleX, setScaleX] = useState(1);
+
+  // Position et taille en pixels absolus
+  const left = (span.left / pdfW) * displayW;
+  const top = (span.top / pdfH) * displayH;
+  const targetW = (span.width / pdfW) * displayW;
+  const height = (span.height / pdfH) * displayH;
+  const fontSize = (span.fontSize / pdfH) * displayH;
+
+  // Mesurer et calculer scaleX apres le premier render
+  useEffect(() => {
+    if (!spanRef.current) return;
+    const natural = spanRef.current.offsetWidth;
+    if (natural > 0 && targetW > 0) {
+      setScaleX(targetW / natural);
+    }
+  }, [targetW, span.text, fontSize]);
+
+  return (
+    <span
+      ref={spanRef}
+      style={{
+        position: "absolute",
+        left, top, height,
+        fontSize,
+        fontFamily: span.fontFamily || "serif",
+        fontWeight: span.bold ? 700 : 400,
+        fontStyle: span.italic ? "italic" : "normal",
+        lineHeight: `${height}px`,
+        color: "transparent",
+        whiteSpace: "pre",
+        transformOrigin: "left top",
+        transform: `scaleX(${scaleX})`,
+      }}
+    >
+      {highlightText(span.text, searchQuery)}
+    </span>
+  );
+});
+
 /** Surligne les occurrences de query dans le texte d'un span */
 function highlightText(text: string, query: string): React.ReactNode {
   if (!query.trim()) return text;
@@ -411,41 +460,12 @@ const PageImage = React.memo(function PageImage({
         <Skeleton variant="rectangular" width="100%" height="100%" />
       )}
 
-      {/* Overlay texte positionne en % — positions relatives a la page */}
+      {/* Overlay texte — invisible, selectionnable, etire pour matcher l'image */}
       {src && spans && spans.length > 0 && (
         <Box sx={{ position: "absolute", inset: 0, userSelect: "text", cursor: "text", overflow: "hidden" }}>
-          {spans.map((span, i) => {
-            const topPct = (span.top / pdfH) * 100;
-            const leftPct = (span.left / pdfW) * 100;
-            const wPct = (span.width / pdfW) * 100;
-            const hPct = (span.height / pdfH) * 100;
-            // fontSize en pixels : proportionnel a la hauteur reelle du conteneur
-            const fontPx = (span.fontSize / pdfH) * displayH;
-            return (
-              <span
-                key={i}
-                style={{
-                  position: "absolute",
-                  top: `${topPct}%`,
-                  left: `${leftPct}%`,
-                  width: `${wPct}%`,
-                  height: `${hPct}%`,
-                  fontSize: fontPx,
-                  fontFamily: span.fontFamily || "sans-serif",
-                  fontWeight: span.bold ? 700 : 400,
-                  fontStyle: span.italic ? "italic" : "normal",
-                  lineHeight: 1,
-                  color: "transparent",
-                  whiteSpace: "pre",
-                  overflow: "hidden",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                {highlightText(span.text, searchQuery)}
-              </span>
-            );
-          })}
+          {spans.map((span, i) => (
+            <TextSpanOverlay key={i} span={span} pdfW={pdfW} pdfH={pdfH} displayW={displayW} displayH={displayH} searchQuery={searchQuery} />
+          ))}
         </Box>
       )}
 
