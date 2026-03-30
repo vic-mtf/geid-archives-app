@@ -85,7 +85,7 @@ export default function PhysicalContextMenu({
       anchorReference="anchorPosition"
       anchorPosition={{ top: state.mouseY, left: state.mouseX }}
       slotProps={{
-        paper: { sx: { minWidth: 200, borderRadius: 1.5 } },
+        paper: { sx: { minWidth: 200, borderRadius: 1.5, bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})`, border: 1, borderColor: "divider" } },
       }}
     >
       {/* Voir le détail */}
