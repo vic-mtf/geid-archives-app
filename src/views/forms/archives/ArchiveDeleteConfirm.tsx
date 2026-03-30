@@ -19,6 +19,7 @@ const EVENT_NAME = "__delete_archive_docs";
 export default function ArchiveDeleteConfirm() {
   const { t } = useTranslation();
   const [ids, setIds] = useState<(string | number)[]>([]);
+  const [loading, setLoading] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const dispatch = useDispatch<AppDispatch>();
@@ -38,40 +39,43 @@ export default function ArchiveDeleteConfirm() {
     return () => root?.removeEventListener(EVENT_NAME, handleEvent);
   }, []);
 
-  const handleClose = () => setIds([]);
+  const handleClose = () => { if (!loading) setIds([]); };
 
   const handleConfirm = async () => {
     const count = ids.length;
-    const key = enqueueSnackbar(
-      count > 1
-        ? t("notifications.archiveDeletePendingBulk", { count })
-        : t("notifications.archiveDeletePendingSingle"),
-      { autoHideDuration: null }
-    );
+    setLoading(true);
     try {
       await Promise.all(
         ids.map((id) => execute({ url: `/api/stuff/archives/${id}` }))
       );
+      dispatch(incrementVersion());
+      setIds([]);
       enqueueSnackbar(
         count > 1
           ? t("notifications.archiveDeletedBulk", { count })
           : t("notifications.archiveDeletedSingle"),
-        { variant: "success", title: count > 1 ? t("notifications.archiveDeletedBulkTitle", { count }) : t("notifications.archiveDeletedSingleTitle") }
+        {
+          variant: "success",
+          title: count > 1
+            ? t("notifications.archiveDeletedBulkTitle", { count })
+            : t("notifications.archiveDeletedSingleTitle"),
+        }
       );
-      dispatch(incrementVersion());
-      handleClose();
     } catch {
       enqueueSnackbar(
         t("notifications.archiveDeleteFailed"),
         { variant: "error", title: t("notifications.archiveDeleteFailedTitle") }
       );
     } finally {
-      enqueueSnackbar("", { key, persist: false });
+      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={ids.length > 0} onClose={handleClose} maxWidth="xs" fullWidth BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
+    <Dialog open={ids.length > 0} onClose={handleClose} maxWidth="xs" fullWidth
+      BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }}
+      PaperProps={{ sx: { border: 1, borderColor: "divider" } }}
+    >
       <DialogTitle component="div" fontWeight="bold">
         {t("dialogs.confirmDeletion")}
       </DialogTitle>
@@ -83,11 +87,11 @@ export default function ArchiveDeleteConfirm() {
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} color="inherit">
+        <Button onClick={handleClose} color="inherit" disabled={loading}>
           {t("common.cancel")}
         </Button>
-        <Button onClick={handleConfirm} variant="contained" color="error">
-          {t("common.delete")}
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={loading}>
+          {loading ? t("notifications.archiveDeletePendingSingle") : t("common.delete")}
         </Button>
       </DialogActions>
     </Dialog>

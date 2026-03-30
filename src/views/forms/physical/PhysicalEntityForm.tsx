@@ -301,7 +301,7 @@ export default function PhysicalEntityForm({
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const config = levels[level];
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -356,12 +356,8 @@ export default function PhysicalEntityForm({
       body = { ...body, nature: binderNature };
     }
     const levelName = t(`physical.levelsLower.${level}`) ?? level;
-    const snackKey = enqueueSnackbar(t("notifications.physicalCreatePending", { level: levelName }), {
-      autoHideDuration: null,
-    });
     try {
       await execute({ data: body });
-      closeSnackbar(snackKey);
       enqueueSnackbar(t("notifications.physicalCreated", { level: levelName }), {
         variant: "success",
         title: t("notifications.physicalCreatedTitle", { level: levelName.charAt(0).toUpperCase() + levelName.slice(1) }),
@@ -369,7 +365,6 @@ export default function PhysicalEntityForm({
       reset();
       onSuccess();
     } catch (err: unknown) {
-      closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
         t("notifications.physicalCreateFailed", { level: levelName });

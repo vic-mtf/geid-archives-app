@@ -41,7 +41,7 @@ export default function ArchiveEditForm() {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [doc, setDoc] = useState<ArchiveDocument | null>(null);
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
   const token = useSelector((store: RootState) => (store.user as Record<string, unknown>).token as string);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -93,12 +93,8 @@ export default function ArchiveEditForm() {
         ? (data.tags as string).split(",").map((tag: string) => tag.trim()).filter(Boolean)
         : [],
     };
-    const snackKey = enqueueSnackbar(t("notifications.archiveUpdatePending"), {
-      autoHideDuration: null,
-    });
     try {
       await execute({ url: `/api/stuff/archives/${doc._id ?? doc.id}`, data: body });
-      closeSnackbar(snackKey);
       enqueueSnackbar(t("notifications.archiveUpdated"), {
         variant: "success",
         title: t("notifications.archiveUpdatedTitle"),
@@ -106,7 +102,6 @@ export default function ArchiveEditForm() {
       dispatch(incrementVersion());
       handleClose();
     } catch (err: unknown) {
-      closeSnackbar(snackKey);
       const msg =
         ((err as { response?: { data?: { error?: string } } })?.response?.data?.error) ??
         t("notifications.archiveUpdateFailed");
