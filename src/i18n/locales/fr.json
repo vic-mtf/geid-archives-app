@@ -262,16 +262,18 @@
       "subtitle": "T\u00e9l\u00e9versez un fichier et renseignez ses m\u00e9tadonn\u00e9es",
       "dropZone": "Glissez un fichier ici ou cliquez pour parcourir",
       "dropZoneHint": "PDF, Word, Excel, images\u2026 (max. 50 Mo)",
-      "designationLabel": "D\u00e9signation *",
+      "designationLabel": "D\u00e9signation",
       "designationPlaceholder": "Ex : Rapport annuel RH 2024",
       "designationHelper": "Titre principal du document",
-      "descriptionLabel": "Description *",
+      "refNumberLabel": "Num\u00e9ro de r\u00e9f\u00e9rence",
+      "refNumberPlaceholder": "R\u00e9f\u00e9rence interne du document",
+      "descriptionLabel": "Description",
       "descriptionPlaceholder": "D\u00e9crivez bri\u00e8vement le contenu et l'objet du document\u2026",
       "submitLabel": "Envoyer au service d'archivage",
       "errorNoFile": "Veuillez s\u00e9lectionner un fichier.",
-      "errorNoDesignation": "La d\u00e9signation est requise.",
-      "errorNoDescription": "La description est requise.",
-      "errorNoType": "Le type de document est requis."
+      "errorNoDesignation": "Veuillez renseigner la d\u00e9signation.",
+      "errorNoDescription": "Veuillez renseigner la description.",
+      "errorNoType": "Veuillez choisir le type de document."
     },
     "archiveEdit": {
       "title": "Modifier l'archive",
