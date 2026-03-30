@@ -5,7 +5,7 @@
  * - Pre-remplissage depuis les metadonnees du fichier workspace
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -68,8 +68,12 @@ export default function ArchiveCreateDialog() {
   const dispatch = useDispatch<AppDispatch>();
   const { enqueueSnackbar } = useSnackbar();
 
-  const typeRef = { current: null as string | null | undefined };
-  const subTypeRef = { current: null as string | null | undefined };
+  const typeRef = useRef<string | null | undefined>(null);
+  const subTypeRef = useRef<string | null | undefined>(null);
+  const [defaultType, setDefaultType] = useState<string | null>(null);
+  const [defaultSubType, setDefaultSubType] = useState<string | null>(null);
+  // Key pour forcer le re-mount de Typology quand les defaults changent
+  const [typologyKey, setTypologyKey] = useState(0);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
@@ -80,6 +84,8 @@ export default function ArchiveCreateDialog() {
     setFile(null); setWsFile(null); setDragging(false);
     setFileError(""); setTypeError("");
     typeRef.current = null; subTypeRef.current = null;
+    setDefaultType(null); setDefaultSubType(null);
+    setTypologyKey((k) => k + 1);
     reset({ designation: "", description: "", refNumber: "" });
   }, [reset]);
 
@@ -101,8 +107,9 @@ export default function ArchiveCreateDialog() {
         const nameWithoutExt = (f.name || "").replace(/\.[^.]+$/, "").replace(/_/g, " ");
         setValue("designation", f.designation || nameWithoutExt);
         if (f.description) setValue("description", f.description);
-        if (f.docType) typeRef.current = f.docType;
-        if (f.docSubType) subTypeRef.current = f.docSubType;
+        if (f.docType) { setDefaultType(f.docType); typeRef.current = f.docType; }
+        if (f.docSubType) { setDefaultSubType(f.docSubType); subTypeRef.current = f.docSubType; }
+        setTypologyKey((k) => k + 1);
       }
     };
     root?.addEventListener("__workspace_file_selected", handler);
@@ -251,7 +258,7 @@ export default function ArchiveCreateDialog() {
               placeholder={t("forms.archiveCreate.refNumberPlaceholder")}
             />
 
-            <Typology type={typeRef} subType={subTypeRef} />
+            <Typology key={typologyKey} type={typeRef} subType={subTypeRef} defaultType={defaultType} defaultSubType={defaultSubType} />
             {typeError && <Typography variant="caption" color="error.main" sx={{ mt: -1, ml: 1.5 }}>{typeError}</Typography>}
 
             <TextField

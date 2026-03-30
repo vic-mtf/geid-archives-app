@@ -33,6 +33,8 @@ interface TypologyValues {
 interface TypologyProps {
   type?: React.MutableRefObject<string | null | undefined>;
   subType?: React.MutableRefObject<string | null | undefined>;
+  defaultType?: string | null;
+  defaultSubType?: string | null;
   externalTypeError?: boolean;
   externalSubTypeError?: boolean;
 }
@@ -40,6 +42,8 @@ interface TypologyProps {
 export default function Typology({
   type,
   subType,
+  defaultType,
+  defaultSubType,
   externalTypeError,
   externalSubTypeError,
 }: TypologyProps) {
@@ -47,11 +51,19 @@ export default function Typology({
     (store: RootState) => (store.user as Record<string, unknown>).docTypes as DocTypeEntry[] | undefined
   ) ?? [];
 
-  const [values, setValues] = useState<TypologyValues>({
-    type: null,
-    subType: null,
-    types: docTypes.map(toName).filter(Boolean),
-    subTypes: typeof docTypes[0] !== "string" ? (docTypes[0] as DocType)?.subtypes?.map((s) => typeof s === "string" ? s : s.name) ?? [] : [],
+  const [values, setValues] = useState<TypologyValues>(() => {
+    const initType = defaultType || null;
+    const found = initType ? docTypes.find((d) => toName(d) === initType) : null;
+    const subs = found && typeof found !== "string" ? (found as DocType).subtypes?.map((s) => typeof s === "string" ? s : s.name) ?? [] : [];
+    // Sync refs
+    if (type && initType) type.current = initType;
+    if (subType && defaultSubType) subType.current = defaultSubType;
+    return {
+      type: initType,
+      subType: defaultSubType || null,
+      types: docTypes.map(toName).filter(Boolean),
+      subTypes: subs,
+    };
   });
 
   const typeEmptyError = useMemo(
