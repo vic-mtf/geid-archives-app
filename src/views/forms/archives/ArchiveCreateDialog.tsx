@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
@@ -75,14 +75,10 @@ export default function ArchiveCreateDialog() {
   // Key pour forcer le re-mount de Typology quand les defaults changent
   const [typologyKey, setTypologyKey] = useState(0);
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     mode: "onTouched",
   });
-
-  const watchDesignation = watch("designation");
-  const watchDescription = watch("description");
-  const watchRefNumber = watch("refNumber");
 
   const resetAll = useCallback(() => {
     setFile(null); setWsFile(null); setDragging(false);
@@ -245,41 +241,44 @@ export default function ArchiveCreateDialog() {
               </Stack>
             )}
 
-            <TextField
-              {...register("designation")}
-              value={watchDesignation || ""}
-              label={t("forms.archiveCreate.designationLabel")}
-              fullWidth size="small" required
-              InputLabelProps={{ shrink: !!watchDesignation }}
-              placeholder={t("forms.archiveCreate.designationPlaceholder")}
-              error={!!errors.designation}
-              helperText={errors.designation?.message || t("forms.archiveCreate.designationHelper")}
-            />
+            <Controller name="designation" control={control} render={({ field }) => (
+              <TextField
+                {...field}
+                label={t("forms.archiveCreate.designationLabel")}
+                fullWidth size="small" required
+                InputLabelProps={{ shrink: !!field.value }}
+                placeholder={t("forms.archiveCreate.designationPlaceholder")}
+                error={!!errors.designation}
+                helperText={errors.designation?.message || t("forms.archiveCreate.designationHelper")}
+              />
+            )} />
 
-            <TextField
-              {...register("refNumber")}
-              value={watchRefNumber || ""}
-              label={t("forms.archiveCreate.refNumberLabel")}
-              fullWidth size="small" required
-              InputLabelProps={{ shrink: !!watchRefNumber }}
-              placeholder={t("forms.archiveCreate.refNumberPlaceholder")}
-              error={!!errors.refNumber}
-              helperText={errors.refNumber?.message}
-            />
+            <Controller name="refNumber" control={control} render={({ field }) => (
+              <TextField
+                {...field}
+                label={t("forms.archiveCreate.refNumberLabel")}
+                fullWidth size="small" required
+                InputLabelProps={{ shrink: !!field.value }}
+                placeholder={t("forms.archiveCreate.refNumberPlaceholder")}
+                error={!!errors.refNumber}
+                helperText={errors.refNumber?.message}
+              />
+            )} />
 
             <Typology key={typologyKey} type={typeRef} subType={subTypeRef} defaultType={defaultType} defaultSubType={defaultSubType} />
             {typeError && <Typography variant="caption" color="error.main" sx={{ mt: -1, ml: 1.5 }}>{typeError}</Typography>}
 
-            <TextField
-              {...register("description")}
-              value={watchDescription || ""}
-              label={t("forms.archiveCreate.descriptionLabel")}
-              fullWidth size="small" multiline rows={3} required
-              InputLabelProps={{ shrink: !!watchDescription }}
-              placeholder={t("forms.archiveCreate.descriptionPlaceholder")}
-              error={!!errors.description}
-              helperText={errors.description?.message}
-            />
+            <Controller name="description" control={control} render={({ field }) => (
+              <TextField
+                {...field}
+                label={t("forms.archiveCreate.descriptionLabel")}
+                fullWidth size="small" multiline rows={3} required
+                InputLabelProps={{ shrink: !!field.value }}
+                placeholder={t("forms.archiveCreate.descriptionPlaceholder")}
+                error={!!errors.description}
+                helperText={errors.description?.message}
+              />
+            )} />
           </Stack>
         </DialogContent>
 
