@@ -349,6 +349,7 @@ function TocPage() {
     { num: "4.1", title: "Soumettre une nouvelle archive", sub: true },
     { num: "4.2", title: "La liste des archives et les filtres", sub: true },
     { num: "4.3", title: "Le panneau de détail", sub: true },
+    { num: "4.4", title: "Le lecteur de fichiers intégré", sub: true },
     { num: "5",   title: "Le cycle de vie documentaire" },
     { num: "5.1", title: "En attente de validation", sub: true },
     { num: "5.2", title: "Archive active", sub: true },
@@ -798,10 +799,11 @@ function Chapter4() {
           dans votre organisation, vous pouvez laisser ce champ vide.
         </Field>
 
-        <Field label="Numéro de référence" example="REF-DG-042/2024">
+        <Field label="Numéro de référence" required example="REF-DG-042/2024">
           La référence unique attribuée au document lors de sa création ou de sa réception dans
-          votre organisation. Si votre service utilise un système de numérotation interne,
-          reportez-le ici pour assurer la continuité entre vos outils existants et GEID Archives.
+          votre organisation. Ce champ est obligatoire. Si votre service utilise un système de
+          numérotation interne, reportez-le ici pour assurer la continuité entre vos outils
+          existants et GEID Archives.
         </Field>
 
         <Field label="Dossier" example="(automatique)">
@@ -835,7 +837,10 @@ function Chapter4() {
           de votre système pour choisir un fichier enregistré sur votre ordinateur, tablette ou
           téléphone. La seconde, Depuis mon espace personnel, vous permet de sélectionner un
           fichier déjà déposé dans votre espace de travail. Cette option est pratique si vous avez
-          préparé le document en amont avant de l'archiver.
+          préparé le document en amont avant de l'archiver. Lorsque vous sélectionnez un fichier
+          depuis votre espace personnel, le formulaire se pré-remplit automatiquement : la
+          désignation reprend le nom du fichier et le type documentaire est suggéré si possible.
+          Vous pouvez modifier ces valeurs avant de valider.
         </P2>
 
         <Succ>Avant de cliquer sur Soumettre, relisez une dernière fois la désignation et le dossier. Ce sont les deux champs les plus consultés par les archivistes et les plus utilisés dans les recherches.</Succ>
@@ -867,6 +872,56 @@ function Chapter4() {
           vous serez invité à vous reconnecter.
         </P2>
         <Info label="CONFIDENTIALITÉ">Les fichiers d'archives sont protégés par le système d'authentification. Ils ne peuvent être consultés que par les utilisateurs connectés et autorisés, ce qui garantit la confidentialité des documents archivés.</Info>
+        <Ftr />
+      </Page>
+
+      <Page size="A4" style={s.page}>
+        <Hdr section="Chapitre 4 — Les archives numériques (suite)" />
+
+        <H2>4.6 — Le lecteur de fichiers intégré</H2>
+        <P2>
+          Double-cliquez sur une archive dans la liste pour ouvrir son fichier dans le lecteur
+          intégré. Le lecteur s'adapte automatiquement au type de fichier et offre des fonctionnalités
+          avancées de consultation. Un fichier déjà consulté s'ouvre instantanément grâce à la mise
+          en cache locale. Vous pouvez naviguer entre les archives avec les flèches de navigation
+          affichées de chaque côté du lecteur.
+        </P2>
+
+        <H4>Documents (PDF, Word, présentations)</H4>
+        <P2>
+          Chaque page du document est affichée individuellement. Une barre de navigation flottante
+          en bas de l'écran permet de parcourir les pages, de zoomer et d'effectuer une recherche
+          dans le texte du document. Le texte est sélectionnable et les occurrences trouvées sont
+          surlignées en jaune.
+        </P2>
+        <Bullet>Flèches gauche et droite : page précédente ou suivante.</Bullet>
+        <Bullet>Plus (+) et moins (-) : augmenter ou réduire le zoom.</Bullet>
+        <Bullet>Ctrl+F : ouvrir la barre de recherche dans le document.</Bullet>
+        <Bullet>Début et Fin : aller à la première ou dernière page.</Bullet>
+        <Bullet>Sur écran tactile : pincez à deux doigts pour zoomer.</Bullet>
+
+        <H4>Images</H4>
+        <P2>
+          L'image s'affiche en plein écran avec possibilité de zoomer à la molette ou au pincé
+          tactile, de la faire glisser pour explorer les détails et de la faire pivoter. Le
+          pourcentage de zoom est affiché en permanence. Un double-clic recentre et réinitialise
+          le zoom.
+        </P2>
+
+        <H4>Vidéos</H4>
+        <P2>
+          Le lecteur vidéo propose les contrôles classiques : lecture, pause, barre de progression
+          avec aperçu au survol, volume, vitesse de lecture réglable. Vous pouvez aussi passer en
+          mode image dans l'image pour continuer à regarder la vidéo tout en travaillant, ou en
+          plein écran avec un double-clic. Sur les appareils tactiles, glissez horizontalement
+          pour avancer ou reculer de dix secondes.
+        </P2>
+
+        <H4>Fichiers audio</H4>
+        <P2>
+          Un lecteur audio avec visualisation animée et contrôles complets : lecture, pause, barre
+          de progression, volume et vitesse de lecture.
+        </P2>
         <Ftr />
       </Page>
     </>

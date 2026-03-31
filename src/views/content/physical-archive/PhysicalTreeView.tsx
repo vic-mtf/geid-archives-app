@@ -14,11 +14,6 @@ import { useTranslation } from "react-i18next";
 import { TreeView } from "@mui/x-tree-view/TreeView";
 import { TreeItem } from "@mui/x-tree-view/TreeItem";
 import WarehouseOutlinedIcon      from "@mui/icons-material/WarehouseOutlined";
-import DnsOutlinedIcon            from "@mui/icons-material/DnsOutlined";
-import ViewStreamOutlinedIcon     from "@mui/icons-material/ViewStreamOutlined";
-import StyleOutlinedIcon          from "@mui/icons-material/StyleOutlined";
-import FolderRoundedIcon         from "@mui/icons-material/FolderOutlined";
-import TopicOutlinedIcon          from "@mui/icons-material/TopicOutlined";
 import KeyboardArrowDownOutlinedIcon from "@mui/icons-material/KeyboardArrowDownOutlined";
 import KeyboardArrowRightOutlinedIcon from "@mui/icons-material/KeyboardArrowRightOutlined";
 import useAxios from "@/hooks/useAxios";
@@ -29,6 +24,11 @@ import openArchiveFile from "@/utils/openArchiveFile";
 import { DraggableArchive } from "./DndWrappers";
 import { useDroppable } from "@dnd-kit/core";
 import type { DocumentDropData } from "./useArchiveDnd";
+import {
+  type Level, type TreeNode, type PathItem,
+  LEVEL_ICON, CHILD_LEVEL, BASE, childUrl, getLabel,
+  findInTree, updateNode,
+} from "./physicalTreeUtils";
 
 /** Label droppable pour les documents dans le tree */
 function DroppableDocLabel({ documentId, documentLabel, children }: {
@@ -57,77 +57,9 @@ function DroppableDocLabel({ documentId, documentLabel, children }: {
   );
 }
 
-// ── Types ────────────────────────────────────────────────────
-
-/** Niveau de la hiérarchie */
-type Level = "container" | "shelf" | "floor" | "binder" | "record" | "document";
-
-/** Noeud dans l'arbre */
-interface TreeNode {
-  id: string;
-  label: string;
-  level: Level;
-  children?: TreeNode[];
-  loaded?: boolean;
-  /** Pour les archives numériques affichées comme feuilles */
-  isArchive?: boolean;
-  fileUrl?: string;
-}
-
-// ── Config icônes par niveau ─────────────────────────────────
-
-const LEVEL_ICON: Record<Level, React.ReactNode> = {
-  container: <WarehouseOutlinedIcon sx={{ fontSize: 18, color: "#5C6BC0" }} />,
-  shelf:     <DnsOutlinedIcon sx={{ fontSize: 18, color: "#26A69A" }} />,
-  floor:     <ViewStreamOutlinedIcon sx={{ fontSize: 18, color: "#42A5F5" }} />,
-  binder:    <StyleOutlinedIcon sx={{ fontSize: 18, color: "#FFA726" }} />,
-  record:    <FolderRoundedIcon sx={{ fontSize: 18, color: "#AB47BC" }} />,
-  document:  <TopicOutlinedIcon sx={{ fontSize: 18, color: "#78909C" }} />,
-};
-
-/** Niveau enfant de chaque niveau */
-const CHILD_LEVEL: Record<Level, Level | null> = {
-  container: "shelf",
-  shelf:     "floor",
-  floor:     "binder",
-  binder:    "record",
-  record:    "document",
-  document:  "document",
-};
-
-// ── URLs API pour charger les enfants ────────────────────────
-
-const BASE = "/api/stuff/archives/physical";
-
-function childUrl(level: Level, parentId: string, parentLevel?: Level): string {
-  switch (level) {
-    case "shelf":    return `${BASE}/shelves/container/${parentId}`;
-    case "floor":    return `${BASE}/floors/shelf/${parentId}`;
-    case "binder":   return `${BASE}/binders/floor/${parentId}`;
-    case "record":   return `${BASE}/records/binder/${parentId}`;
-    case "document": return parentLevel === "document"
-      ? `${BASE}/documents/parent/${parentId}`
-      : `${BASE}/documents/record/${parentId}`;
-    default:         return `${BASE}/containers`;
-  }
-}
-
-/** Extrait le label lisible d'un élément API */
-function getLabel(item: Record<string, unknown>, level: Level): string {
-  if (level === "floor") return item.label ? `${item.label}` : `Niveau ${item.number}`;
-  if (level === "record") return (item.internalNumber as string) ?? (item.subject as string) ?? String(item._id);
-  if (level === "document") return (item.title as string) ?? String(item._id);
-  return (item.name as string) ?? String(item._id);
-}
-
 // ── Props ────────────────────────────────────────────────────
 
-/** Élément du chemin de navigation */
-export interface PathItem {
-  id: string;
-  label: string;
-  level: Level;
-}
+export type { Level, TreeNode, PathItem };
 
 export interface PhysicalTreeViewProps {
   headers: Record<string, string>;
@@ -505,28 +437,3 @@ export default function PhysicalTreeView({ headers, onSelect, selectedId, expand
   );
 }
 
-// ── Utilitaires ───────────────────────────────────────────────
-
-/** Recherche récursive d'un noeud par ID */
-function findInTree(nodes: TreeNode[], id: string): TreeNode | null {
-  for (const n of nodes) {
-    if (n.id === id) return n;
-    if (n.children) {
-      const found = findInTree(n.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-function updateNode(
-  nodes: TreeNode[],
-  targetId: string,
-  update: Partial<TreeNode>,
-): TreeNode[] {
-  return nodes.map((n) => {
-    if (n.id === targetId) return { ...n, ...update };
-    if (n.children) return { ...n, children: updateNode(n.children, targetId, update) };
-    return n;
-  });
-}
