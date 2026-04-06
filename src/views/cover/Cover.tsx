@@ -105,6 +105,7 @@ export default function Cover({ setOpened }: CoverProps) {
             Archives
           </Typography>
         </Stack>
+        <Box position="relative" py={2} display="flex" justifyContent="center" alignItems="center" minHeight={32} />
       </Stack>
 
       {/* Footer — toujours visible en bas */}
