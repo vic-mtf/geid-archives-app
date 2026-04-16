@@ -99,8 +99,8 @@ export default function DuaConfigDialog() {
     const handler = (e: Event) => {
       const { doc: d } = (e as CustomEvent).detail as { doc: DuaDoc };
       setDoc(d);
-      // Pre-fill with existing DUA if any
-      setValue(d?.dua?.value ?? "");
+      // Pre-remplissage : DUA existante si definie, sinon 10 ans / conservation par defaut
+      setValue(d?.dua?.value ?? 10);
       setUnit(d?.dua?.unit ?? "years");
       setSortFinal(d?.dua?.sortFinal ?? "conservation");
       setOpen(true);

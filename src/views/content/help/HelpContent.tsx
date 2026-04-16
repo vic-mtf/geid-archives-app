@@ -99,7 +99,7 @@ const SECTIONS: ManualSection[] = [
   {
     id: "etat-intermediaire", number: "5.3", title: "Archive intermédiaire",
     keywords: ["intermédiaire", "semi-actif", "DUA", "durée administrative", "conservation"],
-    body: "L'état intermédiaire correspond à des archives dont l'utilisation courante est terminée mais dont la conservation reste obligatoire pendant une durée déterminée appelée Durée d'Utilité Administrative. Ces archives sont moins consultées mais restent accessibles en cas de besoin légal ou réglementaire.",
+    body: "L'état intermédiaire correspond à des archives dont l'utilisation courante est terminée mais dont la conservation reste obligatoire pendant une durée déterminée appelée Durée d'Utilité Administrative. Ces archives sont moins consultées mais restent accessibles en cas de besoin légal ou réglementaire. Dès le passage en intermédiaire, une DUA de 10 ans en conservation est appliquée par défaut — vous pouvez l'ajuster à tout moment depuis le bouton « Configurer la durée de conservation ».",
   },
   {
     id: "etat-permanent", number: "5.4", title: "Archive historique",
@@ -124,7 +124,7 @@ const SECTIONS: ManualSection[] = [
   {
     id: "dua-configuration", number: "6.1", title: "Configurer une DUA",
     keywords: ["configurer", "paramétrer", "DUA", "valeur", "unité", "date de départ", "sort final"],
-    body: "Pour configurer la DUA d'une archive cliquez sur le bouton DUA dans le panneau de détail. Saisissez la valeur numérique, l'unité de temps jours mois ou années, la date de départ et le sort final conservation définitive ou élimination. Le système calculera automatiquement la date d'expiration et vous alertera quand elle approche.",
+    body: "Lorsqu'une archive passe en état intermédiaire, le système applique automatiquement une DUA de 10 ans en conservation définitive, à compter du jour de la transition. Pour ajuster cette valeur, ouvrez le panneau de détail de l'archive et cliquez sur le bouton « Configurer la durée de conservation ». Saisissez la valeur numérique, l'unité de temps en mois ou en années, puis choisissez le sort final conservation définitive ou élimination. Le système calcule automatiquement la date d'expiration et vous alertera quand elle approche.",
   },
   {
     id: "validation", number: "7", title: "Valider une archive",
@@ -894,6 +894,13 @@ export default function HelpContent() {
           C'est à ce stade que la Durée d'Utilité Administrative entre en jeu : le système calculera
           automatiquement la date à laquelle l'archive devra être traitée.
         </Paragraph>
+        <Paragraph>
+          Pour éviter qu'une archive intermédiaire se retrouve sans règle de conservation, le
+          système applique automatiquement, au moment du passage en intermédiaire, une DUA par
+          défaut de dix années en conservation définitive, à compter du jour de la transition.
+          Cette valeur couvre la durée légale minimale la plus courante et peut être ajustée à
+          tout moment par l'archiviste depuis le bouton « Configurer la durée de conservation ».
+        </Paragraph>
 
         <SectionTitle id="etat-permanent" number="5.4">Archive historique</SectionTitle>
         <Paragraph>
@@ -989,15 +996,22 @@ export default function HelpContent() {
 
         <SectionTitle id="dua-configuration" number="6.1">Configurer une DUA</SectionTitle>
         <Paragraph>
-          Pour configurer la DUA d'une archive, ouvrez son panneau de détail en cliquant sur sa
-          ligne dans la liste, puis cliquez sur le bouton DUA dans la barre d'actions rapides
-          en haut du panneau.
+          Dès qu'une archive passe en état intermédiaire, le système lui applique automatiquement
+          une durée de conservation par défaut de dix années en conservation définitive, calculée
+          à partir du jour de la transition. Cette valeur par défaut évite qu'une archive reste
+          sans règle de conservation et correspond à la durée légale la plus couramment observée.
+          Elle peut être ajustée à tout moment.
+        </Paragraph>
+        <Paragraph>
+          Pour ajuster la DUA d'une archive, ouvrez son panneau de détail en cliquant sur sa
+          ligne dans la liste, puis cliquez sur le bouton « Configurer la durée de conservation »
+          dans la barre d'actions rapides en haut du panneau. Les champs seront pré-remplis avec
+          les valeurs actuelles (ou avec les valeurs par défaut si la DUA vient d'être appliquée).
         </Paragraph>
         <Step number={1}>Saisissez la valeur numérique dans le champ prévu. Par exemple, saisissez 5 pour cinq années.</Step>
-        <Step number={2}>Choisissez l'unité de temps dans la liste : jours, mois ou années.</Step>
-        <Step number={3}>Indiquez la date de départ de la DUA. Il s'agit souvent de la date de clôture du dossier ou de la date de la dernière action administrative.</Step>
-        <Step number={4}>Choisissez le sort final : conservation définitive pour verser l'archive aux archives historiques, ou élimination pour la détruire à l'expiration.</Step>
-        <Step number={5}>Confirmez en cliquant sur Enregistrer. La date d'expiration calculée s'affiche immédiatement.</Step>
+        <Step number={2}>Choisissez l'unité de temps dans la liste : mois ou années.</Step>
+        <Step number={3}>Choisissez le sort final : conservation définitive pour verser l'archive aux archives historiques à l'expiration, ou élimination pour la proposer à la destruction.</Step>
+        <Step number={4}>Confirmez en cliquant sur Enregistrer. La date d'expiration calculée s'affiche immédiatement, ainsi que le temps restant avant échéance.</Step>
 
         <Divider sx={{ my: 3 }} />
 

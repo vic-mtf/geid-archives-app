@@ -46,7 +46,7 @@ export default function useArchiveEvents({
         dispatch(incrementVersion());
         const lifecycleMsgs: Record<string, { title: string; msg: string }> = {
           ACTIVE:      { title: "Archive réactivée",          msg: "L'archive est de nouveau active. Elle reprend son cycle de vie normal." },
-          SEMI_ACTIVE: { title: "Passage en intermédiaire",   msg: "L'archive est maintenant en phase intermédiaire. Pensez à définir sa durée de conservation pour planifier son sort final." },
+          SEMI_ACTIVE: { title: "Passage en intermédiaire",   msg: "L'archive est maintenant en phase intermédiaire. Une durée de conservation de 10 ans a été appliquée par défaut — vous pouvez l'ajuster via « Configurer la durée de conservation »." },
           PERMANENT:   { title: "Classée en historique",      msg: "L'archive a été classée définitivement en historique. Elle sera conservée à titre permanent." },
           DESTROYED:           { title: "Archive éliminée",           msg: "L'archive a été éliminée. Cette action est irréversible — assurez-vous d'avoir conservé les documents nécessaires." },
           PROPOSED_ELIMINATION: { title: "Élimination proposée",    msg: "L'archive est proposée à l'élimination. Un procès-verbal doit être créé et approuvé avant destruction." },

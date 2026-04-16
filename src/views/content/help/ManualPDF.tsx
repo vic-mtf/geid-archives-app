@@ -360,8 +360,10 @@ function TocPage() {
     { num: "5.7", title: "Élimination proposée", sub: true },
     { num: "6",   title: "La Durée d'Utilité Administrative (DUA)" },
     { num: "6.1", title: "Cadre réglementaire", sub: true },
-    { num: "6.2", title: "Configurer une DUA", sub: true },
-    { num: "6.3", title: "Tableau des DUA par type de document", sub: true },
+    { num: "6.2", title: "DUA par défaut appliquée automatiquement", sub: true },
+    { num: "6.3", title: "Ajuster la DUA d'une archive", sub: true },
+    { num: "6.4", title: "Tableau des DUA par type de document", sub: true },
+    { num: "6.5", title: "Les alertes DUA", sub: true },
     { num: "7",   title: "Validation et contrôle qualité" },
     { num: "8",   title: "Gestion et opérations sur les archives" },
     { num: "9",   title: "L'archivage physique" },
@@ -859,7 +861,7 @@ function Chapter4() {
         <Bullet>Valider : passe l'archive de En attente à Active (archivistes uniquement).</Bullet>
         <Bullet>Modifier : ouvre le formulaire de modification des métadonnées.</Bullet>
         <Bullet>Dossier physique : ouvre la fenêtre de rattachement à un document physique.</Bullet>
-        <Bullet>DUA : ouvre la fenêtre de configuration de la Durée d'Utilité Administrative.</Bullet>
+        <Bullet>Configurer la durée de conservation : ouvre la fenêtre d'ajustement de la Durée d'Utilité Administrative (pré-remplie avec la valeur par défaut de 10 ans ou la valeur actuelle).</Bullet>
         <Bullet>Supprimer : ouvre la fenêtre de confirmation de suppression (administrateurs uniquement).</Bullet>
 
         <H4>Protection des fichiers</H4>
@@ -1015,10 +1017,16 @@ function Chapter5() {
           parfois les "archives secondaires" ou "semi-actives".
         </P2>
         <P2>
-          C'est à ce stade que la Durée d'Utilité Administrative (DUA) entre en jeu. L'archiviste
-          doit configurer la DUA de l'archive (voir Chapitre 6) pour que le système puisse
-          surveiller l'échéance et alerter quand elle approche. Les archives intermédiaires
-          peuvent nécessiter un accès occasionnel, notamment en cas de contentieux ou de contrôle.
+          C'est à ce stade que la Durée d'Utilité Administrative (DUA) entre en jeu. Dès le
+          passage en état intermédiaire, le système applique automatiquement une DUA par défaut
+          de dix années en conservation définitive, à compter du jour de la transition. Cette
+          valeur par défaut évite qu'une archive reste sans règle de conservation et correspond
+          à la durée légale la plus couramment observée pour les documents administratifs.
+          L'archiviste peut à tout moment ajuster cette valeur depuis le bouton « Configurer la
+          durée de conservation » dans le panneau de détail (voir Chapitre 6) : le système
+          surveillera alors l'échéance configurée et alertera quand elle approche. Les archives
+          intermédiaires peuvent nécessiter un accès occasionnel, notamment en cas de contentieux
+          ou de contrôle.
         </P2>
         <Ftr />
       </Page>
@@ -1108,7 +1116,7 @@ function Chapter5() {
 
         <H2>5.10 — Bonnes pratiques relatives au cycle de vie</H2>
         <Bullet>Ne pas laisser des archives en état En attente trop longtemps. Un délai de traitement supérieur à une semaine signale un dysfonctionnement dans le processus de validation.</Bullet>
-        <Bullet>Configurer systématiquement la DUA dès qu'une archive passe en état Intermédiaire, pour activer les alertes automatiques.</Bullet>
+        <Bullet>La DUA par défaut de dix années en conservation est appliquée automatiquement au passage en Intermédiaire. Vérifier systématiquement qu'elle correspond bien à la nature du document et l'ajuster si nécessaire.</Bullet>
         <Bullet>Ne jamais passer directement un document de En attente à Détruit. Respecter l'ordre logique des états.</Bullet>
         <Bullet>Utiliser l'état Historique pour préserver les documents à valeur patrimoniale identifiée dès que possible, sans attendre l'expiration de la DUA.</Bullet>
         <Ftr />
@@ -1147,18 +1155,29 @@ function Chapter6() {
         ont des DUA spécifiques pouvant aller jusqu'à trente ans ou plus.
       </Info>
 
-      <H2>6.2 — Configurer une DUA dans GEID Archives</H2>
+      <H2>6.2 — DUA par défaut appliquée automatiquement</H2>
       <P2>
-        Pour configurer la DUA d'une archive, l'archive doit se trouver en état Intermédiaire.
-        Ouvrez son panneau de détail et cliquez sur le bouton DUA dans la barre d'actions rapides.
+        Dès qu'une archive passe en état Intermédiaire, le système applique automatiquement une
+        DUA par défaut de dix années en conservation définitive, calculée à compter du jour de la
+        transition. Cette valeur par défaut garantit qu'aucune archive intermédiaire ne se
+        retrouve sans règle de conservation et correspond à la durée légale la plus couramment
+        observée pour les documents administratifs. L'archiviste peut à tout moment ajuster
+        cette valeur pour l'adapter au type de document et à la réglementation applicable.
+      </P2>
+
+      <H2>6.3 — Ajuster la DUA d'une archive</H2>
+      <P2>
+        Pour ajuster la DUA d'une archive intermédiaire, ouvrez son panneau de détail et cliquez
+        sur le bouton « Configurer la durée de conservation » dans la barre d'actions rapides.
+        Les champs seront pré-remplis avec les valeurs en cours (ou avec les valeurs par défaut
+        si la DUA vient d'être appliquée).
       </P2>
       <NumBullet n={1}>Saisissez la valeur numérique dans le champ prévu. Exemple : saisissez 5 pour une DUA de cinq unités.</NumBullet>
-      <NumBullet n={2}>Choisissez l'unité de temps : jours, mois ou années. Pour une DUA de cinq ans, choisissez "années".</NumBullet>
-      <NumBullet n={3}>Indiquez la date de départ. Il s'agit souvent de la date de clôture du dossier ou de fin du contrat, pas nécessairement la date d'archivage.</NumBullet>
-      <NumBullet n={4}>Choisissez le sort final : "Conservation définitive" si le document doit être versé aux archives historiques à l'échéance, ou "Élimination" si le document doit être détruit.</NumBullet>
-      <NumBullet n={5}>Confirmez en cliquant sur Enregistrer. La date d'expiration calculée s'affiche immédiatement sous la DUA configurée.</NumBullet>
+      <NumBullet n={2}>Choisissez l'unité de temps : mois ou années. Pour une DUA de cinq ans, choisissez "années".</NumBullet>
+      <NumBullet n={3}>Choisissez le sort final : "Conservation définitive" si le document doit être versé aux archives historiques à l'échéance, ou "Élimination" si le document doit être proposé à la destruction.</NumBullet>
+      <NumBullet n={4}>Confirmez en cliquant sur Enregistrer. La date d'expiration calculée s'affiche immédiatement, ainsi que le temps restant avant échéance.</NumBullet>
 
-      <H2>6.3 — Tableau des DUA courantes par type de document</H2>
+      <H2>6.4 — Tableau des DUA courantes par type de document</H2>
       <View style={s.table}>
         <View style={s.tableHead}>
           <View style={[s.tableHeadCell, { flex: 2 }]}><Text style={s.tableHeadTxt}>Type de document</Text></View>
@@ -1190,7 +1209,7 @@ function Chapter6() {
         votre archiviste référent ou le tableau de gestion documentaire officiel de votre organisation.
       </Text>
 
-      <H2>6.4 — Les alertes DUA</H2>
+      <H2>6.5 — Les alertes DUA</H2>
       <P2>
         GEID Archives surveille en permanence les DUA configurées et génère des alertes à deux
         niveaux. La première alerte apparaît trente jours avant l'expiration de la DUA, sous forme
