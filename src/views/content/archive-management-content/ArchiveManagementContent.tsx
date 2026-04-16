@@ -314,8 +314,8 @@ export default function ArchiveManagementContent() {
       gridTemplateColumns: isMobile
         ? "1fr"
         : detailOpen && focusedDoc
-          ? `${sidebarWidth}px 1px 1fr 320px`
-          : `${sidebarWidth}px 1px 1fr`,
+          ? `${sidebarWidth}px 1px minmax(0, 1fr) 320px`
+          : `${sidebarWidth}px 1px minmax(0, 1fr)`,
     }}>
 
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}

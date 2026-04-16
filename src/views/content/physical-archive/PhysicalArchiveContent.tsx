@@ -215,11 +215,11 @@ export default function PhysicalArchiveContent() {
         minHeight: 0,
         gridTemplateColumns: insideContainer
           ? {
-              xs: showDetail ? "0px 0px 0px 1fr" : "0px 0px 1fr 0px",
-              md: `${treeWidth}px 1px 1fr 280px`,
-              lg: `${treeWidth}px 1px 1fr 320px`,
+              xs: showDetail ? "0px 0px 0px minmax(0, 1fr)" : "0px 0px minmax(0, 1fr) 0px",
+              md: `${treeWidth}px 1px minmax(0, 1fr) 280px`,
+              lg: `${treeWidth}px 1px minmax(0, 1fr) 320px`,
             }
-          : "1fr",
+          : "minmax(0, 1fr)",
       }}>
 
         {/* ── Col 1 : Sidebar arborescence ── */}

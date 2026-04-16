@@ -133,7 +133,7 @@ export default function EliminationContent() {
           overflow: "hidden",
           gridTemplateColumns: isMobile
             ? "1fr"
-            : `${sidebarWidth}px 1px 1fr ${focusedPv ? 320 : 280}px`,
+            : `${sidebarWidth}px 1px minmax(0, 1fr) ${focusedPv ? 320 : 280}px`,
         }}
       >
         {/* Col 1 — Sidebar */}
