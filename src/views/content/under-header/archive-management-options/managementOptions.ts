@@ -89,7 +89,7 @@ const managementOptions: ManagementOption[] = [
     id: "configure-dua",
     type: "button",
     icon: AccessTimeOutlinedIcon,
-    activeKeys: ["isOnly", "isSemiActive"],
+    activeKeys: ["isOnly", "isActiveOrSemi"],
     requiresWrite: true,
     action() {
       const state = store.getState();

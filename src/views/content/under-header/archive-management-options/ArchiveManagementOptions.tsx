@@ -27,6 +27,8 @@ export default function ArchiveManagementOptions() {
       isPending:   s === "PENDING"   || s === "pending",
       isActive:    s === "ACTIVE"    || s === "validated" || s === "actif",
       isSemiActive:s === "SEMI_ACTIVE"|| s === "archived" || s === "intermédiaire",
+      isActiveOrSemi: s === "ACTIVE" || s === "validated" || s === "actif"
+        || s === "SEMI_ACTIVE" || s === "archived" || s === "intermédiaire",
       isPermanent: s === "PERMANENT" || s === "historique",
       isDestroyed: s === "DESTROYED" || s === "disposed"  || s === "détruit",
 

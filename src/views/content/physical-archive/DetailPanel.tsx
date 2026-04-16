@@ -42,6 +42,9 @@ import { STATUS_LABEL, STATUS_COLOR, normalizeStatus } from "@/constants/lifecyc
 import type { Container, Shelf, Floor, Binder, PhysicalRecord, PhysicalDocument } from "@/types";
 import type { PhysicalLevel } from "@/constants/physical";
 import { LEVEL_LABELS } from "@/constants/physical";
+import useNavigateSetState from "@/hooks/useNavigateSetState";
+import deepNavigate from "@/utils/deepNavigate";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -145,6 +148,60 @@ function BinderDetail({ item }: { item: Binder }) {
   );
 }
 
+interface LinkedArchive {
+  _id: string;
+  designation?: string;
+  folder?: string;
+  classNumber?: string;
+  status?: string;
+  validated?: boolean;
+  fileUrl?: string;
+}
+
+function LinkedArchiveCard({ arc }: { arc: LinkedArchive }) {
+  const navigateTo = useNavigateSetState();
+  const { t } = useTranslation();
+  const norm = normalizeStatus(arc.status, arc.validated);
+  const fi = getFileIcon(arc.fileUrl ?? arc.designation);
+
+  const handleOpen = () => {
+    deepNavigate(navigateTo, { tab: "archiveManager", archiveId: arc._id });
+  };
+
+  return (
+    <Tooltip title={t("physical.openInDigitalArchives") || "Ouvrir dans les archives numériques"} placement="left">
+      <Box
+        onClick={handleOpen}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleOpen(); }}
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 1,
+          p: 0.75,
+          borderRadius: 1,
+          border: "1px solid",
+          borderColor: "divider",
+          bgcolor: "background.paper",
+          cursor: "pointer",
+          transition: "background-color 120ms, border-color 120ms",
+          "&:hover": { bgcolor: "action.hover", borderColor: "primary.main" },
+          "&:focus-visible": { outline: 2, outlineColor: "primary.main", outlineOffset: 1 },
+        }}
+      >
+        {React.cloneElement(fi.icon, { fontSize: "small", sx: { color: fi.color, mt: 0.25, flexShrink: 0 } })}
+        <Box flex={1} minWidth={0}>
+          <Typography variant="body2" noWrap fontWeight={500}>{arc.designation ?? arc.folder ?? arc._id}</Typography>
+          {arc.classNumber && <Typography variant="caption" color="text.secondary" noWrap>N° {arc.classNumber}</Typography>}
+        </Box>
+        <Chip label={STATUS_LABEL[norm] ?? norm} color={STATUS_COLOR[norm] ?? "default"} size="small" variant="outlined" sx={{ flexShrink: 0 }} />
+        <OpenInNewOutlinedIcon fontSize="small" sx={{ color: "text.disabled", mt: 0.5, flexShrink: 0 }} />
+      </Box>
+    </Tooltip>
+  );
+}
+
 function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record<string, string> }) {
   const { t } = useTranslation();
   const [{ data: archivesData, loading: archLoading }] = useAxios<{
@@ -184,20 +241,9 @@ function RecordDetail({ item, headers }: { item: PhysicalRecord; headers: Record
         </Typography>
       ) : (
         <Stack spacing={0.5}>
-          {linkedArchives.map((arc) => {
-            const norm = normalizeStatus(arc.status, arc.validated);
-            const fi = getFileIcon(arc.fileUrl ?? arc.designation);
-            return (
-              <Box key={arc._id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 0.75, borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
-                {React.cloneElement(fi.icon, { fontSize: "small", sx: { color: fi.color, mt: 0.25, flexShrink: 0 } })}
-                <Box flex={1} minWidth={0}>
-                  <Typography variant="body2" noWrap fontWeight={500}>{arc.designation ?? arc.folder ?? arc._id}</Typography>
-                  {arc.classNumber && <Typography variant="caption" color="text.secondary" noWrap>N° {arc.classNumber}</Typography>}
-                </Box>
-                <Chip label={STATUS_LABEL[norm] ?? norm} color={STATUS_COLOR[norm] ?? "default"} size="small" variant="outlined" sx={{ flexShrink: 0 }} />
-              </Box>
-            );
-          })}
+          {linkedArchives.map((arc) => (
+            <LinkedArchiveCard key={arc._id} arc={arc} />
+          ))}
         </Stack>
       )}
     </Stack>
@@ -234,20 +280,9 @@ function DocumentDetail({ item, headers }: { item: PhysicalDocument; headers: Re
         </Typography>
       ) : (
         <Stack spacing={0.5}>
-          {linkedArchives.map((arc) => {
-            const norm = normalizeStatus(arc.status, arc.validated);
-            const fi = getFileIcon(arc.fileUrl ?? arc.designation);
-            return (
-              <Box key={arc._id} sx={{ display: "flex", alignItems: "flex-start", gap: 1, p: 0.75, borderRadius: 1, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
-                {React.cloneElement(fi.icon, { fontSize: "small", sx: { color: fi.color, mt: 0.25, flexShrink: 0 } })}
-                <Box flex={1} minWidth={0}>
-                  <Typography variant="body2" noWrap fontWeight={500}>{arc.designation ?? arc.folder ?? arc._id}</Typography>
-                  {arc.classNumber && <Typography variant="caption" color="text.secondary" noWrap>N° {arc.classNumber}</Typography>}
-                </Box>
-                <Chip label={STATUS_LABEL[norm] ?? norm} color={STATUS_COLOR[norm] ?? "default"} size="small" variant="outlined" sx={{ flexShrink: 0 }} />
-              </Box>
-            );
-          })}
+          {linkedArchives.map((arc) => (
+            <LinkedArchiveCard key={arc._id} arc={arc} />
+          ))}
         </Stack>
       )}
     </Stack>

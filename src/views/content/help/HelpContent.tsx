@@ -123,8 +123,8 @@ const SECTIONS: ManualSection[] = [
   },
   {
     id: "dua-configuration", number: "6.1", title: "Configurer une DUA",
-    keywords: ["configurer", "paramétrer", "DUA", "valeur", "unité", "date de départ", "sort final"],
-    body: "Lorsqu'une archive passe en état intermédiaire, le système applique automatiquement une DUA de 10 ans en conservation définitive, à compter du jour de la transition. Pour ajuster cette valeur, ouvrez le panneau de détail de l'archive et cliquez sur le bouton « Configurer la durée de conservation ». Saisissez la valeur numérique, l'unité de temps en mois ou en années, puis choisissez le sort final conservation définitive ou élimination. Le système calcule automatiquement la date d'expiration et vous alertera quand elle approche.",
+    keywords: ["configurer", "paramétrer", "DUA", "valeur", "unité", "date de départ", "sort final", "active", "intermédiaire"],
+    body: "La durée de conservation peut être configurée dès l'état actif pour planifier à l'avance la rétention du document. Sur un document actif, la durée est « prévue » — le compte à rebours ne commence qu'au passage en intermédiaire, où le système pose automatiquement la date de départ. Si aucune DUA n'a été définie au moment du passage en intermédiaire, une valeur par défaut de 10 ans en conservation définitive est appliquée. Pour ajuster cette valeur, ouvrez le panneau de détail de l'archive et cliquez sur le bouton « Configurer la durée de conservation ». Saisissez la valeur numérique, l'unité de temps en mois ou en années, puis choisissez le sort final conservation définitive ou élimination.",
   },
   {
     id: "validation", number: "7", title: "Valider une archive",
@@ -154,7 +154,7 @@ const SECTIONS: ManualSection[] = [
   {
     id: "rattachement", number: "10.2", title: "Rattacher une archive numérique à un document",
     keywords: ["rattacher", "lier", "associer", "archive numérique", "document", "support", "détacher"],
-    body: "Le rattachement permet d'associer une archive numérique à un document précis dans la hiérarchie physique. Les archives se rattachent uniquement aux documents, car c'est le document qui représente la pièce individuelle à laquelle correspond le fichier numérique. Un dossier regroupe les documents, mais on ne rattache pas directement une archive à un dossier. Depuis le panneau de détail de l'archive, cliquez sur le bouton Dossier physique pour ouvrir la navigation en cascade. Parcourez la hiérarchie jusqu'au document souhaité. Confirmez avec le bouton Rattacher. Le détachement est aussi possible depuis le même dialogue.",
+    body: "Le rattachement permet d'associer une archive numérique à un document précis dans la hiérarchie physique. Les archives se rattachent uniquement aux documents, car c'est le document qui représente la pièce individuelle à laquelle correspond le fichier numérique. Un dossier regroupe les documents, mais on ne rattache pas directement une archive à un dossier. Depuis le panneau de détail de l'archive, cliquez sur le bouton Dossier physique pour ouvrir la navigation en cascade. Parcourez la hiérarchie jusqu'au document souhaité. Confirmez avec le bouton Rattacher. Le détachement est aussi possible depuis le même dialogue. Une fois rattachée, l'archive affiche dans son panneau de détail un fil d'Ariane compact « Conteneur › Étagère › Niveau › Classeur › Dossier › Document » avec un bouton « Voir dans les archives physiques » pour sauter vers la fiche du dossier. Inversement, depuis la fiche d'un dossier ou document physique, les archives numériques rattachées sont listées et cliquables pour naviguer vers elles.",
   },
   {
     id: "glisser-deposer", number: "10.3", title: "Glisser-déposer une archive entre documents",

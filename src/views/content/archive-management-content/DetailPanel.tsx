@@ -37,6 +37,7 @@ import GavelOutlinedIcon          from "@mui/icons-material/GavelOutlined";
 import ShieldOutlinedIcon         from "@mui/icons-material/ShieldOutlined";
 import ReplayOutlinedIcon         from "@mui/icons-material/ReplayOutlined";
 import WarningAmberOutlinedIcon   from "@mui/icons-material/WarningAmberOutlined";
+import PhysicalLinkSection         from "./PhysicalLinkSection";
 
 import { useTranslation } from "react-i18next";
 import { STATUS_LABEL, normalizeStatus } from "@/constants/lifecycle";
@@ -91,15 +92,18 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   const dua       = doc.dua as { value?: number; unit?: string; sortFinal?: string; startDate?: string } | undefined;
 
   // ── Calcul DUA ─────────────────────────────────────────────
+  // La DUA peut etre configuree des l etat ACTIVE (valeurs prevues).
+  // Le compte a rebours ne commence qu'au passage en SEMI_ACTIVE (startDate pose).
   let duaExpired = false;
   let duaPct     = 0;
   let duaExpiry: Date | null = null;
-  if (norm === "SEMI_ACTIVE" && dua?.value && dua?.unit && dua?.startDate) {
+  if (dua?.value && dua?.unit && dua?.startDate) {
     duaExpiry  = computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit);
     const span = duaExpiry.getTime() - new Date(dua.startDate).getTime();
     duaPct     = Math.min(100, Math.max(0, ((Date.now() - new Date(dua.startDate).getTime()) / span) * 100));
     duaExpired = Date.now() >= duaExpiry.getTime();
   }
+  const showDuaSection = norm === "ACTIVE" || norm === "SEMI_ACTIVE";
 
   const history = (doc.lifecycleHistory as Array<{ status: string; changedAt?: string }> | undefined) ?? [];
 
@@ -110,7 +114,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
       : []),
     ...(canWrite && norm !== "DESTROYED" ? [{ title: t("archives.actions.edit"), icon: <EditNoteOutlinedIcon />, action: "edit" }] : []),
     ...(canWrite && (norm === "ACTIVE" || norm === "SEMI_ACTIVE") ? [{ title: t("archives.actions.linkPhysical"), icon: <FolderOpenOutlinedIcon />, action: "link-physical" }] : []),
-    ...(norm === "SEMI_ACTIVE" && canWrite
+    ...((norm === "ACTIVE" || norm === "SEMI_ACTIVE") && canWrite
       ? [{ title: t("archives.actions.configureDua"), icon: <AccessTimeOutlinedIcon />, action: "configure-dua", color: "info" as const }]
       : []),
     ...(isAdmin && norm !== "DESTROYED" ? [{ title: t("archives.actions.delete"), icon: <DeleteOutlineOutlinedIcon />, action: "delete", color: "error" as const }] : []),
@@ -237,8 +241,12 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
           )}
         </Box>
 
-        {/* Section DUA */}
-        {norm === "SEMI_ACTIVE" && (
+        {/* Section Rattachement physique */}
+        <Divider />
+        <PhysicalLinkSection doc={doc} canWrite={canWrite} onAction={onAction} />
+
+        {/* Section DUA — visible des l etat ACTIVE */}
+        {showDuaSection && (
           <>
             <Divider />
             <Box px={2} py={1.5}>
@@ -246,7 +254,13 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
                 Durée de conservation (DUA)
               </Typography>
               {!dua?.value ? (
-                <Chip icon={<AccessTimeOutlinedIcon />} label="Non configurée" size="small" color="warning" variant="outlined" />
+                <Chip
+                  icon={<AccessTimeOutlinedIcon />}
+                  label={norm === "ACTIVE" ? "Non prevue" : "Non configurée"}
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                />
               ) : (
                 <>
                   <Typography variant="body2" mb={0.5}>
@@ -254,7 +268,12 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
                     {" · "}
                     Sort : <strong>{dua.sortFinal === "conservation" ? "Historique" : "Élimination"}</strong>
                   </Typography>
-                  {duaExpiry && (
+                  {norm === "ACTIVE" && (
+                    <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                      Durée prévue — commencera au passage en intermédiaire.
+                    </Typography>
+                  )}
+                  {norm === "SEMI_ACTIVE" && duaExpiry && (
                     <Typography
                       variant="caption"
                       color={duaExpired ? "error.main" : "text.secondary"}
@@ -265,12 +284,14 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
                       {duaExpiry.toLocaleDateString("fr-FR")}
                     </Typography>
                   )}
-                  <LinearProgress
-                    variant="determinate"
-                    value={duaPct}
-                    color={duaPct > 90 || duaExpired ? "error" : duaPct > 70 ? "warning" : "info"}
-                    sx={{ height: 6, borderRadius: 2 }}
-                  />
+                  {norm === "SEMI_ACTIVE" && duaExpiry && (
+                    <LinearProgress
+                      variant="determinate"
+                      value={duaPct}
+                      color={duaPct > 90 || duaExpired ? "error" : duaPct > 70 ? "warning" : "info"}
+                      sx={{ height: 6, borderRadius: 2 }}
+                    />
+                  )}
                 </>
               )}
             </Box>
