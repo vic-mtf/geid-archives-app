@@ -41,7 +41,6 @@ import DetailPanel             from "./DetailPanel";
 import ArchiveManagementHeader from "./ArchiveManagementHeader";
 import ArchiveSidebar          from "./ArchiveSidebar";
 import MobileFilterChips       from "./MobileFilterChips";
-import SummaryPanel            from "./SummaryPanel";
 import getStatusNav, { type StatusFilter } from "./statusNav";
 import { exportArchivesCSV }   from "./exportCSV";
 import { computeExpiresAt, dispatchArchiveAction } from "./helpers";
@@ -314,7 +313,9 @@ export default function ArchiveManagementContent() {
       overflow: "hidden",
       gridTemplateColumns: isMobile
         ? "1fr"
-        : `${sidebarWidth}px 1px 1fr ${detailOpen && focusedDoc ? 320 : 280}px`,
+        : detailOpen && focusedDoc
+          ? `${sidebarWidth}px 1px 1fr 320px`
+          : `${sidebarWidth}px 1px 1fr`,
     }}>
 
       {/* ── Sidebar gauche (md+) ──────────────────────────────── */}
@@ -398,8 +399,8 @@ export default function ArchiveManagementContent() {
         </MuiBox>
       </MuiBox>
 
-      {/* ── Panneau droit — détail ou résumé ────────────────── */}
-      {!isMobile && (
+      {/* ── Panneau droit — detail d'une archive selectionnee ──── */}
+      {!isMobile && detailOpen && focusedDoc && (
         <MuiBox
           sx={{
             borderLeft: 1,
@@ -410,30 +411,13 @@ export default function ArchiveManagementContent() {
             minWidth: 0,
           }}
         >
-          {detailOpen && focusedDoc ? (
-            <DetailPanel
-              doc={focusedDoc}
-              canWrite={canWrite}
-              isAdmin={isAdmin}
-              onClose={closeDetail}
-              onAction={handleAction}
-            />
-          ) : (
-            <SummaryPanel
-              totalCount={totalCount}
-              statusCounts={statusCounts}
-              duaExpiredCount={duaExpiredCount}
-              canWrite={canWrite}
-              isAdmin={isAdmin}
-              selectedCount={(selectedElements as string[]).length}
-              rowCount={rows.length}
-              recentArchives={recentArchives as unknown as { id: string; status?: string; validated?: boolean; designation?: string }[]}
-              onBulkDelete={handleBulkDelete}
-              onOpenAdd={openAdd}
-              onExportCSV={exportCSV}
-              onSelectArchive={handleSelectArchive}
-            />
-          )}
+          <DetailPanel
+            doc={focusedDoc}
+            canWrite={canWrite}
+            isAdmin={isAdmin}
+            onClose={closeDetail}
+            onAction={handleAction}
+          />
         </MuiBox>
       )}
 
