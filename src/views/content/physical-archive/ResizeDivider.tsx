@@ -31,11 +31,12 @@ const ResizeDivider = React.memo(function ResizeDivider({
     if (!parent) return null;
     const rect = parent.getBoundingClientRect();
     const raw = clientX - rect.left;
-    // Largeur du panneau détail (dernier enfant visible du grid)
+    // Largeur du panneau detail : uniquement s'il existe apres la colonne centrale
+    // (sidebar | divider | center | detail?). Le divider est a l'index 1.
+    // S'il y a 4 enfants ou plus, le dernier est le panneau detail.
     const children = Array.from(parent.children) as HTMLElement[];
-    const lastChild = children[children.length - 1];
-    const detailW = lastChild && lastChild !== el
-      ? lastChild.getBoundingClientRect().width
+    const detailW = children.length >= 4
+      ? children[children.length - 1].getBoundingClientRect().width
       : 0;
     const maxLeft = rect.width - 1 - minRight - detailW;
     return Math.max(minLeft, Math.min(maxLeft, raw));
