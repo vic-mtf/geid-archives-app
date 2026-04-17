@@ -46,7 +46,7 @@ import formatDate  from "@/utils/formatTime";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useToken from "@/hooks/useToken";
 import StatusChip  from "./StatusChip";
-import { resolveDua, currentPhase } from "./duaDefaults";
+import { resolveDua, currentPhase, humanizeDuration } from "./duaDefaults";
 
 const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif", "avif", "pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt"]);
 function hasThumb(fileUrl: string | undefined): boolean {
@@ -117,28 +117,28 @@ function DuaPhaseBlock({ label, phase, isCurrent, nextLabel, t }: DuaPhaseBlockP
     daysLeft = Math.floor((expiresAt.getTime() - Date.now()) / 86_400_000);
   }
 
-  const borderSx = isCurrent
-    ? { border: 1, borderColor: "info.main", bgcolor: "info.50" }
-    : { border: 1, borderColor: "divider", bgcolor: "action.hover" };
-
   return (
     <Box
       sx={{
-        ...borderSx,
+        border: 1,
+        borderColor: "info.main",
+        bgcolor: "info.50",
         borderRadius: 1.5,
-        p: 1,
+        p: 1.25,
       }}
     >
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.75}>
         <Box display="flex" alignItems="center" gap={0.75}>
-          <Typography variant="caption" fontWeight={600} color={isCurrent ? "info.main" : "text.primary"}>
+          <Typography variant="caption" fontWeight={600} color="info.main">
             {label}
           </Typography>
-          {isCurrent && (
-            <Chip label="en cours" size="small" color="info" sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }} />
-          )}
           {phase.isDefault && (
-            <Chip label="défaut" size="small" variant="outlined" sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }} />
+            <Chip
+              label="défaut"
+              size="small"
+              variant="outlined"
+              sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }}
+            />
           )}
         </Box>
         <Typography variant="caption" fontWeight={600}>
@@ -152,19 +152,26 @@ function DuaPhaseBlock({ label, phase, isCurrent, nextLabel, t }: DuaPhaseBlockP
             variant="determinate"
             value={pct}
             color={pct > 90 || expired ? "error" : pct > 70 ? "warning" : "info"}
-            sx={{ height: 5, borderRadius: 2, mb: 0.5 }}
+            sx={{ height: 5, borderRadius: 2, mb: 0.75 }}
           />
           <Typography variant="caption" color="text.secondary" display="block">
-            {expired
-              ? `Expirée le ${expiresAt?.toLocaleDateString("fr-FR")} — ${nextLabel} imminent`
-              : `Restant ${daysLeft} j — ${nextLabel} le ${expiresAt?.toLocaleDateString("fr-FR")}`}
+            {expired ? (
+              <>Expirée le <strong>{expiresAt?.toLocaleDateString("fr-FR")}</strong> — {nextLabel} imminent</>
+            ) : (
+              <>Reste <strong>{humanizeDuration(daysLeft)}</strong></>
+            )}
           </Typography>
+          {!expired && (
+            <Typography variant="caption" color="text.disabled" display="block">
+              {nextLabel} le {expiresAt?.toLocaleDateString("fr-FR")}
+            </Typography>
+          )}
         </>
       ) : (
         <Typography variant="caption" color="text.secondary" display="block">
           {isCurrent
             ? "Démarrage imminent."
-            : `Prévue ${phase.value} ${unitLabel} — démarrera à l'entrée dans cette étape.`}
+            : `Prévue ${phase.value} ${unitLabel}.`}
         </Typography>
       )}
     </Box>
@@ -322,8 +329,8 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
         <Divider />
         <PhysicalLinkSection doc={doc} canWrite={canWrite} onAction={onAction} />
 
-        {/* Section DUA — cycle par phase (active + intermediaire) */}
-        {showDuaSection && (
+        {/* Section DUA — phase courante uniquement */}
+        {showDuaSection && curPhase && (
           <>
             <Divider />
             <Box px={2} py={1.5}>
@@ -345,28 +352,19 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
               </Box>
 
               <DuaPhaseBlock
-                label="Phase active"
-                shortLabel="act."
-                phase={dua.active}
-                isCurrent={curPhase === "active"}
-                nextLabel="Passage en intermédiaire"
-                t={t}
-              />
-
-              <Box mt={1.5}>
-                <DuaPhaseBlock
-                  label="Phase intermédiaire"
-                  shortLabel="int."
-                  phase={dua.semiActive}
-                  isCurrent={curPhase === "semiActive"}
-                  nextLabel={
-                    dua.sortFinal === "conservation"
+                label={curPhase === "active" ? "Phase active" : "Phase intermédiaire"}
+                shortLabel={curPhase === "active" ? "act." : "int."}
+                phase={dua[curPhase]}
+                isCurrent
+                nextLabel={
+                  curPhase === "active"
+                    ? "Passage en intermédiaire"
+                    : dua.sortFinal === "conservation"
                       ? "Passage en historique"
                       : "Proposition d'élimination"
-                  }
-                  t={t}
-                />
-              </Box>
+                }
+                t={t}
+              />
             </Box>
           </>
         )}

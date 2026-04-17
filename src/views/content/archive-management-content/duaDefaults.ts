@@ -117,3 +117,45 @@ export function currentPhase(
   void status;
   return null;
 }
+
+/**
+ * Formate une duree (nombre de jours) en texte humain :
+ *   - 3627 j => "9 ans 11 mois"
+ *   - 45 j   => "1 mois 15 j"
+ *   - 7 j    => "7 jours"
+ *   - 1 j    => "1 jour"
+ *   - <= 0   => "expirée"
+ */
+export function humanizeDuration(days: number): string {
+  if (days <= 0) return "expirée";
+  if (days === 1) return "1 jour";
+  if (days < 30) return `${days} jours`;
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    const rem = days - months * 30;
+    const mLabel = months === 1 ? "1 mois" : `${months} mois`;
+    if (rem === 0) return mLabel;
+    return `${mLabel} ${rem}${rem === 1 ? " jour" : " j"}`;
+  }
+  const years = Math.floor(days / 365);
+  const remAfterYears = days - years * 365;
+  const months = Math.floor(remAfterYears / 30);
+  const yLabel = years === 1 ? "1 an" : `${years} ans`;
+  if (months === 0) return yLabel;
+  return `${yLabel} ${months} mois`;
+}
+
+/** Version ultra-compacte pour chip/cellule : "9a 11m", "1m 15j", "7j". */
+export function humanizeDurationShort(days: number): string {
+  if (days <= 0) return "expirée";
+  if (days < 30) return `${days}j`;
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    const rem = days - months * 30;
+    return rem === 0 ? `${months}m` : `${months}m ${rem}j`;
+  }
+  const years = Math.floor(days / 365);
+  const remAfterYears = days - years * 365;
+  const months = Math.floor(remAfterYears / 30);
+  return months === 0 ? `${years}a` : `${years}a ${months}m`;
+}

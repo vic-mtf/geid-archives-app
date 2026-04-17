@@ -18,6 +18,7 @@ import {
   phaseExpiresAt,
   phaseProgress,
   currentPhase,
+  humanizeDurationShort,
 } from "./duaDefaults";
 
 interface DuaCellProps {
@@ -78,13 +79,7 @@ export default function DuaCell({ row }: DuaCellProps) {
   const daysLeft = Math.floor(
     (expiresAt.getTime() - now.getTime()) / 86_400_000,
   );
-  const label = expired
-    ? "Expirée"
-    : daysLeft < 30
-      ? `${daysLeft}j`
-      : daysLeft < 365
-        ? `${Math.floor(daysLeft / 30)}m`
-        : `${Math.floor(daysLeft / 365)}a`;
+  const label = expired ? "Expirée" : humanizeDurationShort(daysLeft);
 
   const tooltip =
     `Phase ${phaseLabel.toLowerCase()} : ${target.value} ${unitLabel} ${sortLabel}\n` +
