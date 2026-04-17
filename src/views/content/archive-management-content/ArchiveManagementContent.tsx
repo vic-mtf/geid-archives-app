@@ -36,7 +36,7 @@ import useNavigateSetState from "@/hooks/useNavigateSetState";
 import { normalizeStatus, type NormalizedStatus } from "@/constants/lifecycle";
 import useArchiveEvents from "./useArchiveEvents";
 // useLocation retiré — deep navigate géré dans useArchiveEvents
-import archiveColumns          from "./columns";
+import { buildArchiveColumns } from "./columns";
 import DetailPanel             from "./DetailPanel";
 import ArchiveManagementHeader from "./ArchiveManagementHeader";
 import ArchiveSidebar          from "./ArchiveSidebar";
@@ -370,7 +370,7 @@ export default function ArchiveManagementContent() {
               apiRef={apiRef}
               rows={rows}
               loading={loading}
-              columns={archiveColumns}
+              columns={buildArchiveColumns(statusFilter)}
               checkboxSelection
               disableRowSelectionOnClick
               rowSelectionModel={selectedElements as string[]}
