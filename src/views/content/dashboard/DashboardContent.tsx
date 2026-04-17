@@ -62,6 +62,7 @@ import {
   resolveDua,
   phaseExpiresAt,
   currentPhase,
+  extractActiveStartFromArchive,
 } from "@/views/content/archive-management-content/duaDefaults";
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -72,7 +73,7 @@ function currentPhaseExpiresAt(doc: Record<string, unknown>): Date | null {
   const norm = normalizeStatus(status, doc.validated as boolean | undefined);
   const phase = currentPhase(status, norm);
   if (!phase) return null;
-  const dua = resolveDua(doc.dua);
+  const dua = resolveDua(doc.dua, extractActiveStartFromArchive(doc));
   return phaseExpiresAt(dua[phase]);
 }
 

@@ -44,7 +44,12 @@ import MobileFilterChips       from "./MobileFilterChips";
 import getStatusNav, { type StatusFilter } from "./statusNav";
 import { exportArchivesCSV }   from "./exportCSV";
 import { dispatchArchiveAction } from "./helpers";
-import { resolveDua, phaseExpiresAt, currentPhase } from "./duaDefaults";
+import {
+  resolveDua,
+  phaseExpiresAt,
+  currentPhase,
+  extractActiveStartFromArchive,
+} from "./duaDefaults";
 
 /** Vrai si la DUA de la phase courante de l'archive est expiree. */
 function isDuaExpired(row: Record<string, unknown>): boolean {
@@ -52,7 +57,7 @@ function isDuaExpired(row: Record<string, unknown>): boolean {
   const norm = normalizeStatus(status, row.validated as boolean | undefined);
   const phase = currentPhase(status, norm);
   if (!phase) return false;
-  const dua = resolveDua(row.dua);
+  const dua = resolveDua(row.dua, extractActiveStartFromArchive(row));
   const expiresAt = phaseExpiresAt(dua[phase]);
   if (!expiresAt) return false;
   return Date.now() >= expiresAt.getTime();

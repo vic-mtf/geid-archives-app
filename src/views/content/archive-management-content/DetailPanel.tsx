@@ -46,7 +46,12 @@ import formatDate  from "@/utils/formatTime";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useToken from "@/hooks/useToken";
 import StatusChip  from "./StatusChip";
-import { resolveDua, currentPhase, humanizeDuration } from "./duaDefaults";
+import {
+  resolveDua,
+  currentPhase,
+  humanizeDuration,
+  extractActiveStartFromArchive,
+} from "./duaDefaults";
 
 const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif", "avif", "pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt"]);
 function hasThumb(fileUrl: string | undefined): boolean {
@@ -184,8 +189,9 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   const { t } = useTranslation();
   const norm      = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
   const rawStatus = doc.status as string | undefined;
-  // DUA par phase avec defauts 10 ans / conservation (synchro serveur)
-  const dua       = resolveDua(doc.dua);
+  // DUA par phase avec defauts 10 ans / conservation + fallback startDate active
+  // sur createdAt pour les archives legacy (validees avant la nouvelle logique).
+  const dua       = resolveDua(doc.dua, extractActiveStartFromArchive(doc));
   const curPhase  = currentPhase(doc.status as string | undefined, norm);
   const showDuaSection = curPhase !== null;
 

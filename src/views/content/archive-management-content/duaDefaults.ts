@@ -51,14 +51,30 @@ export interface DuaResolved {
  * Normalise une DUA brute en structure par phase avec defauts.
  * Lit aussi l'ancien format single-DUA (value/unit/startDate top-level) et le
  * traite comme la phase intermediaire.
+ *
+ * @param raw              la DUA brute (archive.dua)
+ * @param fallbackActiveStart date de creation de l'archive, utilisee comme
+ *                            startDate par defaut pour la phase active si
+ *                            dua.active.startDate n'est pas encore pose
+ *                            (cas archives legacy validees avant la nouvelle
+ *                            logique par-phase)
  */
-export function resolveDua(raw: unknown): DuaResolved {
+export function resolveDua(
+  raw: unknown,
+  fallbackActiveStart?: string | Date,
+): DuaResolved {
   const r = (raw ?? {}) as DuaRaw;
 
   // Phase active
   const activeVal = r.active?.value;
   const activeUnit = r.active?.unit;
-  const activeStart = r.active?.startDate;
+  let activeStart = r.active?.startDate;
+  if (!activeStart && fallbackActiveStart) {
+    activeStart =
+      typeof fallbackActiveStart === "string"
+        ? fallbackActiveStart
+        : fallbackActiveStart.toISOString();
+  }
   const active: DuaPhaseResolved = {
     value: activeVal ?? DEFAULT_PHASE_YEARS,
     unit: (activeUnit as DuaUnit) ?? "years",
@@ -85,6 +101,30 @@ export function resolveDua(raw: unknown): DuaResolved {
     sortFinal,
     sortFinalIsDefault: !r.sortFinal,
   };
+}
+
+/**
+ * Cherche la date de bascule en ACTIVE dans l'historique (la plus recente),
+ * sinon retombe sur createdAt. Utilisee comme fallback pour dua.active.startDate.
+ */
+export function extractActiveStartFromArchive(
+  doc: Record<string, unknown>,
+): string | undefined {
+  const history = doc.lifecycleHistory as
+    | Array<{ status?: string; changedAt?: string }>
+    | undefined;
+  if (Array.isArray(history)) {
+    for (let i = history.length - 1; i >= 0; i--) {
+      const h = history[i];
+      if (
+        h?.changedAt &&
+        (h.status === "ACTIVE" || h.status === "actif" || h.status === "validated")
+      ) {
+        return h.changedAt;
+      }
+    }
+  }
+  return (doc.createdAt as string | undefined) ?? undefined;
 }
 
 /** Calcule la date d'expiration d'une phase (ou null si pas demarree). */

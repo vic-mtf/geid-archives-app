@@ -19,6 +19,7 @@ import {
   phaseProgress,
   currentPhase,
   humanizeDurationShort,
+  extractActiveStartFromArchive,
 } from "./duaDefaults";
 
 interface DuaCellProps {
@@ -32,7 +33,7 @@ export default function DuaCell({ row }: DuaCellProps) {
   const phase = currentPhase(status, norm);
   if (!phase) return null;
 
-  const dua = resolveDua(row.dua);
+  const dua = resolveDua(row.dua, extractActiveStartFromArchive(row));
   const target = dua[phase];
   const unitLabel =
     target.unit === "years"
