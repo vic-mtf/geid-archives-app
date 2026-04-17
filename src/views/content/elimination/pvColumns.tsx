@@ -3,9 +3,11 @@
  */
 
 import { GridColDef } from "@mui/x-data-grid";
-import { Chip } from "@mui/material";
+import { Chip, Tooltip, Typography } from "@mui/material";
 import PvStatusChip from "./PvStatusChip";
 import type { PvStatus } from "./pvStatusConfig";
+import timeAgo from "@/utils/timeAgo";
+import formatDate from "@/utils/formatTime";
 
 const pvColumns: GridColDef[] = [
   {
@@ -55,15 +57,18 @@ const pvColumns: GridColDef[] = [
   {
     field: "createdAt",
     headerName: "Date",
-    width: 110,
-    renderCell: (params) =>
-      params.value
-        ? new Date(params.value as string).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })
-        : "—",
+    width: 140,
+    renderCell: (params) => {
+      const raw = params.value as string | undefined;
+      if (!raw) return "—";
+      return (
+        <Tooltip title={formatDate(raw)}>
+          <Typography variant="body2" color="text.secondary">
+            {timeAgo(raw)}
+          </Typography>
+        </Tooltip>
+      );
+    },
   },
 ];
 

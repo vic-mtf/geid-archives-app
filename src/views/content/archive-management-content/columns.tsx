@@ -5,9 +5,12 @@
  * personnalisé (StatusChip, DuaCell) et ses options de tri/filtre.
  */
 
+import { Tooltip, Typography } from "@mui/material";
 import { GridColDef } from "@mui/x-data-grid";
 import StatusChip from "./StatusChip";
-import DuaCell    from "./DuaCell";
+import DuaCell from "./DuaCell";
+import timeAgo from "@/utils/timeAgo";
+import formatDate from "@/utils/formatTime";
 
 /** Colonnes affichées dans le tableau des archives numériques */
 const archiveColumns: GridColDef[] = [
@@ -37,7 +40,10 @@ const archiveColumns: GridColDef[] = [
     headerName: "Statut",
     width: 140,
     renderCell: (p) => (
-      <StatusChip status={p.row.status as string} validated={p.row.validated as boolean} />
+      <StatusChip
+        status={p.row.status as string}
+        validated={p.row.validated as boolean}
+      />
     ),
   },
   {
@@ -50,8 +56,21 @@ const archiveColumns: GridColDef[] = [
   {
     field: "createdAt",
     headerName: "Date",
-    type: "dateTime",
-    width: 150,
+    width: 140,
+    // tri par Date reel (pas par le texte affiche)
+    valueGetter: (value: string | undefined) =>
+      value ? new Date(value) : null,
+    renderCell: (p) => {
+      const raw = p.row.createdAt as string | undefined;
+      if (!raw) return "—";
+      return (
+        <Tooltip title={formatDate(raw)}>
+          <Typography variant="body2" color="text.secondary">
+            {timeAgo(raw)}
+          </Typography>
+        </Tooltip>
+      );
+    },
   },
 ];
 
