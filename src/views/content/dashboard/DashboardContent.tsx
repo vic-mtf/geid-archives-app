@@ -58,15 +58,22 @@ import { useTranslation } from "react-i18next";
 import StatCard from "./StatCard";
 import { EmptyPlaceholder } from "./StatCard";
 import DashboardBottomRow from "./DashboardBottomRow";
+import {
+  resolveDua,
+  phaseExpiresAt,
+  currentPhase,
+} from "@/views/content/archive-management-content/duaDefaults";
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function computeExpiresAt(start: Date, value: number, unit: string): Date {
-  const d = new Date(start);
-  if (unit === "days")   d.setDate(d.getDate() + value);
-  if (unit === "months") d.setMonth(d.getMonth() + value);
-  if (unit === "years")  d.setFullYear(d.getFullYear() + value);
-  return d;
+/** Date d'expiration de la DUA de la phase courante (null si pas en phase). */
+function currentPhaseExpiresAt(doc: Record<string, unknown>): Date | null {
+  const status = doc.status as string | undefined;
+  const norm = normalizeStatus(status, doc.validated as boolean | undefined);
+  const phase = currentPhase(status, norm);
+  if (!phase) return null;
+  const dua = resolveDua(doc.dua);
+  return phaseExpiresAt(dua[phase]);
 }
 
 // ── Composant principal ───────────────────────────────────────
@@ -149,26 +156,24 @@ export default function DashboardContent() {
     return c;
   }, [fullList]);
 
-  const duaExpired = useMemo(() =>
-    archiveList.filter((doc) => {
-      if (normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined) !== "SEMI_ACTIVE") return false;
-      const dua = doc.dua as { value?: number; unit?: string; startDate?: string } | undefined;
-      if (!dua?.value || !dua?.unit || !dua?.startDate) return false;
-      return Date.now() >= computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit).getTime();
-    }),
-    [archiveList]
+  const duaExpired = useMemo(
+    () =>
+      archiveList.filter((doc) => {
+        const exp = currentPhaseExpiresAt(doc as Record<string, unknown>);
+        return exp !== null && Date.now() >= exp.getTime();
+      }),
+    [archiveList],
   );
 
   const duaSoon = useMemo(() => {
     const in30 = Date.now() + duaThreshold * 24 * 60 * 60 * 1000;
     return archiveList.filter((doc) => {
-      if (normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined) !== "SEMI_ACTIVE") return false;
-      const dua = doc.dua as { value?: number; unit?: string; startDate?: string } | undefined;
-      if (!dua?.value || !dua?.unit || !dua?.startDate) return false;
-      const exp = computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit).getTime();
-      return exp > Date.now() && exp <= in30;
+      const exp = currentPhaseExpiresAt(doc as Record<string, unknown>);
+      if (!exp) return false;
+      const t = exp.getTime();
+      return t > Date.now() && t <= in30;
     });
-  }, [archiveList]);
+  }, [archiveList, duaThreshold]);
 
   const criticalBinders = useMemo(
     () => binderList.filter((b) => b.maxCapacity && ((b.currentCount ?? 0) / b.maxCapacity) >= binderThreshold / 100),

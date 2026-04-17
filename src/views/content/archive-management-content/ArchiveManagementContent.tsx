@@ -43,7 +43,20 @@ import ArchiveSidebar          from "./ArchiveSidebar";
 import MobileFilterChips       from "./MobileFilterChips";
 import getStatusNav, { type StatusFilter } from "./statusNav";
 import { exportArchivesCSV }   from "./exportCSV";
-import { computeExpiresAt, dispatchArchiveAction } from "./helpers";
+import { dispatchArchiveAction } from "./helpers";
+import { resolveDua, phaseExpiresAt, currentPhase } from "./duaDefaults";
+
+/** Vrai si la DUA de la phase courante de l'archive est expiree. */
+function isDuaExpired(row: Record<string, unknown>): boolean {
+  const status = row.status as string | undefined;
+  const norm = normalizeStatus(status, row.validated as boolean | undefined);
+  const phase = currentPhase(status, norm);
+  if (!phase) return false;
+  const dua = resolveDua(row.dua);
+  const expiresAt = phaseExpiresAt(dua[phase]);
+  if (!expiresAt) return false;
+  return Date.now() >= expiresAt.getTime();
+}
 
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -129,13 +142,7 @@ export default function ArchiveManagementContent() {
   }, [allRows]);
 
   const duaExpiredCount = useMemo(
-    () =>
-      allRows.filter((r) => {
-        if (normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined) !== "SEMI_ACTIVE") return false;
-        const dua = r.dua as { value?: number; unit?: string; startDate?: string } | undefined;
-        if (!dua?.value || !dua?.unit || !dua?.startDate) return false;
-        return Date.now() >= computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit).getTime();
-      }).length,
+    () => allRows.filter((r) => isDuaExpired(r as Record<string, unknown>)).length,
     [allRows]
   );
 
@@ -166,12 +173,7 @@ export default function ArchiveManagementContent() {
           );
 
     if (quickFilter === "dua_expired") {
-      base = base.filter((r) => {
-        if (normalizeStatus(r.status as string | undefined, r.validated as boolean | undefined) !== "SEMI_ACTIVE") return false;
-        const dua = r.dua as { value?: number; unit?: string; startDate?: string } | undefined;
-        if (!dua?.value || !dua?.unit || !dua?.startDate) return false;
-        return Date.now() >= computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit).getTime();
-      });
+      base = base.filter((r) => isDuaExpired(r as Record<string, unknown>));
     }
     if (quickFilter === "this_month") {
       const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
