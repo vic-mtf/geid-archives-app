@@ -46,8 +46,7 @@ import formatDate  from "@/utils/formatTime";
 import openArchiveFile from "@/utils/openArchiveFile";
 import useToken from "@/hooks/useToken";
 import StatusChip  from "./StatusChip";
-import { computeExpiresAt } from "./helpers";
-import { resolveDua } from "./duaDefaults";
+import { resolveDua, currentPhase } from "./duaDefaults";
 
 const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif", "avif", "pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt"]);
 function hasThumb(fileUrl: string | undefined): boolean {
@@ -84,28 +83,104 @@ function DetailRow({ label, value, multiline }: { label: string; value: string; 
   );
 }
 
+// ── Sous-composant — Bloc d'une phase DUA ───────────────────
+
+interface DuaPhaseBlockProps {
+  label: string;
+  shortLabel: string;
+  phase: { value: number; unit: "years" | "months"; startDate?: string; isDefault: boolean };
+  isCurrent: boolean;
+  nextLabel: string;
+  t: (key: string) => string;
+}
+
+function DuaPhaseBlock({ label, phase, isCurrent, nextLabel, t }: DuaPhaseBlockProps) {
+  const unitLabel =
+    phase.unit === "years"
+      ? phase.value === 1
+        ? t("dua.yearsSingular")
+        : t("dua.yearsPlural")
+      : t("dua.monthsUnit");
+
+  let expiresAt: Date | null = null;
+  let pct = 0;
+  let expired = false;
+  let daysLeft = 0;
+  if (phase.startDate) {
+    const start = new Date(phase.startDate);
+    expiresAt = new Date(start);
+    if (phase.unit === "years") expiresAt.setFullYear(expiresAt.getFullYear() + phase.value);
+    else expiresAt.setMonth(expiresAt.getMonth() + phase.value);
+    const span = expiresAt.getTime() - start.getTime();
+    pct = Math.min(100, Math.max(0, ((Date.now() - start.getTime()) / span) * 100));
+    expired = Date.now() >= expiresAt.getTime();
+    daysLeft = Math.floor((expiresAt.getTime() - Date.now()) / 86_400_000);
+  }
+
+  const borderSx = isCurrent
+    ? { border: 1, borderColor: "info.main", bgcolor: "info.50" }
+    : { border: 1, borderColor: "divider", bgcolor: "action.hover" };
+
+  return (
+    <Box
+      sx={{
+        ...borderSx,
+        borderRadius: 1.5,
+        p: 1,
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.5}>
+        <Box display="flex" alignItems="center" gap={0.75}>
+          <Typography variant="caption" fontWeight={600} color={isCurrent ? "info.main" : "text.primary"}>
+            {label}
+          </Typography>
+          {isCurrent && (
+            <Chip label="en cours" size="small" color="info" sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }} />
+          )}
+          {phase.isDefault && (
+            <Chip label="défaut" size="small" variant="outlined" sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }} />
+          )}
+        </Box>
+        <Typography variant="caption" fontWeight={600}>
+          {phase.value} {unitLabel}
+        </Typography>
+      </Box>
+
+      {phase.startDate ? (
+        <>
+          <LinearProgress
+            variant="determinate"
+            value={pct}
+            color={pct > 90 || expired ? "error" : pct > 70 ? "warning" : "info"}
+            sx={{ height: 5, borderRadius: 2, mb: 0.5 }}
+          />
+          <Typography variant="caption" color="text.secondary" display="block">
+            {expired
+              ? `Expirée le ${expiresAt?.toLocaleDateString("fr-FR")} — ${nextLabel} imminent`
+              : `Restant ${daysLeft} j — ${nextLabel} le ${expiresAt?.toLocaleDateString("fr-FR")}`}
+          </Typography>
+        </>
+      ) : (
+        <Typography variant="caption" color="text.secondary" display="block">
+          {isCurrent
+            ? "Démarrage imminent."
+            : `Prévue ${phase.value} ${unitLabel} — démarrera à l'entrée dans cette étape.`}
+        </Typography>
+      )}
+    </Box>
+  );
+}
+
 // ── Composant principal ──────────────────────────────────────
 
 export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction }: DetailPanelProps) {
   const { t } = useTranslation();
   const norm      = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
   const rawStatus = doc.status as string | undefined;
-  // resolveDua applique les defauts 10 ans / conservation si le doc n'a pas encore de DUA en DB.
+  // DUA par phase avec defauts 10 ans / conservation (synchro serveur)
   const dua       = resolveDua(doc.dua);
-
-  // ── Calcul DUA ─────────────────────────────────────────────
-  // La DUA peut etre configuree des l etat ACTIVE (valeurs prevues).
-  // Le compte a rebours ne commence qu'au passage en SEMI_ACTIVE (startDate pose).
-  let duaExpired = false;
-  let duaPct     = 0;
-  let duaExpiry: Date | null = null;
-  if (dua.startDate) {
-    duaExpiry  = computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit);
-    const span = duaExpiry.getTime() - new Date(dua.startDate).getTime();
-    duaPct     = Math.min(100, Math.max(0, ((Date.now() - new Date(dua.startDate).getTime()) / span) * 100));
-    duaExpired = Date.now() >= duaExpiry.getTime();
-  }
-  const showDuaSection = norm === "ACTIVE" || norm === "SEMI_ACTIVE";
+  const curPhase  = currentPhase(doc.status as string | undefined, norm);
+  const showDuaSection = curPhase !== null;
 
   const history = (doc.lifecycleHistory as Array<{ status: string; changedAt?: string }> | undefined) ?? [];
 
@@ -247,55 +322,51 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
         <Divider />
         <PhysicalLinkSection doc={doc} canWrite={canWrite} onAction={onAction} />
 
-        {/* Section DUA — visible des l etat ACTIVE (defauts 10 ans / conservation) */}
+        {/* Section DUA — cycle par phase (active + intermediaire) */}
         {showDuaSection && (
           <>
             <Divider />
             <Box px={2} py={1.5}>
-              <Box display="flex" alignItems="center" gap={0.75} mb={1}>
-                <Typography variant="caption" color="text.secondary">
-                  Durée de conservation (DUA)
-                </Typography>
-                {dua.isDefault && (
-                  <Chip
-                    label="par défaut"
-                    size="small"
-                    variant="outlined"
-                    sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }}
-                  />
-                )}
-              </Box>
-              <Typography variant="body2" mb={0.5}>
-                {dua.value} {dua.unit === "years" ? (dua.value === 1 ? t("dua.yearsSingular") : t("dua.yearsPlural")) : t("dua.monthsUnit")}
-                {" · "}
-                Sort : <strong>{dua.sortFinal === "conservation" ? "Historique" : "Élimination"}</strong>
-              </Typography>
-              {norm === "ACTIVE" && (
-                <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-                  {dua.isDefault
-                    ? "Valeur par défaut (modifiable) — le compte à rebours commencera au passage en intermédiaire."
-                    : "Durée prévue — commencera au passage en intermédiaire."}
-                </Typography>
-              )}
-              {norm === "SEMI_ACTIVE" && duaExpiry && (
+              <Box display="flex" alignItems="center" gap={0.75} mb={1.25}>
                 <Typography
                   variant="caption"
-                  color={duaExpired ? "error.main" : "text.secondary"}
-                  display="block"
-                  mb={0.5}
+                  color="text.secondary"
+                  sx={{ textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 600 }}
                 >
-                  {duaExpired ? "Expirée le " : "Expire le "}
-                  {duaExpiry.toLocaleDateString("fr-FR")}
+                  Durée de conservation
                 </Typography>
-              )}
-              {norm === "SEMI_ACTIVE" && duaExpiry && (
-                <LinearProgress
-                  variant="determinate"
-                  value={duaPct}
-                  color={duaPct > 90 || duaExpired ? "error" : duaPct > 70 ? "warning" : "info"}
-                  sx={{ height: 6, borderRadius: 2 }}
+                <Chip
+                  label={`Sort final : ${dua.sortFinal === "conservation" ? "Historique" : "Élimination"}`}
+                  size="small"
+                  variant="outlined"
+                  color={dua.sortFinal === "conservation" ? "secondary" : "error"}
+                  sx={{ height: 18, fontSize: 10, "& .MuiChip-label": { px: 0.75 } }}
                 />
-              )}
+              </Box>
+
+              <DuaPhaseBlock
+                label="Phase active"
+                shortLabel="act."
+                phase={dua.active}
+                isCurrent={curPhase === "active"}
+                nextLabel="Passage en intermédiaire"
+                t={t}
+              />
+
+              <Box mt={1.5}>
+                <DuaPhaseBlock
+                  label="Phase intermédiaire"
+                  shortLabel="int."
+                  phase={dua.semiActive}
+                  isCurrent={curPhase === "semiActive"}
+                  nextLabel={
+                    dua.sortFinal === "conservation"
+                      ? "Passage en historique"
+                      : "Proposition d'élimination"
+                  }
+                  t={t}
+                />
+              </Box>
             </Box>
           </>
         )}

@@ -1,79 +1,62 @@
 /**
- * DuaConfigDialog — Configure the DUA (Durée d'Utilité Administrative) for a SEMI_ACTIVE archive.
+ * DuaConfigDialog — Configure la DUA par phase (active + intermediaire).
  *
- * Triggered by the CustomEvent "__configure_dua" with detail { doc }.
- * On save, calls PUT /api/stuff/archives/:id/dua and dispatches incrementVersion.
+ * Declenche par CustomEvent "__configure_dua" { doc }.
+ * PUT /api/stuff/archives/:id/dua avec body { active, semiActive, sortFinal }.
  */
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  FormControlLabel,
-  RadioGroup,
-  Radio,
-  Typography,
-  Box as MuiBox,
-  Divider,
-  Chip,
   Alert,
+  Box as MuiBox,
+  Button,
+  Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  FormControlLabel,
   FormLabel,
+  InputLabel,
+  MenuItem,
+  Radio,
+  RadioGroup,
+  Select,
+  TextField,
+  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
-import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import HistoryEduOutlinedIcon from "@mui/icons-material/HistoryEduOutlined";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
 import type { AppDispatch } from "@/redux/store";
 import { incrementVersion } from "@/redux/data";
 import useAxios from "@/hooks/useAxios";
 import useToken from "@/hooks/useToken";
-
-type DuaUnit = "years" | "months";
-type SortFinal = "conservation" | "elimination";
+import {
+  resolveDua,
+  DEFAULT_PHASE_YEARS,
+  type DuaUnit,
+  type DuaSortFinal,
+} from "@/views/content/archive-management-content/duaDefaults";
 
 interface DuaDoc {
   _id?: string;
   id?: string;
   designation?: string;
-  dua?: {
-    value?: number;
-    unit?: DuaUnit;
-    sortFinal?: SortFinal;
-    startDate?: string;
-  };
+  dua?: unknown;
 }
 
-/** Adds value × unit to a date */
 function addDuration(date: Date, value: number, unit: DuaUnit): Date {
   const d = new Date(date);
-  if (unit === "years")  d.setFullYear(d.getFullYear() + value);
+  if (unit === "years") d.setFullYear(d.getFullYear() + value);
   if (unit === "months") d.setMonth(d.getMonth() + value);
   return d;
-}
-
-/** Human-readable remaining time */
-function formatRemaining(expiresAt: Date, t: (key: string, opts?: Record<string, unknown>) => string): string {
-  const now = new Date();
-  const diffMs = expiresAt.getTime() - now.getTime();
-  if (diffMs <= 0) return t("dua.expired");
-  const days  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const months = Math.floor(days / 30);
-  const years  = Math.floor(days / 365);
-  if (years  >= 1) return years === 1 ? t("dua.remaining1Year") : t("dua.remainingYears", { count: years });
-  if (months >= 1) return months === 1 ? t("dua.remaining1Month") : t("dua.remainingMonths", { count: months });
-  return days === 1 ? t("dua.remaining1Day") : t("dua.remainingDays", { count: days });
 }
 
 export default function DuaConfigDialog() {
@@ -82,27 +65,35 @@ export default function DuaConfigDialog() {
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [open, setOpen] = useState(false);
   const [doc, setDoc] = useState<DuaDoc | null>(null);
-  const [value, setValue] = useState<number | "">("");
-  const [unit, setUnit] = useState<DuaUnit>("years");
-  const [sortFinal, setSortFinal] = useState<SortFinal>("conservation");
+
+  // Phase active
+  const [activeValue, setActiveValue] = useState<number | "">(DEFAULT_PHASE_YEARS);
+  const [activeUnit, setActiveUnit] = useState<DuaUnit>("years");
+
+  // Phase intermediaire
+  const [semiValue, setSemiValue] = useState<number | "">(DEFAULT_PHASE_YEARS);
+  const [semiUnit, setSemiUnit] = useState<DuaUnit>("years");
+
+  const [sortFinal, setSortFinal] = useState<DuaSortFinal>("conservation");
 
   const Authorization = useToken();
   const dispatch = useDispatch<AppDispatch>();
   const [{ loading }, execSave] = useAxios(
     { method: "PUT", headers: { Authorization } },
-    { manual: true }
+    { manual: true },
   );
 
-  // Listen for __configure_dua event
   useEffect(() => {
     const root = document.getElementById("root");
     const handler = (e: Event) => {
       const { doc: d } = (e as CustomEvent).detail as { doc: DuaDoc };
       setDoc(d);
-      // Pre-remplissage : DUA existante si definie, sinon 10 ans / conservation par defaut
-      setValue(d?.dua?.value ?? 10);
-      setUnit(d?.dua?.unit ?? "years");
-      setSortFinal(d?.dua?.sortFinal ?? "conservation");
+      const dua = resolveDua(d?.dua);
+      setActiveValue(dua.active.value);
+      setActiveUnit(dua.active.unit);
+      setSemiValue(dua.semiActive.value);
+      setSemiUnit(dua.semiActive.unit);
+      setSortFinal(dua.sortFinal);
       setOpen(true);
     };
     root?.addEventListener("__configure_dua", handler);
@@ -111,36 +102,70 @@ export default function DuaConfigDialog() {
 
   const handleClose = () => setOpen(false);
 
-  const startDate = doc?.dua?.startDate ? new Date(doc.dua.startDate) : new Date();
+  // Dates d'expiration previsionnelles (pour affichage)
+  const activeStart = useMemo(() => {
+    const dua = resolveDua(doc?.dua);
+    return dua.active.startDate ? new Date(dua.active.startDate) : new Date();
+  }, [doc]);
 
-  const expiresAt = useMemo(() => {
-    if (!value || Number(value) <= 0) return null;
-    return addDuration(startDate, Number(value), unit);
-  }, [value, unit, startDate]);
+  const activeEnd = useMemo(() => {
+    if (!activeValue || Number(activeValue) <= 0) return null;
+    return addDuration(activeStart, Number(activeValue), activeUnit);
+  }, [activeStart, activeValue, activeUnit]);
+
+  const semiStart = useMemo(() => {
+    const dua = resolveDua(doc?.dua);
+    if (dua.semiActive.startDate) return new Date(dua.semiActive.startDate);
+    return activeEnd ?? new Date(); // estimation si pas encore demarree
+  }, [doc, activeEnd]);
+
+  const semiEnd = useMemo(() => {
+    if (!semiValue || Number(semiValue) <= 0) return null;
+    return addDuration(semiStart, Number(semiValue), semiUnit);
+  }, [semiStart, semiValue, semiUnit]);
+
+  const canSave =
+    !!activeValue && Number(activeValue) > 0 &&
+    !!semiValue && Number(semiValue) > 0 &&
+    !loading;
 
   const handleSave = async () => {
     const id = doc?._id || doc?.id;
-    if (!id || !value) return;
+    if (!id || !canSave) return;
     try {
       await execSave({
         url: `/api/stuff/archives/${id}/dua`,
-        data: { value: Number(value), unit, sortFinal },
+        data: {
+          active: { value: Number(activeValue), unit: activeUnit },
+          semiActive: { value: Number(semiValue), unit: semiUnit },
+          sortFinal,
+        },
       });
       dispatch(incrementVersion());
       setOpen(false);
     } catch {
-      // error handled by notistack via global interceptor
+      /* error handled by notistack interceptor */
     }
   };
 
-  const isExpired = expiresAt ? expiresAt <= new Date() : false;
-  const canSave = !!value && Number(value) > 0 && !loading;
-
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth fullScreen={fullScreen} BackdropProps={{ sx: { bgcolor: (theme: any) => theme.palette.background.paper + theme.customOptions.opacity, backdropFilter: (theme: any) => `blur(${theme.customOptions.blur})` } }} PaperProps={{ sx: { border: 1, borderColor: "divider" } }}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={fullScreen}
+      BackdropProps={{
+        sx: {
+          bgcolor: (t: any) => t.palette.background.paper + t.customOptions.opacity,
+          backdropFilter: (t: any) => `blur(${t.customOptions.blur})`,
+        },
+      }}
+      PaperProps={{ sx: { border: 1, borderColor: "divider" } }}
+    >
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <AccessTimeOutlinedIcon color="info" />
-        {t("dua.title")}
+        Durée de conservation (DUA)
         {doc?.designation && (
           <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 400 }}>
             — {doc.designation}
@@ -150,59 +175,125 @@ export default function DuaConfigDialog() {
 
       <DialogContent>
         <Alert severity="info" sx={{ mb: 2 }}>
-          {t("dua.infoAlert")}
+          La DUA se déroule en deux phases consécutives. À l'expiration de
+          chaque phase, l'archive transite automatiquement vers l'étape
+          suivante du cycle de vie.
         </Alert>
 
-        {/* Duration */}
-        <MuiBox display="flex" gap={2} alignItems="flex-start" mb={2}>
-          <TextField
-            label={t("dua.durationLabel")}
-            type="number"
-            value={value}
-            onChange={(e) => setValue(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
-            inputProps={{ min: 1, max: 999 }}
-            sx={{ width: 120 }}
-            size="small"
-          />
-          <FormControl size="small" sx={{ width: 140 }}>
-            <InputLabel>{t("dua.unitLabel")}</InputLabel>
-            <Select
-              value={unit}
-              label={t("dua.unitLabel")}
-              onChange={(e) => setUnit(e.target.value as DuaUnit)}
-            >
-              <MenuItem value="years">{t("dua.unitYears")}</MenuItem>
-              <MenuItem value="months">{t("dua.unitMonths")}</MenuItem>
-            </Select>
-          </FormControl>
-          {expiresAt && (
-            <MuiBox flex={1} display="flex" flexDirection="column" justifyContent="center">
+        {/* ── Phase active ── */}
+        <MuiBox
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+            p: 1.5,
+            mb: 2,
+          }}
+        >
+          <MuiBox display="flex" alignItems="center" gap={0.75} mb={1}>
+            <Chip
+              label="Phase active"
+              size="small"
+              color="info"
+              sx={{ height: 20, fontSize: 11 }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              Compte à rebours : <strong>Active</strong> → Intermédiaire
+            </Typography>
+          </MuiBox>
+          <MuiBox display="flex" gap={1.5} alignItems="center" flexWrap="wrap">
+            <TextField
+              label="Durée"
+              type="number"
+              size="small"
+              value={activeValue}
+              onChange={(e) =>
+                setActiveValue(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))
+              }
+              inputProps={{ min: 1, max: 999 }}
+              sx={{ width: 100 }}
+            />
+            <FormControl size="small" sx={{ width: 130 }}>
+              <InputLabel>Unité</InputLabel>
+              <Select
+                value={activeUnit}
+                label="Unité"
+                onChange={(e) => setActiveUnit(e.target.value as DuaUnit)}
+              >
+                <MenuItem value="years">années</MenuItem>
+                <MenuItem value="months">mois</MenuItem>
+              </Select>
+            </FormControl>
+            {activeEnd && (
               <Typography variant="caption" color="text.secondary">
-                {t("dua.expirationDate")}
+                Fin prévue :{" "}
+                <strong>{activeEnd.toLocaleDateString("fr-FR")}</strong>
               </Typography>
-              <Typography variant="body2" fontWeight={600} color={isExpired ? "error.main" : "text.primary"}>
-                {expiresAt.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })}
-              </Typography>
-              <Chip
-                size="small"
-                label={formatRemaining(expiresAt, t)}
-                color={isExpired ? "error" : "info"}
-                sx={{ mt: 0.5, width: "fit-content" }}
-              />
-            </MuiBox>
-          )}
+            )}
+          </MuiBox>
         </MuiBox>
 
-        <Divider sx={{ my: 2 }} />
+        {/* ── Phase intermediaire ── */}
+        <MuiBox
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
+            p: 1.5,
+            mb: 2,
+          }}
+        >
+          <MuiBox display="flex" alignItems="center" gap={0.75} mb={1}>
+            <Chip
+              label="Phase intermédiaire"
+              size="small"
+              color="secondary"
+              sx={{ height: 20, fontSize: 11 }}
+            />
+            <Typography variant="caption" color="text.secondary">
+              Compte à rebours : Intermédiaire → {sortFinal === "conservation" ? "Historique" : "Élimination"}
+            </Typography>
+          </MuiBox>
+          <MuiBox display="flex" gap={1.5} alignItems="center" flexWrap="wrap">
+            <TextField
+              label="Durée"
+              type="number"
+              size="small"
+              value={semiValue}
+              onChange={(e) =>
+                setSemiValue(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))
+              }
+              inputProps={{ min: 1, max: 999 }}
+              sx={{ width: 100 }}
+            />
+            <FormControl size="small" sx={{ width: 130 }}>
+              <InputLabel>Unité</InputLabel>
+              <Select
+                value={semiUnit}
+                label="Unité"
+                onChange={(e) => setSemiUnit(e.target.value as DuaUnit)}
+              >
+                <MenuItem value="years">années</MenuItem>
+                <MenuItem value="months">mois</MenuItem>
+              </Select>
+            </FormControl>
+            {semiEnd && (
+              <Typography variant="caption" color="text.secondary">
+                Fin prévue :{" "}
+                <strong>{semiEnd.toLocaleDateString("fr-FR")}</strong>
+              </Typography>
+            )}
+          </MuiBox>
+        </MuiBox>
 
-        {/* Sort final */}
-        <FormControl component="fieldset">
-          <FormLabel component="legend" sx={{ mb: 1, fontSize: 14 }}>
-            {t("dua.sortFinalLabel")}
+        {/* ── Sort final ── */}
+        <FormControl component="fieldset" fullWidth>
+          <FormLabel component="legend" sx={{ mb: 1, fontSize: 13 }}>
+            Sort final — que faire à l'expiration de la phase intermédiaire ?
           </FormLabel>
           <RadioGroup
             value={sortFinal}
-            onChange={(e) => setSortFinal(e.target.value as SortFinal)}
+            onChange={(e) => setSortFinal(e.target.value as DuaSortFinal)}
           >
             <FormControlLabel
               value="conservation"
@@ -212,10 +303,10 @@ export default function DuaConfigDialog() {
                   <HistoryEduOutlinedIcon fontSize="small" color="action" />
                   <MuiBox>
                     <Typography variant="body2" fontWeight={500}>
-                      {t("dua.conservation")}
+                      Conservation définitive
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {t("dua.conservationDesc")}
+                      L'archive est versée en historique (permanent).
                     </Typography>
                   </MuiBox>
                 </MuiBox>
@@ -229,10 +320,10 @@ export default function DuaConfigDialog() {
                   <DeleteForeverOutlinedIcon fontSize="small" color="error" />
                   <MuiBox>
                     <Typography variant="body2" fontWeight={500}>
-                      {t("dua.elimination")}
+                      Élimination proposée
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {t("dua.eliminationDesc")}
+                      Un procès-verbal d'élimination est requis pour la destruction.
                     </Typography>
                   </MuiBox>
                 </MuiBox>
@@ -241,18 +332,17 @@ export default function DuaConfigDialog() {
           </RadioGroup>
         </FormControl>
 
-        {/* DUA start date info */}
-        {doc?.dua?.startDate && (
-          <MuiBox mt={2} p={1.5} bgcolor="action.hover" borderRadius={1}>
-            <Typography variant="caption" color="text.secondary" dangerouslySetInnerHTML={{
-              __html: t("dua.startDateInfo", {
-                date: new Date(doc.dua.startDate).toLocaleDateString("fr-FR", {
-                  day: "2-digit", month: "long", year: "numeric",
-                }),
-              }),
-            }} />
-          </MuiBox>
-        )}
+        <MuiBox mt={2} p={1.25} bgcolor="action.hover" borderRadius={1}>
+          <Typography variant="caption" color="text.secondary" display="block" fontWeight={600}>
+            Cycle complet prévu
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block">
+            Validation → Active ({activeValue}{" "}
+            {activeUnit === "years" ? "an(s)" : "mois"}) → Intermédiaire ({semiValue}{" "}
+            {semiUnit === "years" ? "an(s)" : "mois"}) →{" "}
+            {sortFinal === "conservation" ? "Historique" : "Proposition d'élimination"}
+          </Typography>
+        </MuiBox>
       </DialogContent>
 
       <DialogActions>
@@ -266,7 +356,7 @@ export default function DuaConfigDialog() {
           disabled={!canSave}
           startIcon={loading ? <CircularProgress size={14} color="inherit" /> : undefined}
         >
-          {t("dua.saveButton")}
+          Enregistrer
         </Button>
       </DialogActions>
     </Dialog>
