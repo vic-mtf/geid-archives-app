@@ -47,6 +47,7 @@ import openArchiveFile from "@/utils/openArchiveFile";
 import useToken from "@/hooks/useToken";
 import StatusChip  from "./StatusChip";
 import { computeExpiresAt } from "./helpers";
+import { resolveDua } from "./duaDefaults";
 
 const THUMB_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif", "avif", "pdf", "docx", "xlsx", "pptx", "doc", "xls", "ppt", "odt"]);
 function hasThumb(fileUrl: string | undefined): boolean {
@@ -89,7 +90,8 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   const { t } = useTranslation();
   const norm      = normalizeStatus(doc.status as string | undefined, doc.validated as boolean | undefined);
   const rawStatus = doc.status as string | undefined;
-  const dua       = doc.dua as { value?: number; unit?: string; sortFinal?: string; startDate?: string } | undefined;
+  // resolveDua applique les defauts 10 ans / conservation si le doc n'a pas encore de DUA en DB.
+  const dua       = resolveDua(doc.dua);
 
   // ── Calcul DUA ─────────────────────────────────────────────
   // La DUA peut etre configuree des l etat ACTIVE (valeurs prevues).
@@ -97,7 +99,7 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
   let duaExpired = false;
   let duaPct     = 0;
   let duaExpiry: Date | null = null;
-  if (dua?.value && dua?.unit && dua?.startDate) {
+  if (dua.startDate) {
     duaExpiry  = computeExpiresAt(new Date(dua.startDate), dua.value, dua.unit);
     const span = duaExpiry.getTime() - new Date(dua.startDate).getTime();
     duaPct     = Math.min(100, Math.max(0, ((Date.now() - new Date(dua.startDate).getTime()) / span) * 100));
@@ -245,54 +247,54 @@ export default function DetailPanel({ doc, canWrite, isAdmin, onClose, onAction 
         <Divider />
         <PhysicalLinkSection doc={doc} canWrite={canWrite} onAction={onAction} />
 
-        {/* Section DUA — visible des l etat ACTIVE */}
+        {/* Section DUA — visible des l etat ACTIVE (defauts 10 ans / conservation) */}
         {showDuaSection && (
           <>
             <Divider />
             <Box px={2} py={1.5}>
-              <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                Durée de conservation (DUA)
+              <Box display="flex" alignItems="center" gap={0.75} mb={1}>
+                <Typography variant="caption" color="text.secondary">
+                  Durée de conservation (DUA)
+                </Typography>
+                {dua.isDefault && (
+                  <Chip
+                    label="par défaut"
+                    size="small"
+                    variant="outlined"
+                    sx={{ height: 16, fontSize: 9, "& .MuiChip-label": { px: 0.6 } }}
+                  />
+                )}
+              </Box>
+              <Typography variant="body2" mb={0.5}>
+                {dua.value} {dua.unit === "years" ? (dua.value === 1 ? t("dua.yearsSingular") : t("dua.yearsPlural")) : t("dua.monthsUnit")}
+                {" · "}
+                Sort : <strong>{dua.sortFinal === "conservation" ? "Historique" : "Élimination"}</strong>
               </Typography>
-              {!dua?.value ? (
-                <Chip
-                  icon={<AccessTimeOutlinedIcon />}
-                  label={norm === "ACTIVE" ? "Non prevue" : "Non configurée"}
-                  size="small"
-                  color="warning"
-                  variant="outlined"
+              {norm === "ACTIVE" && (
+                <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                  {dua.isDefault
+                    ? "Valeur par défaut (modifiable) — le compte à rebours commencera au passage en intermédiaire."
+                    : "Durée prévue — commencera au passage en intermédiaire."}
+                </Typography>
+              )}
+              {norm === "SEMI_ACTIVE" && duaExpiry && (
+                <Typography
+                  variant="caption"
+                  color={duaExpired ? "error.main" : "text.secondary"}
+                  display="block"
+                  mb={0.5}
+                >
+                  {duaExpired ? "Expirée le " : "Expire le "}
+                  {duaExpiry.toLocaleDateString("fr-FR")}
+                </Typography>
+              )}
+              {norm === "SEMI_ACTIVE" && duaExpiry && (
+                <LinearProgress
+                  variant="determinate"
+                  value={duaPct}
+                  color={duaPct > 90 || duaExpired ? "error" : duaPct > 70 ? "warning" : "info"}
+                  sx={{ height: 6, borderRadius: 2 }}
                 />
-              ) : (
-                <>
-                  <Typography variant="body2" mb={0.5}>
-                    {dua.value} {dua.unit === "years" ? (dua.value === 1 ? t("dua.yearsSingular") : t("dua.yearsPlural")) : t("dua.monthsUnit")}
-                    {" · "}
-                    Sort : <strong>{dua.sortFinal === "conservation" ? "Historique" : "Élimination"}</strong>
-                  </Typography>
-                  {norm === "ACTIVE" && (
-                    <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-                      Durée prévue — commencera au passage en intermédiaire.
-                    </Typography>
-                  )}
-                  {norm === "SEMI_ACTIVE" && duaExpiry && (
-                    <Typography
-                      variant="caption"
-                      color={duaExpired ? "error.main" : "text.secondary"}
-                      display="block"
-                      mb={0.5}
-                    >
-                      {duaExpired ? "Expirée le " : "Expire le "}
-                      {duaExpiry.toLocaleDateString("fr-FR")}
-                    </Typography>
-                  )}
-                  {norm === "SEMI_ACTIVE" && duaExpiry && (
-                    <LinearProgress
-                      variant="determinate"
-                      value={duaPct}
-                      color={duaPct > 90 || duaExpired ? "error" : duaPct > 70 ? "warning" : "info"}
-                      sx={{ height: 6, borderRadius: 2 }}
-                    />
-                  )}
-                </>
               )}
             </Box>
           </>
